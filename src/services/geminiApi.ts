@@ -59,11 +59,33 @@ export class GeminiApiService {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error?.message || `HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        
+        if (errorText.trim()) {
+          try {
+            const errorData = JSON.parse(errorText);
+            errorMessage = errorData.error?.message || errorMessage;
+          } catch {
+            errorMessage = `${errorMessage} - Response: ${errorText}`;
+          }
+        }
+        
+        throw new Error(errorMessage);
       }
 
-      const data = await response.json();
+      const responseText = await response.text();
+      
+      if (!responseText.trim()) {
+        throw new Error('Empty response received from API');
+      }
+      
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        throw new Error(`Invalid JSON response: ${responseText}`);
+      }
       
       if (!data.choices || data.choices.length === 0) {
         throw new Error('No response generated');
