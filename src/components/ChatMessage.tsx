@@ -1,6 +1,7 @@
 import React from 'react';
 import { Bot, User } from 'lucide-react';
 import { Message } from '../types/chat';
+import { useImageModal } from '../hooks/useImageModal';
 
 interface ChatMessageProps {
   message: Message;
@@ -46,6 +47,7 @@ const extractImageUrls = (text: string): { text: string; images: string[] } => {
 };
 export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const isUser = message.type === 'user';
+  const { openModal } = useImageModal();
   const { text: cleanText, images: extractedImages } = isUser ? 
     { text: message.content, images: [] } : 
     extractImageUrls(message.content);
@@ -75,7 +77,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
                   key={index}
                   src={imageUrl}
                   alt={`Uploaded image ${index + 1}`}
-                  className="rounded-lg object-cover w-full max-h-64 border"
+                  className="rounded-lg object-cover w-full max-h-64 border cursor-pointer hover:opacity-90 transition-opacity duration-200"
+                  onClick={() => openModal(imageUrl)}
                   onError={(e) => {
                     console.error('Image failed to load:', imageUrl);
                     e.currentTarget.style.display = 'none';

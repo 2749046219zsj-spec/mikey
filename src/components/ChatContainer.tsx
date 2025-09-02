@@ -40,7 +40,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
   }
 
   return (
-    <div className="flex-1 overflow-y-auto">
+    <div className="flex-1 overflow-y-auto chat-scrollbar">
       <div className="max-w-4xl mx-auto px-4 py-6">
         {messages.map((message) => (
           <ChatMessage key={message.id} message={message} />
