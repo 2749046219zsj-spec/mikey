@@ -1,7 +1,7 @@
 import { ApiResponse } from '../types/chat';
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const API_URL = '/api/v1/chat/completions';
+const API_URL = 'https://api.poe.com/v1/chat/completions';
 
 export class GeminiApiService {
   private async convertImageToBase64(file: File): Promise<string> {
