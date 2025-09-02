@@ -18,9 +18,6 @@ const extractImageUrls = (text: string): { text: string; images: string[] } => {
   const poeMatches = text.match(poeImageRegex);
   if (poeMatches) {
     images.push(...poeMatches);
-    poeMatches.forEach(url => {
-      cleanText = cleanText.replace(url, '').trim();
-    });
   }
   
   // 提取其他图片链接
@@ -29,15 +26,21 @@ const extractImageUrls = (text: string): { text: string; images: string[] } => {
     imageMatches.forEach(url => {
       if (!images.includes(url)) {
         images.push(url);
-        cleanText = cleanText.replace(url, '').trim();
       }
     });
   }
   
+  // 从文本中移除所有图片链接
+  images.forEach(url => {
+    cleanText = cleanText.replace(new RegExp(url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), '');
+  });
+  
   // 清理文本中的 ![generated_image_1] 等标记
   cleanText = cleanText.replace(/!\[generated_image_\d+\]/g, '').trim();
   // 清理多余的括号
-  cleanText = cleanText.replace(/\([^)]*\)/g, '').trim();
+  cleanText = cleanText.replace(/\(\s*\)/g, '').trim();
+  // 清理多余的空行
+  cleanText = cleanText.replace(/\n\s*\n/g, '\n').trim();
   
   return { text: cleanText, images };
 };
