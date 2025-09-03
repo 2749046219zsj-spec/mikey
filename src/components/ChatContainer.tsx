@@ -7,12 +7,18 @@ interface ChatContainerProps {
   messages: Message[];
   isLoading: boolean;
   error: string | null;
+  onRetry?: () => void;
+  onEditAndResend?: (messageId: string, onEdit: (text: string, images: File[]) => void) => void;
+  onSetEditContent?: (text: string, images: File[]) => void;
 }
 
 export const ChatContainer: React.FC<ChatContainerProps> = ({ 
   messages, 
   isLoading, 
-  error 
+  error,
+  onRetry,
+  onEditAndResend,
+  onSetEditContent
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -43,7 +49,13 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     <div className="flex-1 overflow-y-auto chat-scrollbar">
       <div className="max-w-4xl mx-auto px-4 py-6">
         {messages.map((message) => (
-          <ChatMessage key={message.id} message={message} />
+          <ChatMessage 
+            key={message.id} 
+            message={message}
+            onRetry={onRetry}
+            onEditAndResend={onEditAndResend}
+            onSetEditContent={onSetEditContent}
+          />
         ))}
         
         {isLoading && (

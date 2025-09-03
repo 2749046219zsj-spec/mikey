@@ -1,16 +1,35 @@
 import React, { useState, useRef, KeyboardEvent } from 'react';
-import { Send, Loader2 } from 'lucide-react';
+import { Send, Loader2, X } from 'lucide-react';
 import { ImageUpload } from './ImageUpload';
 
 interface ChatInputProps {
   onSendMessage: (text: string, images: File[]) => void;
   isLoading: boolean;
+  editContent?: { text: string; images: File[] };
+  onClearEditContent?: () => void;
 }
 
-export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
+export const ChatInput: React.FC<ChatInputProps> = ({ 
+  onSendMessage, 
+  isLoading, 
+  editContent, 
+  onClearEditContent 
+}) => {
   const [text, setText] = useState('');
   const [images, setImages] = useState<File[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // 当有编辑内容时，填充到输入框
+  React.useEffect(() => {
+    if (editContent) {
+      setText(editContent.text);
+      setImages(editContent.images);
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        adjustTextareaHeight();
+      }
+    }
+  }, [editContent]);
 
   const handleSubmit = () => {
     if ((!text.trim() && images.length === 0) || isLoading) return;
@@ -18,6 +37,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }
     onSendMessage(text, images);
     setText('');
     setImages([]);
+    onClearEditContent?.();
     
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -42,6 +62,20 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }
   return (
     <div className="border-t border-gray-200 bg-white/80 backdrop-blur-sm">
       <div className="max-w-4xl mx-auto p-4">
+        {editContent && (
+          <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-blue-700 font-medium">正在编辑消息</span>
+              <button
+                onClick={onClearEditContent}
+                className="text-blue-500 hover:text-blue-700"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          </div>
+        )}
+        
         <ImageUpload images={images} onImagesChange={setImages} />
         
         <div className="flex gap-3 items-end mt-3">

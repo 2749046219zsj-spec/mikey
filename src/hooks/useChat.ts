@@ -8,6 +8,7 @@ export const useChat = () => {
     isLoading: false,
     error: null
   });
+  const [retryCallback, setRetryCallback] = useState<(() => void) | null>(null);
 
   const geminiService = new GeminiApiService();
 
@@ -33,13 +34,16 @@ export const useChat = () => {
     const imageUrls = images.map(file => URL.createObjectURL(file));
 
     // Add user message
-    addMessage({
+    const userMessageId = addMessage({
       type: 'user',
       content: text,
-      images: imageUrls
+      images: imageUrls,
+      originalText: text,
+      originalImages: images
     });
 
     setState(prev => ({ ...prev, isLoading: true, error: null }));
+    setRetryCallback(null);
 
     try {
       // Send to Gemini API
@@ -51,14 +55,39 @@ export const useChat = () => {
         content: response
       });
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      
+      // Add error message with retry functionality
+      addMessage({
+        type: 'ai',
+        content: errorMessage,
+        hasError: true
+      });
+      
+      // Set retry callback
+      setRetryCallback(() => () => sendMessage(text, images));
+      
       setState(prev => ({
         ...prev,
-        error: error instanceof Error ? error.message : 'An error occurred'
+        error: null
       }));
     } finally {
       setState(prev => ({ ...prev, isLoading: false }));
     }
   }, [addMessage, geminiService]);
+
+  const retryLastMessage = useCallback(() => {
+    if (retryCallback) {
+      retryCallback();
+    }
+  }, [retryCallback]);
+
+  const editAndResend = useCallback((messageId: string, onEdit: (text: string, images: File[]) => void) => {
+    const message = state.messages.find(m => m.id === messageId);
+    if (message && message.originalText !== undefined) {
+      onEdit(message.originalText, message.originalImages || []);
+    }
+  }, [state.messages]);
 
   const clearChat = useCallback(() => {
     setState({
@@ -66,6 +95,7 @@ export const useChat = () => {
       isLoading: false,
       error: null
     });
+    setRetryCallback(null);
   }, []);
 
   return {
@@ -73,6 +103,8 @@ export const useChat = () => {
     isLoading: state.isLoading,
     error: state.error,
     sendMessage,
+    retryLastMessage,
+    editAndResend,
     clearChat
   };
 };

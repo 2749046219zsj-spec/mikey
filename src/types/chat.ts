@@ -4,6 +4,9 @@ export interface Message {
   content: string;
   timestamp: Date;
   images?: string[];
+  hasError?: boolean;
+  originalText?: string;
+  originalImages?: File[];
 }
 
 export interface ChatState {

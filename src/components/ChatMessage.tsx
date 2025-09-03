@@ -1,10 +1,13 @@
 import React from 'react';
-import { Bot, User } from 'lucide-react';
+import { Bot, User, RotateCcw, Edit3 } from 'lucide-react';
 import { Message } from '../types/chat';
 import { useImageModal } from '../hooks/useImageModal';
 
 interface ChatMessageProps {
   message: Message;
+  onRetry?: () => void;
+  onEditAndResend?: (messageId: string, onEdit: (text: string, images: File[]) => void) => void;
+  onSetEditContent?: (text: string, images: File[]) => void;
 }
 
 // 检测文本中的图片链接
@@ -54,7 +57,7 @@ const extractImageUrls = (text: string): { text: string; images: string[] } => {
   
   return { text: cleanText, images };
 };
-export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
+export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onRetry, onEditAndResend, onSetEditContent }) => {
   const isUser = message.type === 'user';
   const { openModal } = useImageModal();
   const { text: cleanText, images: extractedImages } = isUser ? 
@@ -62,6 +65,12 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
     extractImageUrls(message.content);
   
   const allImages = [...(message.images || []), ...extractedImages];
+  
+  const handleEditAndResend = () => {
+    if (onEditAndResend && onSetEditContent) {
+      onEditAndResend(message.id, onSetEditContent);
+    }
+  };
 
   return (
     <div className={`flex gap-3 mb-6 ${isUser ? 'flex-row-reverse' : ''}`}>
@@ -77,7 +86,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         <div className={`rounded-2xl px-4 py-3 ${
           isUser
             ? 'bg-gradient-to-r from-purple-500 to-blue-600 text-white'
-            : 'bg-white border border-gray-200 text-gray-800 shadow-sm'
+            : message.hasError ? 'bg-red-50 border border-red-200 text-red-800 shadow-sm' : 'bg-white border border-gray-200 text-gray-800 shadow-sm'
         }`}>
           {allImages && allImages.length > 0 && (
             <div className="mb-3 grid grid-cols-1 gap-2 max-w-sm">
@@ -99,6 +108,27 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
           
           {cleanText && (
             <p className="text-sm leading-relaxed whitespace-pre-wrap">{cleanText}</p>
+          )}
+          
+          {message.hasError && (
+            <div className="mt-3 pt-3 border-t border-red-200 flex gap-2">
+              <button
+                onClick={onRetry}
+                className="flex items-center gap-1 px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-xs font-medium transition-colors duration-200"
+              >
+                <RotateCcw size={12} />
+                重新发送
+              </button>
+              {isUser && (
+                <button
+                  onClick={handleEditAndResend}
+                  className="flex items-center gap-1 px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-xs font-medium transition-colors duration-200"
+                >
+                  <Edit3 size={12} />
+                  编辑重发
+                </button>
+              )}
+            </div>
           )}
         </div>
         
