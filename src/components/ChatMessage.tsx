@@ -122,6 +122,17 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onRetryToInpu
           )}
         </div>
         
+        {/* 为用户消息添加重新发送按钮 */}
+        {isUser && (
+          <button
+            onClick={handleRetryToInput}
+            className="mt-2 px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg text-xs font-medium transition-colors duration-200 flex items-center gap-1"
+          >
+            <RotateCcw size={12} />
+            重新发送
+          </button>
+        )}
+        
         <span className="text-xs text-gray-500 mt-1 px-1">
           {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </span>
