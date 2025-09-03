@@ -11,8 +11,7 @@ function App() {
     isLoading, 
     error, 
     sendMessage, 
-    retryLastMessage, 
-    editAndResend, 
+    retryToInput, 
     clearChat 
   } = useChat();
   
@@ -37,8 +36,7 @@ function App() {
         messages={messages}
         isLoading={isLoading}
         error={error}
-        onRetry={retryLastMessage}
-        onEditAndResend={editAndResend}
+        onRetryToInput={retryToInput}
         onSetEditContent={handleSetEditContent}
       />
       

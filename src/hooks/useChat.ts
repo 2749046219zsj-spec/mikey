@@ -60,12 +60,11 @@ export const useChat = () => {
       // Add error message with retry functionality
       addMessage({
         type: 'ai',
-        content: errorMessage,
-        hasError: true
+        content: `生成失败: ${errorMessage}`,
+        hasError: true,
+        originalText: text,
+        originalImages: images
       });
-      
-      // Set retry callback
-      setRetryCallback(() => () => sendMessage(text, images));
       
       setState(prev => ({
         ...prev,
@@ -76,15 +75,9 @@ export const useChat = () => {
     }
   }, [addMessage, geminiService]);
 
-  const retryLastMessage = useCallback(() => {
-    if (retryCallback) {
-      retryCallback();
-    }
-  }, [retryCallback]);
-
-  const editAndResend = useCallback((messageId: string, onEdit: (text: string, images: File[]) => void) => {
+  const retryToInput = useCallback((messageId: string, onEdit: (text: string, images: File[]) => void) => {
     const message = state.messages.find(m => m.id === messageId);
-    if (message && message.originalText !== undefined) {
+    if (message && message.originalText !== undefined && message.originalImages !== undefined) {
       onEdit(message.originalText, message.originalImages || []);
     }
   }, [state.messages]);
@@ -103,8 +96,7 @@ export const useChat = () => {
     isLoading: state.isLoading,
     error: state.error,
     sendMessage,
-    retryLastMessage,
-    editAndResend,
+    retryToInput,
     clearChat
   };
 };

@@ -7,8 +7,7 @@ interface ChatContainerProps {
   messages: Message[];
   isLoading: boolean;
   error: string | null;
-  onRetry?: () => void;
-  onEditAndResend?: (messageId: string, onEdit: (text: string, images: File[]) => void) => void;
+  onRetryToInput?: (messageId: string, onEdit: (text: string, images: File[]) => void) => void;
   onSetEditContent?: (text: string, images: File[]) => void;
 }
 
@@ -16,8 +15,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
   messages, 
   isLoading, 
   error,
-  onRetry,
-  onEditAndResend,
+  onRetryToInput,
   onSetEditContent
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -52,8 +50,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
           <ChatMessage 
             key={message.id} 
             message={message}
-            onRetry={onRetry}
-            onEditAndResend={onEditAndResend}
+            onRetryToInput={onRetryToInput}
             onSetEditContent={onSetEditContent}
           />
         ))}
@@ -69,14 +66,6 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                 <span className="text-sm text-gray-600">Gemini is thinking...</span>
               </div>
             </div>
-          </div>
-        )}
-        
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-            <p className="text-red-800 text-sm">
-              <strong>Error:</strong> {error}
-            </p>
           </div>
         )}
         

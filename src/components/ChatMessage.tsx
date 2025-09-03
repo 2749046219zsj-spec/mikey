@@ -5,8 +5,7 @@ import { useImageModal } from '../hooks/useImageModal';
 
 interface ChatMessageProps {
   message: Message;
-  onRetry?: () => void;
-  onEditAndResend?: (messageId: string, onEdit: (text: string, images: File[]) => void) => void;
+  onRetryToInput?: (messageId: string, onEdit: (text: string, images: File[]) => void) => void;
   onSetEditContent?: (text: string, images: File[]) => void;
 }
 
@@ -57,7 +56,7 @@ const extractImageUrls = (text: string): { text: string; images: string[] } => {
   
   return { text: cleanText, images };
 };
-export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onRetry, onEditAndResend, onSetEditContent }) => {
+export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onRetryToInput, onSetEditContent }) => {
   const isUser = message.type === 'user';
   const { openModal } = useImageModal();
   const { text: cleanText, images: extractedImages } = isUser ? 
@@ -66,9 +65,9 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onRetry, onEd
   
   const allImages = [...(message.images || []), ...extractedImages];
   
-  const handleEditAndResend = () => {
-    if (onEditAndResend && onSetEditContent) {
-      onEditAndResend(message.id, onSetEditContent);
+  const handleRetryToInput = () => {
+    if (onRetryToInput && onSetEditContent) {
+      onRetryToInput(message.id, onSetEditContent);
     }
   };
 
@@ -113,21 +112,12 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onRetry, onEd
           {message.hasError && (
             <div className="mt-3 pt-3 border-t border-red-200 flex gap-2">
               <button
-                onClick={onRetry}
+                onClick={handleRetryToInput}
                 className="flex items-center gap-1 px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-xs font-medium transition-colors duration-200"
               >
-                <RotateCcw size={12} />
+                <Edit3 size={12} />
                 重新发送
               </button>
-              {isUser && (
-                <button
-                  onClick={handleEditAndResend}
-                  className="flex items-center gap-1 px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-xs font-medium transition-colors duration-200"
-                >
-                  <Edit3 size={12} />
-                  编辑重发
-                </button>
-              )}
             </div>
           )}
         </div>
