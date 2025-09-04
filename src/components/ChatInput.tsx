@@ -88,7 +88,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                 adjustTextareaHeight();
               }}
               onKeyDown={handleKeyDown}
-              placeholder="Message Gemini AI..."
+              placeholder="与 DeepSeek AI 对话..."
               className="w-full px-4 py-3 pr-12 rounded-2xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none min-h-[48px] max-h-[120px] bg-white/90"
               disabled={isLoading}
               rows={1}

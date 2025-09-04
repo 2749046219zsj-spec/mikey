@@ -1,7 +1,8 @@
 import { ApiResponse } from '../types/chat';
 
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const API_URL = 'https://api.poe.com/v1/chat/completions';
+// 使用国内可访问的 AI API 服务
+const API_URL = 'https://api.deepseek.com/v1/chat/completions';
+const API_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY;
 
 export class GeminiApiService {
   private async convertImageToBase64(file: File): Promise<string> {
@@ -9,7 +10,9 @@ export class GeminiApiService {
       const reader = new FileReader();
       reader.onload = () => {
         const base64 = reader.result as string;
-        resolve(base64);
+        // 移除 data:image/jpeg;base64, 前缀，只保留 base64 数据
+        const base64Data = base64.split(',')[1];
+        resolve(base64Data);
       };
       reader.onerror = reject;
       reader.readAsDataURL(file);
@@ -17,10 +20,14 @@ export class GeminiApiService {
   }
 
   async sendMessage(text: string, images: File[] = []): Promise<string> {
+    if (!API_KEY) {
+      throw new Error('请在 .env 文件中设置 VITE_DEEPSEEK_API_KEY');
+    }
+
     try {
       const content = [];
       
-      // Add text content
+      // 添加文本内容
       if (text.trim()) {
         content.push({
           type: "text",
@@ -28,25 +35,29 @@ export class GeminiApiService {
         });
       }
 
-      // Add image content
-      for (const image of images) {
-        const base64Data = await this.convertImageToBase64(image);
-        content.push({
-          type: "image_url",
-          image_url: {
-            url: base64Data
-          }
-        });
+      // 添加图片内容（如果支持）
+      if (images.length > 0) {
+        for (const image of images) {
+          const base64Data = await this.convertImageToBase64(image);
+          content.push({
+            type: "image_url",
+            image_url: {
+              url: `data:${image.type};base64,${base64Data}`
+            }
+          });
+        }
       }
 
       const requestBody = {
-        model: "Gemini-2.5-Flash-Image",
+        model: "deepseek-chat",
         messages: [
           {
             role: "user",
-            content: content
+            content: images.length > 0 ? content : text
           }
-        ]
+        ],
+        temperature: 0.7,
+        max_tokens: 2000
       };
 
       const response = await fetch(API_URL, {
@@ -60,14 +71,14 @@ export class GeminiApiService {
 
       if (!response.ok) {
         const errorText = await response.text();
-        let errorMessage = `HTTP error! status: ${response.status}`;
+        let errorMessage = `请求失败: ${response.status}`;
         
         if (errorText.trim()) {
           try {
             const errorData = JSON.parse(errorText);
             errorMessage = errorData.error?.message || errorMessage;
           } catch {
-            errorMessage = `${errorMessage} - Response: ${errorText}`;
+            errorMessage = `${errorMessage} - ${errorText}`;
           }
         }
         
@@ -77,23 +88,23 @@ export class GeminiApiService {
       const responseText = await response.text();
       
       if (!responseText.trim()) {
-        throw new Error('Empty response received from API');
+        throw new Error('API 返回空响应');
       }
       
       let data;
       try {
         data = JSON.parse(responseText);
       } catch (parseError) {
-        throw new Error(`Invalid JSON response: ${responseText}`);
+        throw new Error(`无效的 JSON 响应: ${responseText}`);
       }
       
       if (!data.choices || data.choices.length === 0) {
-        throw new Error('No response generated');
+        throw new Error('API 未生成响应');
       }
 
       return data.choices[0].message.content;
     } catch (error) {
-      console.error('Poe API Error:', error);
+      console.error('DeepSeek API 错误:', error);
       throw error;
     }
   }

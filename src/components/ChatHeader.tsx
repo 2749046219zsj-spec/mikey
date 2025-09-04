@@ -16,8 +16,8 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({ onClearChat, messageCoun
               <Bot size={20} className="text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold text-gray-800">Gemini AI Chat</h1>
-              <p className="text-sm text-gray-600">Powered by Gemini 2.5 Flash</p>
+              <h1 className="text-xl font-semibold text-gray-800">DeepSeek AI Chat</h1>
+              <p className="text-sm text-gray-600">基于 DeepSeek 模型</p>
             </div>
           </div>
           

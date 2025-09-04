@@ -32,11 +32,11 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
             <Bot size={24} className="text-white" />
           </div>
           <h2 className="text-2xl font-semibold text-gray-800 mb-2">
-            Welcome to Gemini AI
+            欢迎使用 DeepSeek AI
           </h2>
           <p className="text-gray-600 leading-relaxed">
-            Start a conversation with Gemini 2.5 Flash. You can send text messages, 
-            upload images for analysis, or ask questions about anything.
+            开始与 DeepSeek AI 对话。你可以发送文本消息，
+            上传图片进行分析，或询问任何问题。
           </p>
         </div>
       </div>
@@ -63,7 +63,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
             <div className="bg-white border border-gray-200 rounded-2xl px-4 py-3 shadow-sm">
               <div className="flex items-center gap-2">
                 <Loader2 size={16} className="animate-spin text-purple-500" />
-                <span className="text-sm text-gray-600">Gemini is thinking...</span>
+                <span className="text-sm text-gray-600">AI 正在思考中...</span>
               </div>
             </div>
           </div>
