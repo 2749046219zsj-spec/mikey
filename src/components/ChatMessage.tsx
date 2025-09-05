@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bot, User, RotateCcw, Edit3 } from 'lucide-react';
+import { Bot, User, RotateCcw, Edit3, Download } from 'lucide-react';
 import { Message } from '../types/chat';
 import { useImageModal } from '../hooks/useImageModal';
 
@@ -65,6 +65,57 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onRetryToInpu
   
   const allImages = [...(message.images || []), ...extractedImages];
   
+  const downloadImage = async (imageUrl: string, index: number) => {
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      
+      // Create a canvas to convert to JPG
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        
+        // Fill white background for JPG
+        ctx!.fillStyle = 'white';
+        ctx!.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw the image
+        ctx!.drawImage(img, 0, 0);
+        
+        // Convert to JPG and download
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `image_${Date.now()}_${index + 1}.jpg`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }
+        }, 'image/jpeg', 0.9);
+      };
+      
+      img.crossOrigin = 'anonymous';
+      img.src = imageUrl;
+    } catch (error) {
+      console.error('Download failed:', error);
+      // Fallback: direct download
+      const a = document.createElement('a');
+      a.href = imageUrl;
+      a.download = `image_${Date.now()}_${index + 1}.jpg`;
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  };
+
   const handleRetryToInput = () => {
     if (onRetryToInput && onSetEditContent) {
       onRetryToInput(message.id, onSetEditContent);
@@ -90,17 +141,33 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onRetryToInpu
           {allImages && allImages.length > 0 && (
             <div className="mb-3 grid grid-cols-1 gap-2 max-w-sm">
               {allImages.map((imageUrl, index) => (
-                <img
+                <div
                   key={index}
-                  src={imageUrl}
-                  alt={`Uploaded image ${index + 1}`}
-                  className="rounded-lg object-cover w-full max-h-64 border cursor-pointer hover:opacity-90 transition-opacity duration-200"
-                  onClick={() => openModal(imageUrl)}
-                  onError={(e) => {
-                    console.error('Image failed to load:', imageUrl);
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
+                  className="relative group"
+                >
+                  <img
+                    src={imageUrl}
+                    alt={`Uploaded image ${index + 1}`}
+                    className="rounded-lg object-cover w-full max-h-64 border cursor-pointer hover:opacity-90 transition-opacity duration-200"
+                    onClick={() => openModal(imageUrl)}
+                    onError={(e) => {
+                      console.error('Image failed to load:', imageUrl);
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                  {!isUser && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        downloadImage(imageUrl, index);
+                      }}
+                      className="absolute top-2 right-2 w-8 h-8 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                      title="Download as JPG"
+                    >
+                      <Download size={14} />
+                    </button>
+                  )}
+                </div>
               ))}
             </div>
           )}

@@ -19,6 +19,27 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const [images, setImages] = useState<File[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const handlePaste = async (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    const imageFiles: File[] = [];
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        if (file) {
+          imageFiles.push(file);
+        }
+      }
+    }
+
+    if (imageFiles.length > 0) {
+      e.preventDefault();
+      setImages([...images, ...imageFiles]);
+    }
+  };
+
   // 当有编辑内容时，填充到输入框
   React.useEffect(() => {
     if (editContent) {
@@ -87,6 +108,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                 setText(e.target.value);
                 adjustTextareaHeight();
               }}
+              onPaste={handlePaste}
               onKeyDown={handleKeyDown}
               placeholder="Message Gemini AI..."
               className="w-full px-4 py-3 pr-12 rounded-2xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none min-h-[48px] max-h-[120px] bg-white/90"
