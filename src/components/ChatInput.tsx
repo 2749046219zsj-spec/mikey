@@ -18,6 +18,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const [text, setText] = useState('');
   const [images, setImages] = useState<File[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // 当有编辑内容时，填充到输入框
   React.useEffect(() => {
@@ -31,6 +32,39 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     }
   }, [editContent]);
 
+  // 添加全局粘贴监听
+  React.useEffect(() => {
+    const handleGlobalPaste = (e: ClipboardEvent) => {
+      // 检查是否在输入框区域内
+      const target = e.target as HTMLElement;
+      const isInInputArea = containerRef.current?.contains(target);
+      
+      if (isInInputArea) {
+        const items = e.clipboardData?.items;
+        if (!items) return;
+
+        const imageFiles: File[] = [];
+        
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          if (item.type.startsWith('image/')) {
+            const file = item.getAsFile();
+            if (file) {
+              imageFiles.push(file);
+            }
+          }
+        }
+
+        if (imageFiles.length > 0) {
+          e.preventDefault();
+          setImages(prev => [...prev, ...imageFiles]);
+        }
+      }
+    };
+
+    document.addEventListener('paste', handleGlobalPaste);
+    return () => document.removeEventListener('paste', handleGlobalPaste);
+  }, []);
   const handleSubmit = () => {
     if ((!text.trim() && images.length === 0) || isLoading) return;
     
@@ -60,7 +94,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   return (
-    <div className="border-t border-gray-200 bg-white/80 backdrop-blur-sm">
+    <div ref={containerRef} className="border-t border-gray-200 bg-white/80 backdrop-blur-sm">
       <div className="max-w-4xl mx-auto p-4">
         {editContent && (
           <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -109,7 +143,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         </div>
         
         <p className="text-xs text-gray-500 mt-2 text-center">
-          Press Enter to send, Shift+Enter for new line
+          按 Enter 发送，Shift+Enter 换行，Ctrl+V 粘贴图片
         </p>
       </div>
     </div>
