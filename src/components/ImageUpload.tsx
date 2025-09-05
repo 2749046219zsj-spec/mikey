@@ -20,26 +20,6 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ onImagesChange, images
     onImagesChange([...images, ...imageFiles]);
   };
 
-  const handlePaste = (e: React.ClipboardEvent) => {
-    const items = e.clipboardData?.items;
-    if (!items) return;
-
-    const imageFiles: File[] = [];
-    
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      if (item.type.startsWith('image/')) {
-        const file = item.getAsFile();
-        if (file) {
-          imageFiles.push(file);
-        }
-      }
-    }
-
-    if (imageFiles.length > 0) {
-      onImagesChange([...images, ...imageFiles]);
-    }
-  };
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
@@ -92,9 +72,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ onImagesChange, images
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
-        onPaste={handlePaste}
         onClick={() => fileInputRef.current?.click()}
-        tabIndex={0}
       >
         <input
           ref={fileInputRef}
@@ -110,10 +88,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ onImagesChange, images
             {isDragOver ? <ImageIcon size={16} className="text-purple-600" /> : <Upload size={16} className="text-gray-500" />}
           </div>
           <p className="text-sm text-gray-600">
-            {isDragOver ? 'Drop images here' : 'Click, drag, or paste images to upload'}
-          </p>
-          <p className="text-xs text-gray-500">
-            支持 Ctrl+V 粘贴剪贴板中的图片
+            {isDragOver ? 'Drop images here' : 'Click or drag images to upload'}
           </p>
         </div>
       </div>
