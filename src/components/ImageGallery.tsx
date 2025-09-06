@@ -7,17 +7,20 @@ export const ImageGallery: React.FC = () => {
   const { 
     images, 
     selectedIndex, 
-    isVisible, 
+    isVisible,
+    isKeyboardActive,
     selectImage, 
     nextImage, 
     prevImage, 
-    toggleVisibility 
+    toggleVisibility,
+    activateKeyboard,
+    deactivateKeyboard
   } = useImageGallery();
   const { openModal } = useImageModal();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (images.length === 0) return;
+      if (images.length === 0 || !isKeyboardActive) return;
       
       switch (e.key) {
         case 'ArrowUp':
@@ -34,12 +37,16 @@ export const ImageGallery: React.FC = () => {
             openModal(images[selectedIndex]);
           }
           break;
+        case 'Escape':
+          e.preventDefault();
+          deactivateKeyboard();
+          break;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [images, selectedIndex, nextImage, prevImage, openModal]);
+  }, [images, selectedIndex, isKeyboardActive, nextImage, prevImage, openModal, deactivateKeyboard]);
 
   const downloadImage = async (imageUrl: string, index: number) => {
     try {
@@ -102,16 +109,29 @@ export const ImageGallery: React.FC = () => {
       </button>
 
       {/* Gallery Sidebar */}
-      <div className={`fixed left-0 top-0 h-full bg-white/95 backdrop-blur-sm border-r border-gray-200 shadow-lg z-20 transition-transform duration-300 ${
+      <div 
+        className={`fixed left-0 top-0 h-full bg-white/95 backdrop-blur-sm border-r border-gray-200 shadow-lg z-20 transition-transform duration-300 ${
         isVisible ? 'translate-x-0' : '-translate-x-full'
-      }`} style={{ width: '320px' }}>
+      } ${isKeyboardActive ? 'ring-2 ring-purple-500' : ''}`} 
+        style={{ width: '320px' }}
+        onClick={activateKeyboard}
+        onMouseEnter={activateKeyboard}
+        onMouseLeave={deactivateKeyboard}
+      >
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-gray-800">Generated Images</h3>
             <span className="text-sm text-gray-500">{images.length} images</span>
           </div>
-          <p className="text-xs text-gray-500 mt-1">
-            Use ↑↓ keys to navigate, Enter to enlarge
+          <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+            {isKeyboardActive ? (
+              <>
+                <span className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></span>
+                Use ↑↓ keys to navigate, Enter to enlarge, Esc to exit
+              </>
+            ) : (
+              'Click or hover to activate keyboard navigation'
+            )}
           </p>
         </div>
 
@@ -125,8 +145,14 @@ export const ImageGallery: React.FC = () => {
                   : 'hover:shadow-md'
               }`}
               onClick={() => {
+                activateKeyboard();
                 selectImage(index);
                 openModal(imageUrl);
+              }}
+              onMouseEnter={() => {
+                if (isKeyboardActive) {
+                  selectImage(index);
+                }
               }}
             >
               <img
@@ -168,7 +194,7 @@ export const ImageGallery: React.FC = () => {
         </div>
 
         {/* Navigation hints */}
-        {images.length > 1 && (
+        {images.length > 1 && isKeyboardActive && (
           <div className="absolute bottom-4 left-4 right-4 flex justify-center gap-2">
             <div className="flex items-center gap-1 px-2 py-1 bg-black/50 text-white text-xs rounded">
               <ChevronLeft size={12} />
@@ -177,6 +203,9 @@ export const ImageGallery: React.FC = () => {
             <div className="flex items-center gap-1 px-2 py-1 bg-black/50 text-white text-xs rounded">
               <ChevronRight size={12} />
               <span>↓</span>
+            </div>
+            <div className="flex items-center gap-1 px-2 py-1 bg-black/50 text-white text-xs rounded">
+              <span>Esc</span>
             </div>
           </div>
         )}

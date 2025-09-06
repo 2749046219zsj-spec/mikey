@@ -4,12 +4,15 @@ interface ImageGalleryState {
   images: string[];
   selectedIndex: number;
   isVisible: boolean;
+  isKeyboardActive: boolean;
   addImage: (url: string) => void;
   addImages: (urls: string[]) => void;
   selectImage: (index: number) => void;
   nextImage: () => void;
   prevImage: () => void;
   toggleVisibility: () => void;
+  activateKeyboard: () => void;
+  deactivateKeyboard: () => void;
   clearImages: () => void;
 }
 
@@ -17,6 +20,7 @@ export const useImageGallery = create<ImageGalleryState>((set, get) => ({
   images: [],
   selectedIndex: 0,
   isVisible: true,
+  isKeyboardActive: false,
   
   addImage: (url: string) => set((state) => ({
     images: state.images.includes(url) ? state.images : [...state.images, url]
@@ -48,8 +52,17 @@ export const useImageGallery = create<ImageGalleryState>((set, get) => ({
     isVisible: !state.isVisible
   })),
   
+  activateKeyboard: () => set(() => ({
+    isKeyboardActive: true
+  })),
+  
+  deactivateKeyboard: () => set(() => ({
+    isKeyboardActive: false
+  })),
+  
   clearImages: () => set(() => ({
     images: [],
-    selectedIndex: 0
+    selectedIndex: 0,
+    isKeyboardActive: false
   }))
 }));
