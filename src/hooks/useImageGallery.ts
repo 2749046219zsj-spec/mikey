@@ -19,11 +19,11 @@ export const useImageGallery = create<ImageGalleryState>((set, get) => ({
   isVisible: true,
   
   addImage: (url: string) => set((state) => ({
-    images: [...state.images, url]
+    images: state.images.includes(url) ? state.images : [...state.images, url]
   })),
   
   addImages: (urls: string[]) => set((state) => ({
-    images: [...state.images, ...urls]
+    images: [...state.images, ...urls.filter(url => !state.images.includes(url))]
   })),
   
   selectImage: (index: number) => set(() => ({

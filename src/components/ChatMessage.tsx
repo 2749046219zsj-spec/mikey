@@ -61,9 +61,12 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onRetryToInpu
   const isUser = message.type === 'user';
   const { openModal } = useImageModal();
   const { addImages } = useImageGallery();
-  const { text: cleanText, images: extractedImages } = isUser ? 
-    { text: message.content, images: [] } : 
-    extractImageUrls(message.content);
+  
+  const { text: cleanText, images: extractedImages } = React.useMemo(() => {
+    return isUser ? 
+      { text: message.content, images: [] } : 
+      extractImageUrls(message.content);
+  }, [isUser, message.content]);
   
   const allImages = [...(message.images || []), ...extractedImages];
   
