@@ -2,6 +2,7 @@ import React from 'react';
 import { Bot, User, RotateCcw, Edit3, Download } from 'lucide-react';
 import { Message } from '../types/chat';
 import { useImageModal } from '../hooks/useImageModal';
+import { useImageGallery } from '../hooks/useImageGallery';
 
 interface ChatMessageProps {
   message: Message;
@@ -59,11 +60,19 @@ const extractImageUrls = (text: string): { text: string; images: string[] } => {
 export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onRetryToInput, onSetEditContent }) => {
   const isUser = message.type === 'user';
   const { openModal } = useImageModal();
+  const { addImages } = useImageGallery();
   const { text: cleanText, images: extractedImages } = isUser ? 
     { text: message.content, images: [] } : 
     extractImageUrls(message.content);
   
   const allImages = [...(message.images || []), ...extractedImages];
+  
+  // Add AI generated images to gallery
+  React.useEffect(() => {
+    if (!isUser && extractedImages.length > 0) {
+      addImages(extractedImages);
+    }
+  }, [isUser, extractedImages, addImages]);
   
   const downloadImage = async (imageUrl: string, index: number) => {
     try {
