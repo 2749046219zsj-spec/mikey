@@ -30,7 +30,10 @@ function App() {
 
   const handleClearChat = () => {
     clearChat();
-    clearImages();
+    // 延迟清理图片，避免状态冲突
+    setTimeout(() => {
+      clearImages();
+    }, 100);
   };
 
   return (

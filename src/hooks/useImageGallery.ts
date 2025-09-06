@@ -23,7 +23,9 @@ export const useImageGallery = create<ImageGalleryState>((set, get) => ({
   })),
   
   addImages: (urls: string[]) => set((state) => ({
-    images: [...state.images, ...urls.filter(url => !state.images.includes(url))]
+    images: [...state.images, ...urls.filter(url => !state.images.includes(url))],
+    // 如果是第一次添加图片，自动显示面板
+    isVisible: state.images.length === 0 ? true : state.isVisible
   })),
   
   selectImage: (index: number) => set(() => ({

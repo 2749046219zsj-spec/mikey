@@ -73,7 +73,12 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onRetryToInpu
   // Add AI generated images to gallery
   React.useEffect(() => {
     if (!isUser && extractedImages.length > 0) {
-      addImages(extractedImages);
+      // 使用 setTimeout 来避免在渲染过程中更新状态
+      const timeoutId = setTimeout(() => {
+        addImages(extractedImages);
+      }, 0);
+      
+      return () => clearTimeout(timeoutId);
     }
   }, [isUser, extractedImages, addImages]);
   
