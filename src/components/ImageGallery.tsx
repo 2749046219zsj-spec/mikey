@@ -136,61 +136,63 @@ export const ImageGallery: React.FC = () => {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ height: 'calc(100vh - 80px)' }}>
-          {images.map((imageUrl, index) => (
-            <div
-              key={index}
-              className={`relative group cursor-pointer rounded-lg overflow-hidden transition-all duration-200 ${
-                selectedIndex === index 
-                  ? 'ring-2 ring-purple-500 shadow-lg' 
-                  : 'hover:shadow-md'
-              }`}
-              onClick={() => {
-                activateKeyboard();
-                selectImage(index);
-                openModal(imageUrl);
-              }}
-              onMouseEnter={() => {
-                if (isKeyboardActive) {
+          <div className="grid grid-cols-3 gap-2">
+            {images.map((imageUrl, index) => (
+              <div
+                key={index}
+                className={`relative group cursor-pointer rounded-lg overflow-hidden transition-all duration-200 ${
+                  selectedIndex === index 
+                    ? 'ring-2 ring-purple-500 shadow-lg' 
+                    : 'hover:shadow-md'
+                }`}
+                onClick={() => {
+                  activateKeyboard();
                   selectImage(index);
-                }
-              }}
-            >
-              <img
-                src={imageUrl}
-                alt={`Generated image ${index + 1}`}
-                className="w-full aspect-square object-cover"
-                onError={(e) => {
-                  console.error('Gallery image failed to load:', imageUrl);
-                  e.currentTarget.style.display = 'none';
+                  openModal(imageUrl);
                 }}
-              />
-              
-              {/* Overlay */}
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200" />
-              
-              {/* Selected indicator */}
-              {selectedIndex === index && (
-                <div className="absolute top-2 left-2 w-3 h-3 bg-purple-500 rounded-full border-2 border-white" />
-              )}
-              
-              {/* Download button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  downloadImage(imageUrl, index);
+                onMouseEnter={() => {
+                  if (isKeyboardActive) {
+                    selectImage(index);
+                  }
                 }}
-                className="absolute top-2 right-2 w-8 h-8 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                title="Download as JPG"
               >
-                <Download size={14} />
-              </button>
-              
-              {/* Image number */}
-              <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/50 text-white text-xs rounded">
-                #{index + 1}
+                <img
+                  src={imageUrl}
+                  alt={`Generated image ${index + 1}`}
+                  className="w-full aspect-square object-cover"
+                  onError={(e) => {
+                    console.error('Gallery image failed to load:', imageUrl);
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+                
+                {/* Overlay */}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200" />
+                
+                {/* Selected indicator */}
+                {selectedIndex === index && (
+                  <div className="absolute top-1 left-1 w-2 h-2 bg-purple-500 rounded-full border border-white" />
+                )}
+                
+                {/* Download button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    downloadImage(imageUrl, index);
+                  }}
+                  className="absolute top-1 right-1 w-6 h-6 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                  title="Download as JPG"
+                >
+                  <Download size={10} />
+                </button>
+                
+                {/* Image number */}
+                <div className="absolute bottom-1 left-1 px-1 py-0.5 bg-black/50 text-white text-xs rounded">
+                  #{index + 1}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         {/* Navigation hints */}
