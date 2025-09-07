@@ -37,16 +37,16 @@ function App() {
   };
 
   return (
-    <div className="h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex flex-col overflow-hidden">
+    <div className="h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex overflow-hidden">
       <ImageGallery />
       
-      <ChatHeader 
-        onClearChat={handleClearChat}
-        messageCount={messages.length}
-      />
-      
-      <div className="flex-1 flex">
-        <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col">
+        <ChatHeader 
+          onClearChat={handleClearChat}
+          messageCount={messages.length}
+        />
+        
+        <div className="flex-1 flex flex-col min-h-0">
           <ChatContainer 
             messages={messages}
             isLoading={isLoading}

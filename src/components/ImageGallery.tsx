@@ -158,7 +158,7 @@ export const ImageGallery: React.FC = () => {
               <img
                 src={imageUrl}
                 alt={`Generated image ${index + 1}`}
-                className="w-full h-32 object-cover"
+                className="w-full aspect-square object-cover"
                 onError={(e) => {
                   console.error('Gallery image failed to load:', imageUrl);
                   e.currentTarget.style.display = 'none';
