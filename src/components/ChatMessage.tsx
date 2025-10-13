@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bot, User, RotateCcw, Edit3, Download } from 'lucide-react';
+import { Bot, User, RotateCcw, CreditCard as Edit3, Download } from 'lucide-react';
 import { Message } from '../types/chat';
 import { useImageModal } from '../hooks/useImageModal';
 import { useImageGallery } from '../hooks/useImageGallery';
