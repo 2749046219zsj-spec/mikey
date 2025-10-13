@@ -3,6 +3,7 @@ import { MessageCircle, X, Minus, Bot, User, Send, Loader2, Settings, Image, Pap
 import { useWidgetChat } from '../hooks/useWidgetChat';
 import { useImageSelector } from '../hooks/useImageSelector';
 import { StylePresetDropdown } from './StylePresetDropdown';
+import { CraftSelector } from './CraftSelector';
 
 interface Position {
   x: number;
@@ -209,6 +210,13 @@ export const ChatWidget: React.FC = () => {
     setInputText(newText);
   };
 
+  // 处理工艺选择确认
+  const handleCraftsConfirm = (crafts: string[]) => {
+    const craftsText = crafts.join('、');
+    const newText = inputText ? `${inputText}, ${craftsText}` : craftsText;
+    setInputText(newText);
+  };
+
   // 格式化时间
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -409,8 +417,7 @@ export const ChatWidget: React.FC = () => {
 
                 <div className="flex items-center gap-2 mt-2">
                   <StylePresetDropdown onSelectStyle={handleStyleSelect} buttonText="风格" />
-                  <StylePresetDropdown onSelectStyle={handleStyleSelect} buttonText="艺术" />
-                  <StylePresetDropdown onSelectStyle={handleStyleSelect} buttonText="流派" />
+                  <CraftSelector onConfirm={handleCraftsConfirm} buttonText="工艺" />
                 </div>
 
                 {widgetMessages.length > 0 && (
