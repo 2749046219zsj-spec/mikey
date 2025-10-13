@@ -14,13 +14,6 @@ const models = [
     description: 'Fast image analysis',
     icon: Bot,
     color: 'from-purple-500 to-blue-600'
-  },
-  {
-    id: 'GPT-4.1',
-    name: 'GPT-4.1',
-    description: 'Advanced reasoning',
-    icon: Zap,
-    color: 'from-emerald-500 to-teal-600'
   }
 ];
 
