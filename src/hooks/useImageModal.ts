@@ -12,14 +12,25 @@ export const useImageModal = create<ImageModalState>((set) => ({
   isOpen: false,
   imageUrl: null,
   openModal: (url: string) => {
-    const galleryState = useImageGallery.getState();
-    const imageIndex = galleryState.images.findIndex(img => img === url);
+    try {
+      if (!url) {
+        console.error('Cannot open modal: Invalid URL');
+        return;
+      }
 
-    if (imageIndex !== -1) {
-      galleryState.selectImage(imageIndex);
+      const galleryState = useImageGallery.getState();
+      if (galleryState && galleryState.images) {
+        const imageIndex = galleryState.images.findIndex(img => img === url);
+
+        if (imageIndex !== -1 && galleryState.selectImage) {
+          galleryState.selectImage(imageIndex);
+        }
+      }
+
+      set({ isOpen: true, imageUrl: url });
+    } catch (error) {
+      console.error('Error opening modal:', error);
     }
-
-    set({ isOpen: true, imageUrl: url });
   },
   closeModal: () => set({ isOpen: false, imageUrl: null }),
 }));

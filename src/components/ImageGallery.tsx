@@ -348,14 +348,23 @@ export const ImageGallery: React.FC = () => {
                     ? 'ring-2 ring-blue-500 shadow-md'
                     : 'hover:shadow-md'
                 }`}
-                onClick={() => {
-                  activateKeyboard();
-                  selectImage(index);
-                  openModal(imageUrl);
+                onClick={(e) => {
+                  try {
+                    e.stopPropagation();
+                    activateKeyboard();
+                    selectImage(index);
+                    openModal(imageUrl);
+                  } catch (error) {
+                    console.error('Error opening image:', error);
+                  }
                 }}
                 onMouseEnter={() => {
-                  if (isKeyboardActive) {
-                    selectImage(index);
+                  try {
+                    if (isKeyboardActive) {
+                      selectImage(index);
+                    }
+                  } catch (error) {
+                    console.error('Error selecting image:', error);
                   }
                 }}
               >
@@ -363,9 +372,13 @@ export const ImageGallery: React.FC = () => {
                   src={imageUrl}
                   alt={`Generated image ${index + 1}`}
                   className="w-full aspect-square object-cover"
+                  loading="lazy"
                   onError={(e) => {
                     console.error('Gallery image failed to load:', imageUrl);
-                    e.currentTarget.style.display = 'none';
+                    const target = e.currentTarget;
+                    target.style.backgroundColor = '#f3f4f6';
+                    target.alt = 'Image failed to load';
+                    target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%23f3f4f6"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" fill="%239ca3af" font-size="10" dy=".3em"%3ELoad Failed%3C/text%3E%3C/svg%3E';
                   }}
                 />
 

@@ -38,8 +38,9 @@ export const ImageModal: React.FC = () => {
   }, [isOpen, closeModal, nextImage, prevImage]);
 
   // 当选中的图片改变时，更新模态框显示的图片
-  const currentImageUrl = images[selectedIndex] || imageUrl;
-  if (!isOpen || !imageUrl) return null;
+  const currentImageUrl = (images && images[selectedIndex]) || imageUrl;
+
+  if (!isOpen || !currentImageUrl) return null;
 
   return (
     <div 
@@ -85,6 +86,10 @@ export const ImageModal: React.FC = () => {
           alt="Enlarged view"
           className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
           onClick={(e) => e.stopPropagation()}
+          onError={(e) => {
+            console.error('Modal image failed to load:', currentImageUrl);
+            e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect width="200" height="200" fill="%23f3f4f6"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" fill="%239ca3af" dy=".3em"%3EImage Load Failed%3C/text%3E%3C/svg%3E';
+          }}
         />
         
         {/* 图片计数器 */}

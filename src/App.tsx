@@ -6,6 +6,7 @@ import { ImageModal } from './components/ImageModal';
 import { ImageGallery } from './components/ImageGallery';
 import { ChatWidget } from './components/ChatWidget';
 import { ImageSelector } from './components/ImageSelector';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { useChat } from './hooks/useChat';
 
 function App() {
@@ -46,40 +47,42 @@ function App() {
   };
 
   return (
-    <div className="h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex flex-col">
-      <ChatHeader
-        onClearChat={clearChat}
-        messageCount={messages.length}
-        selectedModel={selectedModel}
-        onModelChange={setSelectedModel}
-        isLoading={isLoading}
-        queueInfo={queueInfo}
-        onStopQueue={stopQueue}
-        onClearQueue={clearQueue}
-      />
-      
-      <ChatContainer 
-        messages={messages}
-        isLoading={isLoading}
-        error={error}
-        onRetryToInput={retryToInput}
-        onSetEditContent={handleSetEditContent}
-      />
-      
-      <ChatInput 
-        onSendMessage={handleSendMessage}
-        isLoading={isLoading}
-        editContent={editContent}
-        onClearEditContent={handleClearEditContent}
-      />
-      
-      <ImageModal />
-      <ImageGallery />
-      <ImageSelector />
+    <ErrorBoundary>
+      <div className="h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex flex-col">
+        <ChatHeader
+          onClearChat={clearChat}
+          messageCount={messages.length}
+          selectedModel={selectedModel}
+          onModelChange={setSelectedModel}
+          isLoading={isLoading}
+          queueInfo={queueInfo}
+          onStopQueue={stopQueue}
+          onClearQueue={clearQueue}
+        />
 
-      {/* 客服弹窗 */}
-      <ChatWidget />
-    </div>
+        <ChatContainer
+          messages={messages}
+          isLoading={isLoading}
+          error={error}
+          onRetryToInput={retryToInput}
+          onSetEditContent={handleSetEditContent}
+        />
+
+        <ChatInput
+          onSendMessage={handleSendMessage}
+          isLoading={isLoading}
+          editContent={editContent}
+          onClearEditContent={handleClearEditContent}
+        />
+
+        <ImageModal />
+        <ImageGallery />
+        <ImageSelector />
+
+        {/* 客服弹窗 */}
+        <ChatWidget />
+      </div>
+    </ErrorBoundary>
   );
 }
 
