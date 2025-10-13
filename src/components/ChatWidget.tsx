@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Minus, Bot, User, Send, Loader2, Settings, Image, FileText, Lightbulb, Palette } from 'lucide-react';
+import { MessageCircle, X, Minus, Bot, User, Send, Loader2, Settings } from 'lucide-react';
 import { useChat } from '../hooks/useChat';
 
 interface Position {
@@ -7,37 +7,6 @@ interface Position {
   y: number;
 }
 
-// 提示词模板
-const promptTemplates = [
-  {
-    id: 'image-analysis',
-    title: '图片分析',
-    icon: Image,
-    prompt: '请详细分析这张图片，包括：\n1. 图片内容描述\n2. 色彩搭配分析\n3. 构图特点\n4. 可能的用途或含义',
-    color: 'from-blue-500 to-blue-600'
-  },
-  {
-    id: 'content-writing',
-    title: '内容创作',
-    icon: FileText,
-    prompt: '请帮我创作一篇关于[主题]的文章，要求：\n1. 结构清晰，逻辑性强\n2. 语言生动有趣\n3. 字数控制在800-1200字\n4. 包含实用的建议或观点',
-    color: 'from-green-500 to-green-600'
-  },
-  {
-    id: 'idea-brainstorm',
-    title: '创意头脑风暴',
-    icon: Lightbulb,
-    prompt: '请为[项目/问题]提供创意解决方案：\n1. 至少提供5个不同角度的想法\n2. 每个想法要有具体的实施步骤\n3. 分析优缺点\n4. 推荐最佳方案',
-    color: 'from-yellow-500 to-orange-500'
-  },
-  {
-    id: 'design-feedback',
-    title: '设计反馈',
-    icon: Palette,
-    prompt: '请对这个设计作品提供专业反馈：\n1. 视觉效果评价\n2. 用户体验分析\n3. 改进建议\n4. 行业标准对比',
-    color: 'from-purple-500 to-pink-500'
-  }
-];
 export const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -45,7 +14,6 @@ export const ChatWidget: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState<Position>({ x: 0, y: 0 });
   const [inputText, setInputText] = useState('');
-  const [showPrompts, setShowPrompts] = useState(false);
   
   const widgetRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -126,11 +94,6 @@ export const ChatWidget: React.FC = () => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  // 使用提示词模板
-  const usePromptTemplate = (template: typeof promptTemplates[0]) => {
-    setInputText(template.prompt);
-    setShowPrompts(false);
-  };
   return (
     <>
       {/* 浮动按钮 */}
@@ -154,7 +117,7 @@ export const ChatWidget: React.FC = () => {
             left: position.x,
             top: position.y,
             width: '400px',
-            height: isMinimized ? '60px' : '600px'
+            height: isMinimized ? '60px' : '500px'
           }}
         >
           {/* 标题栏 */}
@@ -185,52 +148,13 @@ export const ChatWidget: React.FC = () => {
           {/* 聊天内容 */}
           {!isMinimized && (
             <>
-              {/* 提示词模板区域 */}
-              <div className="border-b border-gray-200 bg-gray-50">
-                <button
-                  onClick={() => setShowPrompts(!showPrompts)}
-                  className="w-full p-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors flex items-center justify-between"
-                >
-                  <span className="flex items-center gap-2">
-                    <Lightbulb size={16} className="text-orange-500" />
-                    提示词模板
-                  </span>
-                  <span className={`transform transition-transform ${showPrompts ? 'rotate-180' : ''}`}>
-                    ▼
-                  </span>
-                </button>
-                
-                {showPrompts && (
-                  <div className="p-3 space-y-2 max-h-40 overflow-y-auto">
-                    {promptTemplates.map((template) => {
-                      const Icon = template.icon;
-                      return (
-                        <button
-                          key={template.id}
-                          onClick={() => usePromptTemplate(template)}
-                          className={`w-full p-2 rounded-lg text-left text-sm hover:shadow-md transition-all duration-200 bg-gradient-to-r ${template.color} text-white`}
-                        >
-                          <div className="flex items-center gap-2 mb-1">
-                            <Icon size={14} />
-                            <span className="font-medium">{template.title}</span>
-                          </div>
-                          <div className="text-xs text-white/80 line-clamp-2">
-                            {template.prompt.split('\n')[0]}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
               {/* 消息区域 */}
-              <div className={`flex-1 overflow-y-auto p-4 bg-gray-50 ${showPrompts ? 'h-60' : 'h-80'}`}>
+              <div className="flex-1 overflow-y-auto p-4 h-80 bg-gray-50">
                 {widgetMessages.length === 0 ? (
                   <div className="text-center text-gray-500 mt-8">
                     <Bot size={32} className="mx-auto mb-2 text-gray-400" />
                     <p>你好！我是客服助手</p>
                     <p className="text-sm">有什么可以帮助你的吗？</p>
-                    <p className="text-xs mt-2 text-gray-400">💡 试试上面的提示词模板</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
