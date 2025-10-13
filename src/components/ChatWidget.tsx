@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Minus, Bot, User, Send, Loader2, Settings, Image, Paperclip, Zap, ArrowRight } from 'lucide-react';
+import { MessageCircle, X, Minus, Bot, User, Send, Loader2, Settings, Image, Paperclip } from 'lucide-react';
 import { useWidgetChat } from '../hooks/useWidgetChat';
 import { useImageSelector } from '../hooks/useImageSelector';
 
@@ -141,16 +141,15 @@ export const ChatWidget: React.FC = () => {
     setWidgetImages([]);
   };
 
-  // 监听AI回复，自动检测提示词
+  // 监听AI回复，自动检测提示词并直接发送到主界面
   useEffect(() => {
     if (widgetMessages.length > 0) {
       const lastMessage = widgetMessages[widgetMessages.length - 1];
-      if (lastMessage.type === 'ai' && !widgetLoading) {
+      if (lastMessage.type === 'ai' && !widgetLoading && !lastMessage.promptsSent) {
         const prompts = extractPrompts(lastMessage.content);
-        if (prompts.length > 0) { // 只要有提示词就显示发送按钮
-          // 在消息中添加发送按钮的标记
-          lastMessage.hasPrompts = true;
-          lastMessage.extractedPrompts = prompts;
+        if (prompts.length > 0) {
+          lastMessage.promptsSent = true;
+          handleSendPromptsToMain(prompts);
         }
       }
     }
@@ -306,21 +305,7 @@ export const ChatWidget: React.FC = () => {
                             )}
                             <p className="whitespace-pre-wrap">{message.content}</p>
                           </div>
-                          
-                          {/* 提示词发送按钮 */}
-                          {message.type === 'ai' && message.hasPrompts && message.extractedPrompts && (
-                            <div className="mt-2">
-                              <button
-                                onClick={() => handleSendPromptsToMain(message.extractedPrompts)}
-                                className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg text-xs font-medium hover:from-orange-600 hover:to-red-700 transition-all duration-200 shadow-md hover:shadow-lg"
-                              >
-                                <Zap size={14} />
-                                发送 {message.extractedPrompts.length} 个提示词到绘图
-                                <ArrowRight size={14} />
-                              </button>
-                            </div>
-                          )}
-                          
+
                           <div className={`text-xs text-gray-500 mt-1 ${
                             message.type === 'user' ? 'text-right' : 'text-left'
                           }`}>
