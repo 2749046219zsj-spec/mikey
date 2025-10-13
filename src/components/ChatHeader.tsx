@@ -1,12 +1,33 @@
 import React from 'react';
 import { Bot, Trash2 } from 'lucide-react';
+import { ModelSelector } from './ModelSelector';
 
 interface ChatHeaderProps {
   onClearChat: () => void;
   messageCount: number;
+  selectedModel: string;
+  onModelChange: (model: string) => void;
+  isLoading?: boolean;
 }
 
-export const ChatHeader: React.FC<ChatHeaderProps> = ({ onClearChat, messageCount }) => {
+export const ChatHeader: React.FC<ChatHeaderProps> = ({ 
+  onClearChat, 
+  messageCount, 
+  selectedModel, 
+  onModelChange, 
+  isLoading = false 
+}) => {
+  const getModelDisplayName = (modelId: string) => {
+    switch (modelId) {
+      case 'Gemini-2.5-Flash-Image':
+        return 'Gemini 2.5 Flash';
+      case 'GPT-5-Pro':
+        return 'GPT-5 Pro';
+      default:
+        return modelId;
+    }
+  };
+
   return (
     <div className="border-b border-gray-200 bg-white/90 backdrop-blur-sm sticky top-0 z-10">
       <div className="max-w-4xl mx-auto px-4 py-4">
@@ -16,8 +37,8 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({ onClearChat, messageCoun
               <Bot size={20} className="text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold text-gray-800">Gemini AI Chat</h1>
-              <p className="text-sm text-gray-600">Powered by Gemini 2.5 Flash</p>
+              <h1 className="text-xl font-semibold text-gray-800">AI Chat</h1>
+              <p className="text-sm text-gray-600">Powered by {getModelDisplayName(selectedModel)}</p>
             </div>
           </div>
           
@@ -30,6 +51,14 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({ onClearChat, messageCoun
               Clear Chat
             </button>
           )}
+        </div>
+        
+        <div className="mt-4">
+          <ModelSelector 
+            selectedModel={selectedModel}
+            onModelChange={onModelChange}
+            disabled={isLoading}
+          />
         </div>
       </div>
     </div>

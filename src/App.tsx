@@ -12,9 +12,11 @@ function App() {
     messages, 
     isLoading, 
     error, 
+    selectedModel,
     sendMessage, 
     retryToInput, 
-    clearChat 
+    clearChat,
+    setSelectedModel
   } = useChat();
   
   const { clearImages } = useImageGallery();
@@ -44,6 +46,9 @@ function App() {
         <ChatHeader 
           onClearChat={handleClearChat}
           messageCount={messages.length}
+          selectedModel={selectedModel}
+          onModelChange={setSelectedModel}
+          isLoading={isLoading}
         />
         
         <div className="flex-1 flex flex-col min-h-0">

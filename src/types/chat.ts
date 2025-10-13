@@ -7,12 +7,14 @@ export interface Message {
   hasError?: boolean;
   originalText?: string;
   originalImages?: File[];
+  model?: string;
 }
 
 export interface ChatState {
   messages: Message[];
   isLoading: boolean;
   error: string | null;
+  selectedModel: string;
 }
 
 export interface ApiResponse {
@@ -23,4 +25,3 @@ export interface ApiResponse {
       }>;
     };
   }>;
-}

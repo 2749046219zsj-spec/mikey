@@ -16,7 +16,7 @@ export class GeminiApiService {
     });
   }
 
-  async sendMessage(text: string, images: File[] = []): Promise<string> {
+  async sendMessage(text: string, images: File[] = [], model: string = 'Gemini-2.5-Flash-Image'): Promise<string> {
     try {
       const content = [];
       
@@ -40,7 +40,7 @@ export class GeminiApiService {
       }
 
       const requestBody = {
-        model: "Gemini-2.5-Flash-Image",
+        model: model,
         messages: [
           {
             role: "user",

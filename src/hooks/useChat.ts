@@ -6,7 +6,8 @@ export const useChat = () => {
   const [state, setState] = useState<ChatState>({
     messages: [],
     isLoading: false,
-    error: null
+    error: null,
+    selectedModel: 'Gemini-2.5-Flash-Image'
   });
   const [retryCallback, setRetryCallback] = useState<(() => void) | null>(null);
 
@@ -39,7 +40,8 @@ export const useChat = () => {
       content: text,
       images: imageUrls,
       originalText: text,
-      originalImages: images
+      originalImages: images,
+      model: state.selectedModel
     });
 
     setState(prev => ({ ...prev, isLoading: true, error: null }));
@@ -47,12 +49,13 @@ export const useChat = () => {
 
     try {
       // Send to Gemini API
-      const response = await geminiService.sendMessage(text, images);
+      const response = await geminiService.sendMessage(text, images, state.selectedModel);
 
       // Add AI response
       addMessage({
         type: 'ai',
-        content: response
+        content: response,
+        model: state.selectedModel
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred';
@@ -63,7 +66,8 @@ export const useChat = () => {
         content: `生成失败: ${errorMessage}`,
         hasError: true,
         originalText: text,
-        originalImages: images
+        originalImages: images,
+        model: state.selectedModel
       });
       
       setState(prev => ({
@@ -74,6 +78,7 @@ export const useChat = () => {
       setState(prev => ({ ...prev, isLoading: false }));
     }
   }, [addMessage, geminiService]);
+  }, [addMessage, geminiService, state.selectedModel]);
 
   const retryToInput = useCallback((messageId: string, onEdit: (text: string, images: File[]) => void) => {
     const message = state.messages.find(m => m.id === messageId);
@@ -82,21 +87,29 @@ export const useChat = () => {
     }
   }, [state.messages]);
 
+  const setSelectedModel = useCallback((model: string) => {
+    setState(prev => ({ ...prev, selectedModel: model }));
+  }, []);
+
   const clearChat = useCallback(() => {
     setState({
       messages: [],
       isLoading: false,
-      error: null
+      error: null,
+      selectedModel: state.selectedModel
     });
     setRetryCallback(null);
   }, []);
+  }, [state.selectedModel]);
 
   return {
     messages: state.messages,
     isLoading: state.isLoading,
     error: state.error,
+    selectedModel: state.selectedModel,
     sendMessage,
     retryToInput,
-    clearChat
+    clearChat,
+    setSelectedModel
   };
 };
