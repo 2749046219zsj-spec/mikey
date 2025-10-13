@@ -4,6 +4,7 @@ import { ChatInput } from './components/ChatInput';
 import { ChatHeader } from './components/ChatHeader';
 import { ImageModal } from './components/ImageModal';
 import { ImageGallery } from './components/ImageGallery';
+import { ChatWidget } from './components/ChatWidget';
 import { useChat } from './hooks/useChat';
 
 function App() {
@@ -60,6 +61,9 @@ function App() {
       
       <ImageModal />
       <ImageGallery />
+      
+      {/* 客服弹窗 */}
+      <ChatWidget />
     </div>
   );
 }
