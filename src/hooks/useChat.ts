@@ -48,8 +48,34 @@ export const useChat = () => {
     setRetryCallback(null);
 
     try {
+      // Build conversation history for API
+      const conversationHistory = state.messages.map(msg => {
+        if (msg.type === 'user') {
+          // For user messages, create content array
+          const content = [];
+          if (msg.originalText && msg.originalText.trim()) {
+            content.push({
+              type: "text",
+              text: msg.originalText
+            });
+          }
+          // Note: We don't include images in history to avoid token limits
+          return {
+            role: "user",
+            content: content.length > 0 ? content : [{ type: "text", text: msg.content }]
+          };
+        } else {
+          // For AI messages, extract clean text
+          const cleanContent = msg.content.replace(/(https?:\/\/[^\s\)]+\.(?:jpg|jpeg|png|gif|webp|svg)(?:\?[^\s]*)?)/gi, '').replace(/!\[generated_image_\d+\]/g, '').replace(/\(\s*\)/g, '').replace(/\n\s*\n/g, '\n').trim();
+          return {
+            role: "assistant",
+            content: cleanContent || msg.content
+          };
+        }
+      });
+
       // Send to Gemini API
-      const response = await geminiService.sendMessage(text, images, state.selectedModel);
+      const response = await geminiService.sendMessage(text, images, state.selectedModel, conversationHistory);
 
       // Add AI response
       addMessage({

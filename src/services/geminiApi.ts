@@ -16,7 +16,7 @@ export class GeminiApiService {
     });
   }
 
-  async sendMessage(text: string, images: File[] = [], model: string = 'Gemini-2.5-Flash-Image'): Promise<string> {
+  async sendMessage(text: string, images: File[] = [], model: string = 'Gemini-2.5-Flash-Image', conversationHistory: any[] = []): Promise<string> {
     try {
       const content = [];
       
@@ -39,14 +39,18 @@ export class GeminiApiService {
         });
       }
 
+      // Build messages array with conversation history
+      const messages = [
+        ...conversationHistory,
+        {
+          role: "user",
+          content: content
+        }
+      ];
+
       const requestBody = {
         model: model,
-        messages: [
-          {
-            role: "user",
-            content: content
-          }
-        ]
+        messages: messages
       };
 
       const response = await fetch(API_URL, {
