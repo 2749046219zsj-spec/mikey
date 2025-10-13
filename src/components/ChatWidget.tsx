@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Minus, Bot, User, Send, Loader2, Settings } from 'lucide-react';
+import { MessageCircle, X, Minus, Bot, User, Send, Loader2, Settings, Image, Paperclip } from 'lucide-react';
 import { useChat } from '../hooks/useChat';
 
 interface Position {
@@ -14,9 +14,11 @@ export const ChatWidget: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState<Position>({ x: 0, y: 0 });
   const [inputText, setInputText] = useState('');
+  const [widgetImages, setWidgetImages] = useState<File[]>([]);
   
   const widgetRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { messages: widgetMessages, isLoading: widgetLoading, sendMessage: widgetSendMessage, clearChat: widgetClearChat } = useChat();
 
@@ -77,8 +79,48 @@ export const ChatWidget: React.FC = () => {
   // 发送消息
   const handleSendMessage = () => {
     if (!inputText.trim() || widgetLoading) return;
-    widgetSendMessage(inputText);
+    widgetSendMessage(inputText, widgetImages);
     setInputText('');
+    setWidgetImages([]);
+  };
+
+  // 处理图片选择
+  const handleImageSelect = (files: FileList | null) => {
+    if (!files) return;
+    
+    const imageFiles = Array.from(files).filter(file => 
+      file.type.startsWith('image/')
+    );
+    
+    setWidgetImages([...widgetImages, ...imageFiles]);
+  };
+
+  // 移除图片
+  const removeWidgetImage = (index: number) => {
+    const newImages = widgetImages.filter((_, i) => i !== index);
+    setWidgetImages(newImages);
+  };
+
+  // 处理粘贴图片
+  const handlePaste = async (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    const imageFiles: File[] = [];
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        if (file) {
+          imageFiles.push(file);
+        }
+      }
+    }
+
+    if (imageFiles.length > 0) {
+      e.preventDefault();
+      setWidgetImages([...widgetImages, ...imageFiles]);
+    }
   };
 
   // 处理回车发送
@@ -117,7 +159,7 @@ export const ChatWidget: React.FC = () => {
             left: position.x,
             top: position.y,
             width: '400px',
-            height: isMinimized ? '60px' : '500px'
+            height: isMinimized ? '60px' : '550px'
           }}
         >
           {/* 标题栏 */}
@@ -149,7 +191,7 @@ export const ChatWidget: React.FC = () => {
           {!isMinimized && (
             <>
               {/* 消息区域 */}
-              <div className="flex-1 overflow-y-auto p-4 h-80 bg-gray-50">
+              <div className="flex-1 overflow-y-auto p-4 bg-gray-50" style={{ height: '360px' }}>
                 {widgetMessages.length === 0 ? (
                   <div className="text-center text-gray-500 mt-8">
                     <Bot size={32} className="mx-auto mb-2 text-gray-400" />
@@ -222,19 +264,60 @@ export const ChatWidget: React.FC = () => {
 
               {/* 输入区域 */}
               <div className="p-4 border-t border-gray-200 bg-white rounded-b-lg">
+                {/* 图片预览区域 */}
+                {widgetImages.length > 0 && (
+                  <div className="mb-3 flex flex-wrap gap-2">
+                    {widgetImages.map((file, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={`Upload ${index + 1}`}
+                          className="w-12 h-12 object-cover rounded border-2 border-gray-200"
+                        />
+                        <button
+                          onClick={() => removeWidgetImage(index)}
+                          className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs"
+                        >
+                          <X size={8} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
                 <div className="flex gap-2">
+                  {/* 隐藏的文件输入 */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => handleImageSelect(e.target.files)}
+                  />
+                  
+                  {/* 图片上传按钮 */}
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-10 h-10 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg flex items-center justify-center transition-colors"
+                    title="上传图片"
+                  >
+                    <Image size={16} />
+                  </button>
+                  
                   <input
                     type="text"
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                     onKeyPress={handleKeyPress}
+                    onPaste={handlePaste}
                     placeholder="输入消息..."
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
                     disabled={widgetLoading}
                   />
                   <button
                     onClick={handleSendMessage}
-                    disabled={!inputText.trim() || widgetLoading}
+                    disabled={(!inputText.trim() && widgetImages.length === 0) || widgetLoading}
                     className="w-10 h-10 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
                   >
                     {widgetLoading ? (
