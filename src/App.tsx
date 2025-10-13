@@ -1,25 +1,69 @@
-import React from 'react';
-import { ChatWidget } from './components/ChatWidget';
+import React, { useState } from 'react';
+import { ChatContainer } from './components/ChatContainer';
+import { ChatInput } from './components/ChatInput';
+import { ChatHeader } from './components/ChatHeader';
 import { ImageModal } from './components/ImageModal';
+import { ImageGallery } from './components/ImageGallery';
+import { ChatWidget } from './components/ChatWidget';
+import { useChat } from './hooks/useChat';
 
 function App() {
+  const { 
+    messages, 
+    isLoading, 
+    error, 
+    selectedModel, 
+    sendMessage, 
+    retryToInput, 
+    clearChat, 
+    setSelectedModel 
+  } = useChat();
+
+  const [editContent, setEditContent] = useState<{ text: string; images: File[] } | null>(null);
+
+  const handleSendMessage = (text: string, images: File[]) => {
+    sendMessage(text, images);
+    setEditContent(null);
+  };
+
+  const handleSetEditContent = (text: string, images: File[]) => {
+    setEditContent({ text, images });
+  };
+
+  const handleClearEditContent = () => {
+    setEditContent(null);
+  };
+
   return (
-    <div className="h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
-      {/* 主页面内容 */}
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">
-            欢迎使用 AI 助手
-          </h1>
-          <p className="text-gray-600 mb-8">
-            点击右下角的聊天按钮开始对话
-          </p>
-        </div>
-      </div>
+    <div className="h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex flex-col">
+      <ChatHeader 
+        onClearChat={clearChat}
+        messageCount={messages.length}
+        selectedModel={selectedModel}
+        onModelChange={setSelectedModel}
+        isLoading={isLoading}
+      />
       
-      {/* 聊天小部件 */}
-      <ChatWidget />
+      <ChatContainer 
+        messages={messages}
+        isLoading={isLoading}
+        error={error}
+        onRetryToInput={retryToInput}
+        onSetEditContent={handleSetEditContent}
+      />
+      
+      <ChatInput 
+        onSendMessage={handleSendMessage}
+        isLoading={isLoading}
+        editContent={editContent}
+        onClearEditContent={handleClearEditContent}
+      />
+      
       <ImageModal />
+      <ImageGallery />
+      
+      {/* 客服弹窗 */}
+      <ChatWidget />
     </div>
   );
 }

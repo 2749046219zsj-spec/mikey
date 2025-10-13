@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Minus, Bot, User, Send, Loader2 } from 'lucide-react';
+import { MessageCircle, X, Minus, Bot, User, Send, Loader2, Settings } from 'lucide-react';
 import { useChat } from '../hooks/useChat';
-import { Message } from '../types/chat';
 
 interface Position {
   x: number;
@@ -19,14 +18,14 @@ export const ChatWidget: React.FC = () => {
   const widgetRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  const { messages, isLoading, sendMessage, clearChat } = useChat();
+  const { messages: widgetMessages, isLoading: widgetLoading, sendMessage: widgetSendMessage, clearChat: widgetClearChat } = useChat();
 
   // 自动滚动到底部
   useEffect(() => {
     if (messagesEndRef.current && isOpen && !isMinimized) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages, isOpen, isMinimized]);
+  }, [widgetMessages, isOpen, isMinimized]);
 
   // 处理拖拽开始
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -77,8 +76,8 @@ export const ChatWidget: React.FC = () => {
 
   // 发送消息
   const handleSendMessage = () => {
-    if (!inputText.trim() || isLoading) return;
-    sendMessage(inputText);
+    if (!inputText.trim() || widgetLoading) return;
+    widgetSendMessage(inputText);
     setInputText('');
   };
 
@@ -101,9 +100,9 @@ export const ChatWidget: React.FC = () => {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center z-50 hover:scale-110"
+          className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center z-50 hover:scale-110"
         >
-          <MessageCircle size={24} />
+          <Settings size={24} />
         </button>
       )}
 
@@ -123,12 +122,12 @@ export const ChatWidget: React.FC = () => {
         >
           {/* 标题栏 */}
           <div
-            className="drag-handle flex items-center justify-between p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-t-lg cursor-grab active:cursor-grabbing"
+            className="drag-handle flex items-center justify-between p-4 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-t-lg cursor-grab active:cursor-grabbing"
             onMouseDown={handleMouseDown}
           >
             <div className="flex items-center gap-2">
-              <Bot size={20} />
-              <span className="font-medium">AI 助手</span>
+              <Settings size={20} />
+              <span className="font-medium">客服助手</span>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -151,15 +150,15 @@ export const ChatWidget: React.FC = () => {
             <>
               {/* 消息区域 */}
               <div className="flex-1 overflow-y-auto p-4 h-80 bg-gray-50">
-                {messages.length === 0 ? (
+                {widgetMessages.length === 0 ? (
                   <div className="text-center text-gray-500 mt-8">
                     <Bot size={32} className="mx-auto mb-2 text-gray-400" />
-                    <p>你好！我是AI助手</p>
+                    <p>你好！我是客服助手</p>
                     <p className="text-sm">有什么可以帮助你的吗？</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {messages.map((message) => (
+                    {widgetMessages.map((message) => (
                       <div
                         key={message.id}
                         className={`flex gap-2 ${message.type === 'user' ? 'flex-row-reverse' : ''}`}
@@ -202,14 +201,14 @@ export const ChatWidget: React.FC = () => {
                       </div>
                     ))}
                     
-                    {isLoading && (
+                    {widgetLoading && (
                       <div className="flex gap-2">
                         <div className="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center">
                           <Bot size={16} />
                         </div>
                         <div className="bg-white border border-gray-200 rounded-lg px-3 py-2">
                           <div className="flex items-center gap-2">
-                            <Loader2 size={16} className="animate-spin text-blue-500" />
+                            <Loader2 size={16} className="animate-spin text-orange-500" />
                             <span className="text-sm text-gray-600">正在思考...</span>
                           </div>
                         </div>
@@ -230,15 +229,15 @@ export const ChatWidget: React.FC = () => {
                     onChange={(e) => setInputText(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder="输入消息..."
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                    disabled={isLoading}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                    disabled={widgetLoading}
                   />
                   <button
                     onClick={handleSendMessage}
-                    disabled={!inputText.trim() || isLoading}
-                    className="w-10 h-10 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
+                    disabled={!inputText.trim() || widgetLoading}
+                    className="w-10 h-10 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
                   >
-                    {isLoading ? (
+                    {widgetLoading ? (
                       <Loader2 size={16} className="animate-spin" />
                     ) : (
                       <Send size={16} />
@@ -246,9 +245,9 @@ export const ChatWidget: React.FC = () => {
                   </button>
                 </div>
                 
-                {messages.length > 0 && (
+                {widgetMessages.length > 0 && (
                   <button
-                    onClick={clearChat}
+                    onClick={widgetClearChat}
                     className="text-xs text-gray-500 hover:text-gray-700 mt-2 transition-colors"
                   >
                     清空对话
