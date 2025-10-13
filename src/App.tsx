@@ -1,76 +1,24 @@
 import React from 'react';
-import { ChatHeader } from './components/ChatHeader';
-import { ChatContainer } from './components/ChatContainer';
-import { ChatInput } from './components/ChatInput';
+import { ChatWidget } from './components/ChatWidget';
 import { ImageModal } from './components/ImageModal';
-import { ImageGallery } from './components/ImageGallery';
-import { useChat } from './hooks/useChat';
-import { useImageGallery } from './hooks/useImageGallery';
 
 function App() {
-  const { 
-    messages, 
-    isLoading, 
-    error, 
-    selectedModel,
-    sendMessage, 
-    retryToInput, 
-    clearChat,
-    setSelectedModel
-  } = useChat();
-  
-  const { clearImages } = useImageGallery();
-  const [editContent, setEditContent] = React.useState<{ text: string; images: File[] } | null>(null);
-
-  const handleSetEditContent = (text: string, images: File[]) => {
-    setEditContent({ text, images });
-  };
-
-  const handleClearEditContent = () => {
-    setEditContent(null);
-  };
-
-  const handleClearChat = () => {
-    clearChat();
-    // 延迟清理图片，避免状态冲突
-    setTimeout(() => {
-      clearImages();
-    }, 100);
-  };
-
   return (
-    <div className="h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex overflow-hidden">
-      <ImageGallery />
-      
-      <div className="flex-1 flex flex-col">
-        <ChatHeader 
-          onClearChat={handleClearChat}
-          messageCount={messages.length}
-          selectedModel={selectedModel}
-          onModelChange={setSelectedModel}
-          isLoading={isLoading}
-        />
-        
-        <div className="flex-1 flex flex-col min-h-0">
-          <ChatContainer 
-            messages={messages}
-            isLoading={isLoading}
-            error={error}
-            onRetryToInput={retryToInput}
-            onSetEditContent={handleSetEditContent}
-          />
-          
-          <div className="flex-shrink-0">
-            <ChatInput 
-              onSendMessage={sendMessage}
-              isLoading={isLoading}
-              editContent={editContent}
-              onClearEditContent={handleClearEditContent}
-            />
-          </div>
+    <div className="h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+      {/* 主页面内容 */}
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-gray-800 mb-4">
+            欢迎使用 AI 助手
+          </h1>
+          <p className="text-gray-600 mb-8">
+            点击右下角的聊天按钮开始对话
+          </p>
         </div>
       </div>
       
+      {/* 聊天小部件 */}
+      <ChatWidget />
       <ImageModal />
     </div>
   );
