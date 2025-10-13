@@ -8,6 +8,11 @@ interface ChatHeaderProps {
   selectedModel: string;
   onModelChange: (model: string) => void;
   isLoading?: boolean;
+  queueInfo?: {
+    total: number;
+    current: number;
+    isProcessing: boolean;
+  };
 }
 
 export const ChatHeader: React.FC<ChatHeaderProps> = ({ 
@@ -15,7 +20,8 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   messageCount, 
   selectedModel, 
   onModelChange, 
-  isLoading = false 
+  isLoading = false,
+  queueInfo
 }) => {
   const getModelDisplayName = (modelId: string) => {
     switch (modelId) {
@@ -37,6 +43,11 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
             <div>
               <h1 className="text-xl font-semibold text-gray-800">AI Chat</h1>
               <p className="text-sm text-gray-600">Powered by Gemini 2.5 Flash</p>
+              {queueInfo?.isProcessing && (
+                <p className="text-xs text-purple-600 font-medium">
+                  批量绘图进行中: {queueInfo.current}/{queueInfo.total}
+                </p>
+              )}
             </div>
           </div>
           

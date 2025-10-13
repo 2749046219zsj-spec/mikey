@@ -13,6 +13,7 @@ function App() {
     isLoading, 
     error, 
     selectedModel, 
+    queueInfo,
     sendMessage, 
     retryToInput, 
     clearChat, 
@@ -21,6 +22,13 @@ function App() {
 
   const [editContent, setEditContent] = useState<{ text: string; images: File[] } | null>(null);
 
+  // 将发送消息函数暴露给全局，供客服弹窗调用
+  useEffect(() => {
+    (window as any).mainChatSendMessage = sendMessage;
+    return () => {
+      delete (window as any).mainChatSendMessage;
+    };
+  }, [sendMessage]);
   const handleSendMessage = (text: string, images: File[]) => {
     sendMessage(text, images);
     setEditContent(null);
@@ -42,6 +50,7 @@ function App() {
         selectedModel={selectedModel}
         onModelChange={setSelectedModel}
         isLoading={isLoading}
+        queueInfo={queueInfo}
       />
       
       <ChatContainer 

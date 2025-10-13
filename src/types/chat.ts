@@ -8,6 +8,8 @@ export interface Message {
   originalText?: string;
   originalImages?: File[];
   model?: string;
+  hasPrompts?: boolean;
+  extractedPrompts?: string[];
 }
 
 export interface ChatState {

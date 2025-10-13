@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Minus, Bot, User, Send, Loader2, Settings, Image, Paperclip } from 'lucide-react';
+import { MessageCircle, X, Minus, Bot, User, Send, Loader2, Settings, Image, Paperclip, Zap, ArrowRight } from 'lucide-react';
 import { useChat } from '../hooks/useChat';
+import { usePromptQueue } from '../hooks/usePromptQueue';
 
 interface Position {
   x: number;
@@ -21,6 +22,7 @@ export const ChatWidget: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { messages: widgetMessages, isLoading: widgetLoading, sendMessage: widgetSendMessage, clearChat: widgetClearChat } = useChat();
+  const { addPrompts } = usePromptQueue();
 
   // 自动滚动到底部
   useEffect(() => {
@@ -76,6 +78,55 @@ export const ChatWidget: React.FC = () => {
     };
   }, [isDragging, dragOffset]);
 
+  // 解析AI回复中的提示词列表
+  const extractPrompts = (content: string): string[] => {
+    const prompts: string[] = [];
+    
+    // 匹配编号列表格式 (1. 2. 3. 等)
+    const numberedMatches = content.match(/\d+\.\s*\*\*[^*]+\*\*[^0-9]*/g);
+    if (numberedMatches) {
+      numberedMatches.forEach(match => {
+        // 提取 ** ** 之间的内容作为提示词
+        const promptMatch = match.match(/\*\*([^*]+)\*\*/);
+        if (promptMatch) {
+          prompts.push(promptMatch[1].trim());
+        }
+      });
+    }
+    
+    // 如果没有找到编号格式，尝试其他格式
+    if (prompts.length === 0) {
+      const lines = content.split('\n');
+      lines.forEach(line => {
+        if (line.includes('**') && line.includes('**')) {
+          const promptMatch = line.match(/\*\*([^*]+)\*\*/);
+          if (promptMatch) {
+            prompts.push(promptMatch[1].trim());
+          }
+        }
+      });
+    }
+    
+    return prompts.filter(prompt => prompt.length > 10); // 过滤太短的内容
+  };
+
+  // 发送提示词到主界面
+  const sendPromptsToMain = (prompts: string[]) => {
+    if (prompts.length === 0) return;
+    
+    // 添加到队列
+    addPrompts(prompts);
+    
+    // 发送第一个提示词到主界面
+    const mainSendMessage = (window as any).mainChatSendMessage;
+    if (mainSendMessage && typeof mainSendMessage === 'function') {
+      mainSendMessage(prompts[0], []);
+    }
+    
+    // 显示成功提示
+    alert(`已将 ${prompts.length} 个提示词发送到主界面进行绘图！`);
+  };
+
   // 发送消息
   const handleSendMessage = () => {
     if (!inputText.trim() || widgetLoading) return;
@@ -83,6 +134,21 @@ export const ChatWidget: React.FC = () => {
     setInputText('');
     setWidgetImages([]);
   };
+
+  // 监听AI回复，自动检测提示词
+  useEffect(() => {
+    if (widgetMessages.length > 0) {
+      const lastMessage = widgetMessages[widgetMessages.length - 1];
+      if (lastMessage.type === 'ai' && !widgetLoading) {
+        const prompts = extractPrompts(lastMessage.content);
+        if (prompts.length >= 3) { // 至少3个提示词才显示发送按钮
+          // 在消息中添加发送按钮的标记
+          lastMessage.hasPrompts = true;
+          lastMessage.extractedPrompts = prompts;
+        }
+      }
+    }
+  }, [widgetMessages, widgetLoading]);
 
   // 处理图片选择
   const handleImageSelect = (files: FileList | null) => {
@@ -234,6 +300,21 @@ export const ChatWidget: React.FC = () => {
                             )}
                             <p className="whitespace-pre-wrap">{message.content}</p>
                           </div>
+                          
+                          {/* 提示词发送按钮 */}
+                          {message.type === 'ai' && message.hasPrompts && message.extractedPrompts && (
+                            <div className="mt-2">
+                              <button
+                                onClick={() => sendPromptsToMain(message.extractedPrompts)}
+                                className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-500 to-blue-600 text-white rounded-lg text-xs font-medium hover:from-purple-600 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg"
+                              >
+                                <Zap size={14} />
+                                发送 {message.extractedPrompts.length} 个提示词到主界面绘图
+                                <ArrowRight size={14} />
+                              </button>
+                            </div>
+                          )}
+                          
                           <div className={`text-xs text-gray-500 mt-1 ${
                             message.type === 'user' ? 'text-right' : 'text-left'
                           }`}>
