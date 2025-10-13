@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { ChevronLeft, ChevronRight, X, Eye, EyeOff, Download } from 'lucide-react';
 import { useImageGallery } from '../hooks/useImageGallery';
 import { useImageModal } from '../hooks/useImageModal';
+import { useSharedImage } from '../hooks/useSharedImage';
 
 export const ImageGallery: React.FC = () => {
   const { 
@@ -17,11 +18,12 @@ export const ImageGallery: React.FC = () => {
     deactivateKeyboard
   } = useImageGallery();
   const { openModal } = useImageModal();
+  const { setCurrentImage } = useSharedImage();
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKeyDown = async (e: KeyboardEvent) => {
       if (images.length === 0 || !isKeyboardActive) return;
-      
+
       switch (e.key) {
         case 'ArrowUp':
           e.preventDefault();
@@ -47,6 +49,23 @@ export const ImageGallery: React.FC = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [images, selectedIndex, isKeyboardActive, nextImage, prevImage, openModal, deactivateKeyboard]);
+
+  useEffect(() => {
+    const updateSharedImage = async () => {
+      if (images.length > 0 && images[selectedIndex]) {
+        try {
+          const response = await fetch(images[selectedIndex]);
+          const blob = await response.blob();
+          const file = new File([blob], `image_${selectedIndex}.png`, { type: blob.type });
+          setCurrentImage(file, images[selectedIndex]);
+        } catch (error) {
+          console.error('Failed to load image for sharing:', error);
+        }
+      }
+    };
+
+    updateSharedImage();
+  }, [selectedIndex, images, setCurrentImage]);
 
   const downloadImage = async (imageUrl: string, index: number) => {
     try {
@@ -145,12 +164,21 @@ export const ImageGallery: React.FC = () => {
                     ? 'ring-2 ring-purple-500 shadow-lg' 
                     : 'hover:shadow-md'
                 }`}
-                onClick={() => {
+                onClick={async () => {
                   activateKeyboard();
                   selectImage(index);
                   openModal(imageUrl);
+
+                  try {
+                    const response = await fetch(imageUrl);
+                    const blob = await response.blob();
+                    const file = new File([blob], `image_${index}.png`, { type: blob.type });
+                    setCurrentImage(file, imageUrl);
+                  } catch (error) {
+                    console.error('Failed to load image for sharing:', error);
+                  }
                 }}
-                onMouseEnter={() => {
+                onMouseEnter={async () => {
                   if (isKeyboardActive) {
                     selectImage(index);
                   }
