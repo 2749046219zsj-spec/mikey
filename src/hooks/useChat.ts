@@ -11,7 +11,6 @@ export const useChat = () => {
     selectedModel: 'Gemini-2.5-Flash-Image'
   });
   const [retryCallback, setRetryCallback] = useState<(() => void) | null>(null);
-  const [queueImages, setQueueImages] = useState<File[]>([]);
 
   const geminiService = new GeminiApiService();
   const { queue, isProcessing, currentIndex, totalCount, addPrompts, processNext, setProcessing } = usePromptQueue();
@@ -134,11 +133,9 @@ export const useChat = () => {
 
     // 如果找到多个提示词，使用队列模式
     if (prompts.length > 0) {
-      // 保存图片，用于后续队列中的提示词
-      setQueueImages(images);
       addPrompts(prompts);
       setProcessing(true);
-      // 发送第一个提示词，带上参考图片
+      // 发送第一个提示词
       await sendSinglePrompt(prompts[0], images);
       setProcessing(false);
     } else {
@@ -154,8 +151,7 @@ export const useChat = () => {
       const timer = setTimeout(async () => {
         setProcessing(true);
         const nextPrompt = queue[currentIndex + 1];
-        // 使用保存的图片，每个提示词都带上参考图
-        const success = await sendSinglePrompt(nextPrompt, queueImages);
+        const success = await sendSinglePrompt(nextPrompt, []);
         if (success) {
           processNext();
         }
@@ -163,11 +159,8 @@ export const useChat = () => {
       }, 2000);
 
       return () => clearTimeout(timer);
-    } else if (queue.length === 0) {
-      // 队列清空后，清除保存的图片
-      setQueueImages([]);
     }
-  }, [queue, isProcessing, currentIndex, queueImages, sendSinglePrompt, processNext, setProcessing]);
+  }, [queue, isProcessing, currentIndex, sendSinglePrompt, processNext, setProcessing]);
 
   const retryToInput = useCallback((messageId: string, onEdit: (text: string, images: File[]) => void) => {
     const message = state.messages.find(m => m.id === messageId);
