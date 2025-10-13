@@ -9,16 +9,18 @@ import { ImageSelector } from './components/ImageSelector';
 import { useChat } from './hooks/useChat';
 
 function App() {
-  const { 
-    messages, 
-    isLoading, 
-    error, 
-    selectedModel, 
+  const {
+    messages,
+    isLoading,
+    error,
+    selectedModel,
     queueInfo,
-    sendMessage, 
-    retryToInput, 
-    clearChat, 
-    setSelectedModel 
+    sendMessage,
+    retryToInput,
+    clearChat,
+    setSelectedModel,
+    stopQueue,
+    clearQueue
   } = useChat();
 
   const [editContent, setEditContent] = useState<{ text: string; images: File[] } | null>(null);
@@ -45,13 +47,15 @@ function App() {
 
   return (
     <div className="h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex flex-col">
-      <ChatHeader 
+      <ChatHeader
         onClearChat={clearChat}
         messageCount={messages.length}
         selectedModel={selectedModel}
         onModelChange={setSelectedModel}
         isLoading={isLoading}
         queueInfo={queueInfo}
+        onStopQueue={stopQueue}
+        onClearQueue={clearQueue}
       />
       
       <ChatContainer 

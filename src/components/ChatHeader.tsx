@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bot, Trash2 } from 'lucide-react';
+import { Bot, Trash2, StopCircle, XCircle } from 'lucide-react';
 import { ModelSelector } from './ModelSelector';
 
 interface ChatHeaderProps {
@@ -13,15 +13,19 @@ interface ChatHeaderProps {
     current: number;
     isProcessing: boolean;
   };
+  onStopQueue?: () => void;
+  onClearQueue?: () => void;
 }
 
-export const ChatHeader: React.FC<ChatHeaderProps> = ({ 
-  onClearChat, 
-  messageCount, 
-  selectedModel, 
-  onModelChange, 
+export const ChatHeader: React.FC<ChatHeaderProps> = ({
+  onClearChat,
+  messageCount,
+  selectedModel,
+  onModelChange,
   isLoading = false,
-  queueInfo
+  queueInfo,
+  onStopQueue,
+  onClearQueue
 }) => {
   const getModelDisplayName = (modelId: string) => {
     switch (modelId) {
@@ -44,22 +48,46 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
               <h1 className="text-xl font-semibold text-gray-800">AI Chat</h1>
               <p className="text-sm text-gray-600">Powered by Gemini 2.5 Flash</p>
               {queueInfo?.isProcessing && (
-                <p className="text-xs text-purple-600 font-medium">
-                  批量绘图进行中: {queueInfo.current}/{queueInfo.total}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-purple-600 font-medium">
+                    批量绘图进行中: {queueInfo.current}/{queueInfo.total}
+                  </p>
+                </div>
               )}
             </div>
           </div>
           
-          {messageCount > 0 && (
-            <button
-              onClick={onClearChat}
-              className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
-            >
-              <Trash2 size={16} />
-              Clear Chat
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {queueInfo?.isProcessing && (
+              <>
+                <button
+                  onClick={onStopQueue}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition-all duration-200 border border-orange-300"
+                  title="停止当前绘制，完成当前图后不再继续"
+                >
+                  <StopCircle size={16} />
+                  停止绘制
+                </button>
+                <button
+                  onClick={onClearQueue}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200 border border-red-300"
+                  title="立即结束绘制并清空队列"
+                >
+                  <XCircle size={16} />
+                  结束绘制
+                </button>
+              </>
+            )}
+            {messageCount > 0 && (
+              <button
+                onClick={onClearChat}
+                className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+              >
+                <Trash2 size={16} />
+                Clear Chat
+              </button>
+            )}
+          </div>
         </div>
         
         <div className="mt-4">

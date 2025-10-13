@@ -13,7 +13,7 @@ export const useChat = () => {
   const [retryCallback, setRetryCallback] = useState<(() => void) | null>(null);
 
   const geminiService = new GeminiApiService();
-  const { queue, referenceImages, isProcessing, currentIndex, totalCount, addPrompts, processNext, setProcessing } = usePromptQueue();
+  const { queue, referenceImages, isProcessing, isStopped, currentIndex, totalCount, addPrompts, processNext, stopQueue, clearQueue, setProcessing } = usePromptQueue();
 
   // 解析提示词：提取 ** ** 内的内容
   const parsePrompts = useCallback((text: string): string[] => {
@@ -146,7 +146,7 @@ export const useChat = () => {
 
   // 监听队列变化，自动处理下一个提示词
   useEffect(() => {
-    if (queue.length > 0 && !isProcessing && currentIndex < queue.length - 1) {
+    if (queue.length > 0 && !isProcessing && !isStopped && currentIndex < queue.length - 1) {
       // 延迟2秒后发送下一个提示词
       const timer = setTimeout(async () => {
         setProcessing(true);
@@ -160,7 +160,7 @@ export const useChat = () => {
 
       return () => clearTimeout(timer);
     }
-  }, [queue, referenceImages, isProcessing, currentIndex, sendSinglePrompt, processNext, setProcessing]);
+  }, [queue, referenceImages, isProcessing, isStopped, currentIndex, sendSinglePrompt, processNext, setProcessing]);
 
   const retryToInput = useCallback((messageId: string, onEdit: (text: string, images: File[]) => void) => {
     const message = state.messages.find(m => m.id === messageId);
@@ -196,6 +196,8 @@ export const useChat = () => {
     sendMessage,
     retryToInput,
     clearChat,
-    setSelectedModel
+    setSelectedModel,
+    stopQueue,
+    clearQueue
   };
 };
