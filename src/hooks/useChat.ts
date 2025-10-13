@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Message, ChatState } from '../types/chat';
 import { GeminiApiService } from '../services/geminiApi';
+import { usePromptQueue } from './usePromptQueue';
 
 export const useChat = () => {
   const [state, setState] = useState<ChatState>({
@@ -12,6 +13,7 @@ export const useChat = () => {
   const [retryCallback, setRetryCallback] = useState<(() => void) | null>(null);
 
   const geminiService = new GeminiApiService();
+  const { queue, isProcessing, currentIndex, totalCount, processNext, setProcessing } = usePromptQueue();
 
   const addMessage = useCallback((message: Omit<Message, 'id' | 'timestamp'>) => {
     const newMessage: Message = {
@@ -27,6 +29,19 @@ export const useChat = () => {
 
     return newMessage.id;
   }, []);
+
+  // 自动处理队列中的下一个提示词
+  const processQueueNext = useCallback(() => {
+    if (queue.length > 0 && !isProcessing) {
+      const hasNext = processNext();
+      if (hasNext && queue[currentIndex + 1]) {
+        // 延迟1秒后发送下一个提示词，给用户时间查看
+        setTimeout(() => {
+          sendMessage(queue[currentIndex + 1], []);
+        }, 1000);
+      }
+    }
+  }, [queue, currentIndex, isProcessing, processNext]);
 
   const sendMessage = useCallback(async (text: string, images: File[] = []) => {
     if (!text.trim() && images.length === 0) return;
@@ -46,6 +61,7 @@ export const useChat = () => {
 
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     setRetryCallback(null);
+    setProcessing(true);
 
     try {
       // Build conversation history for API
@@ -83,6 +99,13 @@ export const useChat = () => {
         content: response,
         model: state.selectedModel
       });
+      
+      // 如果有队列任务，处理下一个
+      if (queue.length > 0) {
+        setTimeout(() => {
+          processQueueNext();
+        }, 2000); // 等待2秒让用户看到结果
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred';
       
@@ -100,10 +123,11 @@ export const useChat = () => {
         ...prev,
         error: null
       }));
+      setProcessing(false);
     } finally {
       setState(prev => ({ ...prev, isLoading: false }));
     }
-  }, [addMessage, geminiService, state.selectedModel]);
+  }, [addMessage, geminiService, state.selectedModel, queue, processQueueNext, setProcessing]);
 
   const retryToInput = useCallback((messageId: string, onEdit: (text: string, images: File[]) => void) => {
     const message = state.messages.find(m => m.id === messageId);
@@ -131,6 +155,11 @@ export const useChat = () => {
     isLoading: state.isLoading,
     error: state.error,
     selectedModel: state.selectedModel,
+    queueInfo: {
+      total: totalCount,
+      current: currentIndex + 1,
+      isProcessing: queue.length > 0
+    },
     sendMessage,
     retryToInput,
     clearChat,
