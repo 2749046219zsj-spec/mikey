@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Minus, Bot, User, Send, Loader2, Settings, Image, Paperclip, Zap, ArrowRight } from 'lucide-react';
 import { useWidgetChat } from '../hooks/useWidgetChat';
 import { usePromptQueue } from '../hooks/usePromptQueue';
-import { useSharedImage } from '../hooks/useSharedImage';
 
 interface Position {
   x: number;
@@ -24,7 +23,6 @@ export const ChatWidget: React.FC = () => {
   
   const { messages: widgetMessages, isLoading: widgetLoading, sendMessage: widgetSendMessage, clearChat: widgetClearChat } = useWidgetChat();
   const { addPrompts } = usePromptQueue();
-  const { currentImage, currentImageUrl } = useSharedImage();
 
   // 自动滚动到底部
   useEffect(() => {
@@ -115,20 +113,18 @@ export const ChatWidget: React.FC = () => {
   // 发送提示词到主界面
   const sendPromptsToMain = (prompts: string[]) => {
     if (prompts.length === 0) return;
-
+    
     // 添加到队列
     addPrompts(prompts);
-
-    // 发送第一个提示词到主界面，并附带参考图片
+    
+    // 发送第一个提示词到主界面
     const mainSendMessage = (window as any).mainChatSendMessage;
     if (mainSendMessage && typeof mainSendMessage === 'function') {
-      const imagesToSend = currentImage ? [currentImage] : [];
-      mainSendMessage(prompts[0], imagesToSend);
+      mainSendMessage(prompts[0], []);
     }
-
+    
     // 显示成功提示
-    const imageNote = currentImage ? '（已附带参考图片）' : '';
-    alert(`已将 ${prompts.length} 个提示词${imageNote}发送到主界面进行绘图！`);
+    alert(`已将 ${prompts.length} 个提示词发送到主界面进行绘图！`);
   };
 
   // 发送消息
@@ -349,23 +345,6 @@ export const ChatWidget: React.FC = () => {
 
               {/* 输入区域 */}
               <div className="p-4 border-t border-gray-200 bg-white rounded-b-lg">
-                {/* 参考图片提示 */}
-                {currentImageUrl && (
-                  <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <img
-                        src={currentImageUrl}
-                        alt="Reference"
-                        className="w-10 h-10 object-cover rounded border border-blue-300"
-                      />
-                      <div className="flex-1">
-                        <p className="text-xs font-medium text-blue-900">参考图片已选择</p>
-                        <p className="text-xs text-blue-700">发送提示词时将自动附带此图片</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 {/* 图片预览区域 */}
                 {widgetImages.length > 0 && (
                   <div className="mb-3 flex flex-wrap gap-2">
