@@ -11,7 +11,6 @@ export const useChat = () => {
     selectedModel: 'Gemini-2.5-Flash-Image'
   });
   const [retryCallback, setRetryCallback] = useState<(() => void) | null>(null);
-  const [queueImages, setQueueImages] = useState<File[]>([]);
 
   const geminiService = new GeminiApiService();
   const { queue, isProcessing, currentIndex, totalCount, addPrompts, processNext, setProcessing } = usePromptQueue();
@@ -134,8 +133,6 @@ export const useChat = () => {
 
     // 如果找到多个提示词，使用队列模式
     if (prompts.length > 0) {
-      // 保存图片供后续队列使用
-      setQueueImages(images);
       addPrompts(prompts);
       setProcessing(true);
       // 发送第一个提示词
@@ -154,8 +151,7 @@ export const useChat = () => {
       const timer = setTimeout(async () => {
         setProcessing(true);
         const nextPrompt = queue[currentIndex + 1];
-        // 使用保存的图片
-        const success = await sendSinglePrompt(nextPrompt, queueImages);
+        const success = await sendSinglePrompt(nextPrompt, []);
         if (success) {
           processNext();
         }
@@ -163,11 +159,8 @@ export const useChat = () => {
       }, 2000);
 
       return () => clearTimeout(timer);
-    } else if (queue.length > 0 && currentIndex === queue.length - 1) {
-      // 队列处理完成，清空保存的图片
-      setQueueImages([]);
     }
-  }, [queue, isProcessing, currentIndex, sendSinglePrompt, processNext, setProcessing, queueImages]);
+  }, [queue, isProcessing, currentIndex, sendSinglePrompt, processNext, setProcessing]);
 
   const retryToInput = useCallback((messageId: string, onEdit: (text: string, images: File[]) => void) => {
     const message = state.messages.find(m => m.id === messageId);
@@ -188,7 +181,6 @@ export const useChat = () => {
       selectedModel: state.selectedModel
     });
     setRetryCallback(null);
-    setQueueImages([]);
   }, [state.selectedModel]);
 
   return {
