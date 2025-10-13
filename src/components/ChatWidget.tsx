@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Minus, Bot, User, Send, Loader2, Settings, Image, Paperclip, Zap, ArrowRight } from 'lucide-react';
 import { useWidgetChat } from '../hooks/useWidgetChat';
-import { usePromptQueue } from '../hooks/usePromptQueue';
 import { useImageSelector } from '../hooks/useImageSelector';
 
 interface Position {
@@ -23,7 +22,6 @@ export const ChatWidget: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { messages: widgetMessages, isLoading: widgetLoading, sendMessage: widgetSendMessage, clearChat: widgetClearChat } = useWidgetChat();
-  const { addPrompts } = usePromptQueue();
   const { openSelector } = useImageSelector();
 
   // 自动滚动到底部
@@ -123,13 +121,12 @@ export const ChatWidget: React.FC = () => {
 
   // 将提示词和图片一起发送到主界面
   const sendPromptsWithImage = (prompts: string[], imageFile: File) => {
-    // 添加到队列
-    addPrompts(prompts);
-
-    // 发送第一个提示词和图片到主界面
+    // 发送提示词和图片到主界面（主界面的sendMessage会处理队列）
     const mainSendMessage = (window as any).mainChatSendMessage;
     if (mainSendMessage && typeof mainSendMessage === 'function') {
-      mainSendMessage(prompts[0], [imageFile]);
+      // 构造带提示词的文本（使用**标记让主界面识别为队列）
+      const textWithPrompts = prompts.map(p => `**${p}**`).join('\n');
+      mainSendMessage(textWithPrompts, [imageFile]);
     }
 
     // 显示成功提示
