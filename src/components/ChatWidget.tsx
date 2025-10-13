@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Minus, Bot, User, Send, Loader2, Settings, Image, Paperclip, Zap, ArrowRight } from 'lucide-react';
 import { useWidgetChat } from '../hooks/useWidgetChat';
 import { usePromptQueue } from '../hooks/usePromptQueue';
+import { useImageSelector } from '../hooks/useImageSelector';
 
 interface Position {
   x: number;
@@ -23,6 +24,7 @@ export const ChatWidget: React.FC = () => {
   
   const { messages: widgetMessages, isLoading: widgetLoading, sendMessage: widgetSendMessage, clearChat: widgetClearChat } = useWidgetChat();
   const { addPrompts } = usePromptQueue();
+  const { openSelector } = useImageSelector();
 
   // 自动滚动到底部
   useEffect(() => {
@@ -110,21 +112,38 @@ export const ChatWidget: React.FC = () => {
     return prompts.filter(prompt => prompt.length > 10); // 过滤太短的内容
   };
 
-  // 发送提示词到主界面
-  const sendPromptsToMain = (prompts: string[]) => {
+  // 打开图片选择器
+  const handleSendPromptsToMain = (prompts: string[]) => {
     if (prompts.length === 0) return;
-    
-    // 添加到队列
-    addPrompts(prompts);
-    
-    // 发送第一个提示词到主界面
-    const mainSendMessage = (window as any).mainChatSendMessage;
-    if (mainSendMessage && typeof mainSendMessage === 'function') {
-      mainSendMessage(prompts[0], []);
+
+    openSelector(prompts, (selectedImageUrl: string) => {
+      sendPromptsWithImage(prompts, selectedImageUrl);
+    });
+  };
+
+  // 将提示词和图片一起发送到主界面
+  const sendPromptsWithImage = async (prompts: string[], imageUrl: string) => {
+    try {
+      // 将图片URL转换为File对象
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const file = new File([blob], 'reference_image.jpg', { type: blob.type });
+
+      // 添加到队列
+      addPrompts(prompts);
+
+      // 发送第一个提示词和图片到主界面
+      const mainSendMessage = (window as any).mainChatSendMessage;
+      if (mainSendMessage && typeof mainSendMessage === 'function') {
+        mainSendMessage(prompts[0], [file]);
+      }
+
+      // 显示成功提示
+      alert(`已将 ${prompts.length} 个提示词和参考图发送到主界面进行绘图！`);
+    } catch (error) {
+      console.error('Failed to convert image:', error);
+      alert('图片加载失败，请重试');
     }
-    
-    // 显示成功提示
-    alert(`已将 ${prompts.length} 个提示词发送到主界面进行绘图！`);
   };
 
   // 发送消息
@@ -305,11 +324,11 @@ export const ChatWidget: React.FC = () => {
                           {message.type === 'ai' && message.hasPrompts && message.extractedPrompts && (
                             <div className="mt-2">
                               <button
-                                onClick={() => sendPromptsToMain(message.extractedPrompts)}
-                                className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-500 to-blue-600 text-white rounded-lg text-xs font-medium hover:from-purple-600 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg"
+                                onClick={() => handleSendPromptsToMain(message.extractedPrompts)}
+                                className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg text-xs font-medium hover:from-orange-600 hover:to-red-700 transition-all duration-200 shadow-md hover:shadow-lg"
                               >
                                 <Zap size={14} />
-                                发送 {message.extractedPrompts.length} 个提示词到主界面绘图
+                                发送 {message.extractedPrompts.length} 个提示词到绘图
                                 <ArrowRight size={14} />
                               </button>
                             </div>
