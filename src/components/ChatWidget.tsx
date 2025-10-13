@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Minus, Bot, User, Send, Loader2, Settings, Image, Paperclip } from 'lucide-react';
 import { useWidgetChat } from '../hooks/useWidgetChat';
 import { useImageSelector } from '../hooks/useImageSelector';
+import { StylePresetDropdown } from './StylePresetDropdown';
 
 interface Position {
   x: number;
@@ -202,6 +203,12 @@ export const ChatWidget: React.FC = () => {
     }
   };
 
+  // 处理风格选择
+  const handleStyleSelect = (style: string) => {
+    const newText = inputText ? `${inputText}, ${style}` : style;
+    setInputText(newText);
+  };
+
   // 格式化时间
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -399,7 +406,13 @@ export const ChatWidget: React.FC = () => {
                     )}
                   </button>
                 </div>
-                
+
+                <div className="flex items-center gap-2 mt-2">
+                  <StylePresetDropdown onSelectStyle={handleStyleSelect} buttonText="风格" />
+                  <StylePresetDropdown onSelectStyle={handleStyleSelect} buttonText="艺术" />
+                  <StylePresetDropdown onSelectStyle={handleStyleSelect} buttonText="流派" />
+                </div>
+
                 {widgetMessages.length > 0 && (
                   <button
                     onClick={widgetClearChat}
