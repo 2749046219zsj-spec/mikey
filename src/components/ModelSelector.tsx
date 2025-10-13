@@ -16,8 +16,8 @@ const models = [
     color: 'from-purple-500 to-blue-600'
   },
   {
-    id: 'GPT-5-Pro',
-    name: 'GPT-5 Pro',
+    id: 'GPT-4.1',
+    name: 'GPT-4.1',
     description: 'Advanced reasoning',
     icon: Zap,
     color: 'from-emerald-500 to-teal-600'

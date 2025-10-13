@@ -21,8 +21,8 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
     switch (modelId) {
       case 'Gemini-2.5-Flash-Image':
         return 'Gemini 2.5 Flash';
-      case 'GPT-5-Pro':
-        return 'GPT-5 Pro';
+      case 'GPT-4.1':
+        return 'GPT-4.1';
       default:
         return modelId;
     }

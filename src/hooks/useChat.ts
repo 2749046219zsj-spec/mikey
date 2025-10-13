@@ -7,7 +7,7 @@ export const useChat = () => {
     messages: [],
     isLoading: false,
     error: null,
-    selectedModel: 'Gemini-2.5-Flash-Image'
+    selectedModel: 'GPT-4.1'
   });
   const [retryCallback, setRetryCallback] = useState<(() => void) | null>(null);
 
