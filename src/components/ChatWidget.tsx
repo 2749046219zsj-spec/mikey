@@ -116,34 +116,24 @@ export const ChatWidget: React.FC = () => {
   const handleSendPromptsToMain = (prompts: string[]) => {
     if (prompts.length === 0) return;
 
-    openSelector(prompts, (selectedImageUrl: string) => {
-      sendPromptsWithImage(prompts, selectedImageUrl);
+    openSelector(prompts, (imageFile: File) => {
+      sendPromptsWithImage(prompts, imageFile);
     });
   };
 
   // 将提示词和图片一起发送到主界面
-  const sendPromptsWithImage = async (prompts: string[], imageUrl: string) => {
-    try {
-      // 将图片URL转换为File对象
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      const file = new File([blob], 'reference_image.jpg', { type: blob.type });
+  const sendPromptsWithImage = (prompts: string[], imageFile: File) => {
+    // 添加到队列
+    addPrompts(prompts);
 
-      // 添加到队列
-      addPrompts(prompts);
-
-      // 发送第一个提示词和图片到主界面
-      const mainSendMessage = (window as any).mainChatSendMessage;
-      if (mainSendMessage && typeof mainSendMessage === 'function') {
-        mainSendMessage(prompts[0], [file]);
-      }
-
-      // 显示成功提示
-      alert(`已将 ${prompts.length} 个提示词和参考图发送到主界面进行绘图！`);
-    } catch (error) {
-      console.error('Failed to convert image:', error);
-      alert('图片加载失败，请重试');
+    // 发送第一个提示词和图片到主界面
+    const mainSendMessage = (window as any).mainChatSendMessage;
+    if (mainSendMessage && typeof mainSendMessage === 'function') {
+      mainSendMessage(prompts[0], [imageFile]);
     }
+
+    // 显示成功提示
+    alert(`已将 ${prompts.length} 个提示词和参考图发送到主界面进行绘图！`);
   };
 
   // 发送消息
