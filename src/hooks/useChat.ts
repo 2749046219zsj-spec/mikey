@@ -77,7 +77,6 @@ export const useChat = () => {
     } finally {
       setState(prev => ({ ...prev, isLoading: false }));
     }
-  }, [addMessage, geminiService]);
   }, [addMessage, geminiService, state.selectedModel]);
 
   const retryToInput = useCallback((messageId: string, onEdit: (text: string, images: File[]) => void) => {
@@ -99,7 +98,6 @@ export const useChat = () => {
       selectedModel: state.selectedModel
     });
     setRetryCallback(null);
-  }, []);
   }, [state.selectedModel]);
 
   return {
