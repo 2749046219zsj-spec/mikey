@@ -22,6 +22,7 @@ export const ChatWidget: React.FC = () => {
   const widgetRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   const { messages: widgetMessages, isLoading: widgetLoading, sendMessage: widgetSendMessage, clearChat: widgetClearChat } = useWidgetChat();
   const { openSelector } = useImageSelector();
@@ -141,6 +142,13 @@ export const ChatWidget: React.FC = () => {
     widgetSendMessage(inputText, widgetImages);
     setInputText('');
     setWidgetImages([]);
+
+    // 重置textarea高度
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+      }
+    }, 0);
   };
 
   // 监听AI回复，自动检测提示词并直接发送到主界面
@@ -208,6 +216,7 @@ export const ChatWidget: React.FC = () => {
   const handleStyleSelect = (style: string) => {
     const newText = inputText ? `${inputText}, ${style}` : style;
     setInputText(newText);
+    setTimeout(() => adjustTextareaHeight(), 0);
   };
 
   // 处理工艺选择确认
@@ -215,6 +224,22 @@ export const ChatWidget: React.FC = () => {
     const craftsText = crafts.join('、');
     const newText = inputText ? `${inputText}, ${craftsText}` : craftsText;
     setInputText(newText);
+    setTimeout(() => adjustTextareaHeight(), 0);
+  };
+
+  // 自动调整textarea高度
+  const adjustTextareaHeight = () => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+    }
+  };
+
+  // 处理输入变化
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInputText(e.target.value);
+    adjustTextareaHeight();
   };
 
   // 格式化时间
@@ -392,14 +417,16 @@ export const ChatWidget: React.FC = () => {
                     <Image size={16} />
                   </button>
                   
-                  <input
-                    type="text"
+                  <textarea
+                    ref={textareaRef}
                     value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
+                    onChange={handleInputChange}
                     onKeyPress={handleKeyPress}
                     onPaste={handlePaste}
                     placeholder="输入消息..."
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                    rows={1}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm resize-none overflow-y-auto"
+                    style={{ minHeight: '40px', maxHeight: '120px' }}
                     disabled={widgetLoading}
                   />
                   <button
