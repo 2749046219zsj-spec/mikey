@@ -3,15 +3,15 @@ import { Send, Loader2, X } from 'lucide-react';
 import { ImageUpload } from './ImageUpload';
 import { StylePresetDropdown } from './StylePresetDropdown';
 import { CraftSelector } from './CraftSelector';
-import { ModeSelector, GenerationMode } from './ModeSelector';
+import { ModeSelector, AppMode } from './ModeSelector';
 
 interface ChatInputProps {
   onSendMessage: (text: string, images: File[]) => void;
   isLoading: boolean;
   editContent?: { text: string; images: File[] };
   onClearEditContent?: () => void;
-  selectedMode?: GenerationMode;
-  onModeChange?: (mode: GenerationMode) => void;
+  currentMode?: AppMode;
+  onModeChange?: (mode: AppMode) => void;
 }
 
 export const ChatInput: React.FC<ChatInputProps> = ({
@@ -19,7 +19,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   isLoading,
   editContent,
   onClearEditContent,
-  selectedMode = 'normal',
+  currentMode = 'image-generation',
   onModeChange
 }) => {
   const [text, setText] = useState('');
@@ -162,11 +162,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
         <div className="flex items-center gap-2 mt-3">
           {onModeChange && (
-            <ModeSelector
-              selectedMode={selectedMode}
-              onModeChange={onModeChange}
-              buttonText="模式"
-            />
+            <ModeSelector currentMode={currentMode} onModeChange={onModeChange} />
           )}
           <StylePresetDropdown onSelectStyle={handleStyleSelect} buttonText="风格预设" />
           <CraftSelector onConfirm={handleCraftsConfirm} buttonText="工艺" />
