@@ -4,6 +4,8 @@ import { useWidgetChat } from '../hooks/useWidgetChat';
 import { useImageSelector } from '../hooks/useImageSelector';
 import { StylePresetDropdown } from './StylePresetDropdown';
 import { CraftSelector } from './CraftSelector';
+import { ProductSelector } from './ProductSelector';
+import { PromptStructureSelector } from './PromptStructureSelector';
 
 interface Position {
   x: number;
@@ -245,6 +247,20 @@ export const ChatWidget: React.FC = () => {
     setTimeout(() => adjustTextareaHeight(), 0);
   };
 
+  // 处理产品选择
+  const handleProductSelect = (product: string) => {
+    const newText = inputText ? `${inputText}, ${product}` : product;
+    setInputText(newText);
+    setTimeout(() => adjustTextareaHeight(), 0);
+  };
+
+  // 处理提示词结构选择
+  const handleStructureSelect = (structure: string) => {
+    const newText = inputText ? `${inputText}, ${structure}` : structure;
+    setInputText(newText);
+    setTimeout(() => adjustTextareaHeight(), 0);
+  };
+
   // 自动调整textarea高度
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;
@@ -460,9 +476,11 @@ export const ChatWidget: React.FC = () => {
                   </button>
                 </div>
 
-                <div className="flex items-center gap-2 mt-2">
+                <div className="flex items-center gap-2 mt-2 flex-wrap">
+                  <ProductSelector onSelectProduct={handleProductSelect} buttonText="产品" />
                   <StylePresetDropdown onSelectStyle={handleStyleSelect} buttonText="风格" />
                   <CraftSelector onConfirm={handleCraftsConfirm} buttonText="工艺" />
+                  <PromptStructureSelector onSelectStructure={handleStructureSelect} buttonText="提示词结构" />
                 </div>
 
                 {widgetMessages.length > 0 && (
