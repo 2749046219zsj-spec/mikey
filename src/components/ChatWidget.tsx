@@ -2,8 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Minus, Bot, User, Send, Loader2, Settings, Image, Paperclip } from 'lucide-react';
 import { useWidgetChat } from '../hooks/useWidgetChat';
 import { useImageSelector } from '../hooks/useImageSelector';
-import { StylePresetDropdown } from './StylePresetDropdown';
-import { CraftSelector } from './CraftSelector';
 
 interface Position {
   x: number;
@@ -22,10 +20,9 @@ export const ChatWidget: React.FC = () => {
   const widgetRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   const { messages: widgetMessages, isLoading: widgetLoading, sendMessage: widgetSendMessage, clearChat: widgetClearChat } = useWidgetChat();
-  const { openAdvancedSelector } = useImageSelector();
+  const { openSelector } = useImageSelector();
 
   // 自动滚动到底部
   useEffect(() => {
@@ -117,41 +114,23 @@ export const ChatWidget: React.FC = () => {
   const handleSendPromptsToMain = (prompts: string[]) => {
     if (prompts.length === 0) return;
 
-    openAdvancedSelector(prompts, (result) => {
-      if (result.mode === 'unified' && result.unifiedImages) {
-        sendPromptsWithUnifiedImages(prompts, result.unifiedImages);
-      } else if (result.mode === 'individual' && result.promptImages) {
-        sendPromptsWithIndividualImages(result.promptImages);
-      }
+    openSelector(prompts, (imageFile: File) => {
+      sendPromptsWithImage(prompts, imageFile);
     });
   };
 
-  // 将提示词和统一参考图发送到主界面
-  const sendPromptsWithUnifiedImages = (prompts: string[], images: File[]) => {
+  // 将提示词和图片一起发送到主界面
+  const sendPromptsWithImage = (prompts: string[], imageFile: File) => {
+    // 发送提示词和图片到主界面（主界面的sendMessage会处理队列）
     const mainSendMessage = (window as any).mainChatSendMessage;
     if (mainSendMessage && typeof mainSendMessage === 'function') {
+      // 构造带提示词的文本（使用**标记让主界面识别为队列）
       const textWithPrompts = prompts.map(p => `**${p}**`).join('\n');
-      mainSendMessage(textWithPrompts, images);
+      mainSendMessage(textWithPrompts, [imageFile]);
     }
 
-    alert(`已将 ${prompts.length} 个提示词和 ${images.length} 张统一参考图发送到主界面进行绘图！`);
-  };
-
-  // 将提示词和各自的参考图分别发送到主界面
-  const sendPromptsWithIndividualImages = (promptImages: { prompt: string; images: File[] }[]) => {
-    const mainSendMessage = (window as any).mainChatSendMessage;
-    if (mainSendMessage && typeof mainSendMessage === 'function') {
-      promptImages.forEach(({ prompt, images }) => {
-        if (images.length > 0) {
-          mainSendMessage(`**${prompt}**`, images);
-        } else {
-          mainSendMessage(`**${prompt}**`, []);
-        }
-      });
-    }
-
-    const totalImages = promptImages.reduce((sum, p) => sum + p.images.length, 0);
-    alert(`已将 ${promptImages.length} 个提示词（共 ${totalImages} 张参考图）发送到主界面进行绘图！`);
+    // 显示成功提示
+    alert(`已将 ${prompts.length} 个提示词和参考图发送到主界面进行绘图！`);
   };
 
   // 发送消息
@@ -160,13 +139,6 @@ export const ChatWidget: React.FC = () => {
     widgetSendMessage(inputText, widgetImages);
     setInputText('');
     setWidgetImages([]);
-
-    // 重置textarea高度
-    setTimeout(() => {
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
-      }
-    }, 0);
   };
 
   // 监听AI回复，自动检测提示词并直接发送到主界面
@@ -228,36 +200,6 @@ export const ChatWidget: React.FC = () => {
       e.preventDefault();
       handleSendMessage();
     }
-  };
-
-  // 处理风格选择
-  const handleStyleSelect = (style: string) => {
-    const newText = inputText ? `${inputText}, ${style}` : style;
-    setInputText(newText);
-    setTimeout(() => adjustTextareaHeight(), 0);
-  };
-
-  // 处理工艺选择确认
-  const handleCraftsConfirm = (crafts: string[]) => {
-    const craftsText = crafts.join('、');
-    const newText = inputText ? `${inputText}, ${craftsText}` : craftsText;
-    setInputText(newText);
-    setTimeout(() => adjustTextareaHeight(), 0);
-  };
-
-  // 自动调整textarea高度
-  const adjustTextareaHeight = () => {
-    const textarea = textareaRef.current;
-    if (textarea) {
-      textarea.style.height = 'auto';
-      textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
-    }
-  };
-
-  // 处理输入变化
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInputText(e.target.value);
-    adjustTextareaHeight();
   };
 
   // 格式化时间
@@ -435,16 +377,14 @@ export const ChatWidget: React.FC = () => {
                     <Image size={16} />
                   </button>
                   
-                  <textarea
-                    ref={textareaRef}
+                  <input
+                    type="text"
                     value={inputText}
-                    onChange={handleInputChange}
+                    onChange={(e) => setInputText(e.target.value)}
                     onKeyPress={handleKeyPress}
                     onPaste={handlePaste}
                     placeholder="输入消息..."
-                    rows={1}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm resize-none overflow-y-auto"
-                    style={{ minHeight: '40px', maxHeight: '120px' }}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
                     disabled={widgetLoading}
                   />
                   <button
@@ -459,12 +399,7 @@ export const ChatWidget: React.FC = () => {
                     )}
                   </button>
                 </div>
-
-                <div className="flex items-center gap-2 mt-2">
-                  <StylePresetDropdown onSelectStyle={handleStyleSelect} buttonText="风格" />
-                  <CraftSelector onConfirm={handleCraftsConfirm} buttonText="工艺" />
-                </div>
-
+                
                 {widgetMessages.length > 0 && (
                   <button
                     onClick={widgetClearChat}

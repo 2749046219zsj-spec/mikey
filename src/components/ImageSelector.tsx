@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { X, CheckCircle2, ImageIcon, Upload, Clipboard, Trash2 } from 'lucide-react';
+import { X, CheckCircle2, ImageIcon, Upload, Clipboard } from 'lucide-react';
 import { useImageSelector } from '../hooks/useImageSelector';
 import { useImageGallery } from '../hooks/useImageGallery';
 
@@ -7,31 +7,18 @@ export const ImageSelector: React.FC = () => {
   const {
     isOpen,
     prompts,
-    mode,
     selectedImageUrl,
     selectedImageFile,
-    selectedImages,
-    promptImages,
-    currentPromptIndex,
     onConfirm,
-    onConfirmMultiple,
     closeSelector,
     selectImage,
-    selectUploadedImage,
-    setMode,
-    addImageToUnified,
-    removeImageFromUnified,
-    addImageToPrompt,
-    removeImageFromPrompt,
-    setCurrentPromptIndex
+    selectUploadedImage
   } = useImageSelector();
 
   const { images } = useImageGallery();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadAreaRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
-
-  const isAdvancedMode = onConfirmMultiple !== null;
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -45,42 +32,19 @@ export const ImageSelector: React.FC = () => {
   }, [isOpen, closeSelector]);
 
   const handleConfirm = async () => {
-    if (isAdvancedMode && onConfirmMultiple) {
-      if (mode === 'unified') {
-        if (selectedImages.length === 0) {
-          alert('请至少选择一张参考图');
-          return;
-        }
-        onConfirmMultiple({
-          mode: 'unified',
-          unifiedImages: selectedImages
-        });
-      } else {
-        const result = prompts.map((prompt, index) => ({
-          prompt,
-          images: promptImages.get(index) || []
-        }));
-        onConfirmMultiple({
-          mode: 'individual',
-          promptImages: result
-        });
-      }
+    if (selectedImageFile && onConfirm) {
+      onConfirm(selectedImageFile);
       closeSelector();
-    } else if (onConfirm) {
-      if (selectedImageFile) {
-        onConfirm(selectedImageFile);
+    } else if (selectedImageUrl && onConfirm) {
+      try {
+        const response = await fetch(selectedImageUrl);
+        const blob = await response.blob();
+        const file = new File([blob], 'reference_image.jpg', { type: blob.type });
+        onConfirm(file);
         closeSelector();
-      } else if (selectedImageUrl) {
-        try {
-          const response = await fetch(selectedImageUrl);
-          const blob = await response.blob();
-          const file = new File([blob], 'reference_image.jpg', { type: blob.type });
-          onConfirm(file);
-          closeSelector();
-        } catch (error) {
-          console.error('Failed to convert image:', error);
-          alert('图片加载失败，请重试');
-        }
+      } catch (error) {
+        console.error('Failed to convert image:', error);
+        alert('图片加载失败，请重试');
       }
     }
   };
@@ -88,21 +52,11 @@ export const ImageSelector: React.FC = () => {
   const handleFileSelect = (files: FileList | null) => {
     if (!files || files.length === 0) return;
 
-    if (isAdvancedMode) {
-      const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
-
-      if (mode === 'unified') {
-        imageFiles.forEach(file => addImageToUnified(file));
-      } else {
-        imageFiles.forEach(file => addImageToPrompt(currentPromptIndex, file));
-      }
+    const file = files[0];
+    if (file.type.startsWith('image/')) {
+      selectUploadedImage(file);
     } else {
-      const file = files[0];
-      if (file.type.startsWith('image/')) {
-        selectUploadedImage(file);
-      } else {
-        alert('请选择图片文件');
-      }
+      alert('请选择图片文件');
     }
   };
 
@@ -116,15 +70,7 @@ export const ImageSelector: React.FC = () => {
         const file = item.getAsFile();
         if (file) {
           e.preventDefault();
-          if (isAdvancedMode) {
-            if (mode === 'unified') {
-              addImageToUnified(file);
-            } else {
-              addImageToPrompt(currentPromptIndex, file);
-            }
-          } else {
-            selectUploadedImage(file);
-          }
+          selectUploadedImage(file);
           return;
         }
       }
@@ -149,40 +95,16 @@ export const ImageSelector: React.FC = () => {
     handleFileSelect(files);
   };
 
-  const handleGalleryImageClick = async (imageUrl: string) => {
-    if (isAdvancedMode) {
-      try {
-        const response = await fetch(imageUrl);
-        const blob = await response.blob();
-        const file = new File([blob], `gallery_image_${Date.now()}.jpg`, { type: blob.type });
-
-        if (mode === 'unified') {
-          addImageToUnified(file);
-        } else {
-          addImageToPrompt(currentPromptIndex, file);
-        }
-      } catch (error) {
-        console.error('Failed to convert gallery image:', error);
-        alert('图片加载失败，请重试');
-      }
-    } else {
-      selectImage(imageUrl);
-    }
-  };
-
   if (!isOpen) return null;
-
-  const currentPromptImages = promptImages.get(currentPromptIndex) || [];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-5xl max-h-[85vh] flex flex-col">
+      <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
             <h2 className="text-xl font-semibold text-gray-800">选择参考图</h2>
             <p className="text-sm text-gray-500 mt-1">
-              将发送 <span className="font-medium text-blue-600">{prompts.length}</span> 个提示词到主界面
-              {isAdvancedMode && '，请选择参考图模式'}
+              将发送 <span className="font-medium text-blue-600">{prompts.length}</span> 个提示词到主界面，请选择一张参考图
             </p>
           </div>
           <button
@@ -193,79 +115,11 @@ export const ImageSelector: React.FC = () => {
           </button>
         </div>
 
-        {isAdvancedMode && (
-          <div className="p-4 bg-gray-50 border-b border-gray-200">
-            <div className="flex gap-3">
-              <button
-                onClick={() => setMode('unified')}
-                className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all ${
-                  mode === 'unified'
-                    ? 'bg-blue-500 text-white shadow-md'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                <div className="text-sm">统一参考图</div>
-                <div className="text-xs opacity-80 mt-1">
-                  所有提示词共用同一组参考图
-                </div>
-              </button>
-              <button
-                onClick={() => setMode('individual')}
-                className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all ${
-                  mode === 'individual'
-                    ? 'bg-blue-500 text-white shadow-md'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                <div className="text-sm">独立参考图</div>
-                <div className="text-xs opacity-80 mt-1">
-                  每个提示词配置独立的参考图
-                </div>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {isAdvancedMode && mode === 'individual' && (
-          <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 border-b border-gray-200">
-            <div className="text-sm font-medium text-gray-700 mb-2">选择提示词</div>
-            <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-              {prompts.map((prompt, index) => {
-                const imageCount = (promptImages.get(index) || []).length;
-                return (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentPromptIndex(index)}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                      currentPromptIndex === index
-                        ? 'bg-blue-500 text-white shadow-md'
-                        : 'bg-white text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    {prompt.slice(0, 20)}
-                    {prompt.length > 20 ? '...' : ''}
-                    {imageCount > 0 && (
-                      <span className={`ml-2 px-1.5 py-0.5 rounded text-xs ${
-                        currentPromptIndex === index
-                          ? 'bg-white/20'
-                          : 'bg-blue-100 text-blue-600'
-                      }`}>
-                        {imageCount}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
         <div className="flex-1 overflow-y-auto p-6" onPaste={handlePaste} tabIndex={0}>
           <input
             ref={fileInputRef}
             type="file"
             accept="image/*"
-            multiple={isAdvancedMode}
             className="hidden"
             onChange={(e) => handleFileSelect(e.target.files)}
           />
@@ -291,7 +145,6 @@ export const ImageSelector: React.FC = () => {
               </p>
               <p className="text-xs text-gray-500">
                 点击上传、拖拽图片到此处，或使用 Ctrl+V 粘贴
-                {isAdvancedMode && ' (支持多选)'}
               </p>
               <button
                 onClick={() => fileInputRef.current?.click()}
@@ -302,57 +155,7 @@ export const ImageSelector: React.FC = () => {
             </div>
           </div>
 
-          {isAdvancedMode && mode === 'unified' && selectedImages.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">
-                已选择的图片 ({selectedImages.length})
-              </h3>
-              <div className="grid grid-cols-5 gap-3">
-                {selectedImages.map((file, index) => (
-                  <div key={index} className="relative group rounded-lg overflow-hidden ring-2 ring-green-500 shadow-md">
-                    <img
-                      src={URL.createObjectURL(file)}
-                      alt={`Selected ${index + 1}`}
-                      className="w-full aspect-square object-cover"
-                    />
-                    <button
-                      onClick={() => removeImageFromUnified(index)}
-                      className="absolute top-1 right-1 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X size={12} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {isAdvancedMode && mode === 'individual' && currentPromptImages.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">
-                当前提示词的参考图 ({currentPromptImages.length})
-              </h3>
-              <div className="grid grid-cols-5 gap-3">
-                {currentPromptImages.map((file, index) => (
-                  <div key={index} className="relative group rounded-lg overflow-hidden ring-2 ring-green-500 shadow-md">
-                    <img
-                      src={URL.createObjectURL(file)}
-                      alt={`Image ${index + 1}`}
-                      className="w-full aspect-square object-cover"
-                    />
-                    <button
-                      onClick={() => removeImageFromPrompt(currentPromptIndex, index)}
-                      className="absolute top-1 right-1 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X size={12} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {!isAdvancedMode && selectedImageUrl && selectedImageFile && (
+          {selectedImageUrl && selectedImageFile && (
             <div className="mb-6">
               <h3 className="text-sm font-medium text-gray-700 mb-3">已选择的图片</h3>
               <div className="relative group w-48 rounded-lg overflow-hidden ring-4 ring-green-500 shadow-lg">
@@ -374,13 +177,13 @@ export const ImageSelector: React.FC = () => {
           {images.length > 0 && (
             <div>
               <h3 className="text-sm font-medium text-gray-700 mb-3">或从图库选择</h3>
-              <div className="grid grid-cols-5 gap-3">
+              <div className="grid grid-cols-4 gap-4">
                 {images.map((imageUrl, index) => {
-                  const isSelected = !isAdvancedMode && selectedImageUrl === imageUrl && !selectedImageFile;
+                  const isSelected = selectedImageUrl === imageUrl && !selectedImageFile;
                   return (
                     <div
                       key={index}
-                      onClick={() => handleGalleryImageClick(imageUrl)}
+                      onClick={() => selectImage(imageUrl)}
                       className={`relative group cursor-pointer rounded-lg overflow-hidden transition-all duration-200 ${
                         isSelected
                           ? 'ring-4 ring-blue-500 shadow-lg scale-105'
@@ -391,7 +194,6 @@ export const ImageSelector: React.FC = () => {
                         src={imageUrl}
                         alt={`Image ${index + 1}`}
                         className="w-full aspect-square object-cover"
-                        loading="lazy"
                       />
 
                       <div className={`absolute inset-0 transition-all duration-200 ${
@@ -417,36 +219,20 @@ export const ImageSelector: React.FC = () => {
           )}
         </div>
 
-        <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
-          <div className="text-sm text-gray-600">
-            {isAdvancedMode && mode === 'unified' && (
-              <span>已选择 {selectedImages.length} 张参考图</span>
-            )}
-            {isAdvancedMode && mode === 'individual' && (
-              <span>
-                已为 {Array.from(promptImages.keys()).filter(k => (promptImages.get(k) || []).length > 0).length} / {prompts.length} 个提示词配置参考图
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={closeSelector}
-              className="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors"
-            >
-              取消
-            </button>
-            <button
-              onClick={handleConfirm}
-              disabled={
-                isAdvancedMode
-                  ? (mode === 'unified' && selectedImages.length === 0)
-                  : !selectedImageUrl
-              }
-              className="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg disabled:hover:shadow-md"
-            >
-              确认选择
-            </button>
-          </div>
+        <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
+          <button
+            onClick={closeSelector}
+            className="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors"
+          >
+            取消
+          </button>
+          <button
+            onClick={handleConfirm}
+            disabled={!selectedImageUrl}
+            className="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg disabled:hover:shadow-md"
+          >
+            确认选择
+          </button>
         </div>
       </div>
     </div>
