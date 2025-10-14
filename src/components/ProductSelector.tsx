@@ -30,7 +30,7 @@ export const ProductSelector: React.FC<ProductSelectorProps> = ({
   }, [isOpen]);
 
   const handleSelect = () => {
-    onSelectProduct('根据我这个产品进行设计，结合以下风格和工艺');
+    onSelectProduct('根据我这个产品进行设计（数量）个ai提示词，');
     setIsOpen(false);
   };
 
@@ -60,7 +60,7 @@ export const ProductSelector: React.FC<ProductSelectorProps> = ({
               onClick={handleSelect}
               className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-purple-50 hover:to-blue-50 hover:text-purple-700 rounded-lg transition-all hover:shadow-sm border border-transparent hover:border-purple-200"
             >
-              根据我这个产品进行设计，结合以下风格和工艺
+              根据我这个产品进行设计（数量）个ai提示词，
             </button>
           </div>
         </div>
