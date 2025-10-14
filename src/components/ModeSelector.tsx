@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Image, Video, User, Activity, CheckCircle } from 'lucide-react';
+import { ChevronDown, Image, MessageCircle, CheckCircle } from 'lucide-react';
 
-export type AppMode = 'image-generation' | 'video-generation' | 'digital-human' | 'motion-simulation' | 'agent-mode';
+export type AppMode = 'image-generation' | 'customer-service';
 
 interface ModeSelectorProps {
   currentMode: AppMode;
@@ -15,11 +15,8 @@ interface ModeOption {
 }
 
 const modeOptions: ModeOption[] = [
-  { id: 'agent-mode', label: 'Agent 模式', icon: <Activity size={18} /> },
   { id: 'image-generation', label: '图片生成', icon: <Image size={18} /> },
-  { id: 'video-generation', label: '视频生成', icon: <Video size={18} /> },
-  { id: 'digital-human', label: '数字人', icon: <User size={18} /> },
-  { id: 'motion-simulation', label: '动作模拟', icon: <Activity size={18} /> }
+  { id: 'customer-service', label: '客服助手', icon: <MessageCircle size={18} /> }
 ];
 
 export const ModeSelector: React.FC<ModeSelectorProps> = ({ currentMode, onModeChange }) => {
