@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Minus, Bot, User, Send, Loader2, Settings, Image, Paperclip } from 'lucide-react';
+import { MessageCircle, X, Minus, Bot, User, Send, Loader2, Settings, Image } from 'lucide-react';
 import { useWidgetChat } from '../hooks/useWidgetChat';
 import { useImageSelector } from '../hooks/useImageSelector';
 import { StylePresetDropdown } from './StylePresetDropdown';
 import { CraftSelector } from './CraftSelector';
+import { PromptPresetSelector } from './PromptPresetSelector';
 
 interface Position {
   x: number;
@@ -246,24 +247,28 @@ export const ChatWidget: React.FC = () => {
   };
 
   // 生成AI提示词预设
-  const handleGeneratePrompts = () => {
+  const handleGeneratePrompts = (presetName: string, presetDescription: string) => {
     const userContext = inputText.trim()
-      ? `\n\n用户选择的风格和工艺：${inputText}`
-      : '\n\n用户未指定特定风格或工艺，请生成多样化的创意方案。';
+      ? `\n\n用户当前输入的风格和工艺：${inputText}`
+      : '';
 
-    const promptText = `我需要为香水瓶产品设计生成5个AI图像提示词。${userContext}
+    const promptText = `我需要为香水瓶产品设计生成5个AI图像提示词。
+
+场景定位：${presetName}
+场景说明：${presetDescription}${userContext}
 
 请严格按照以下要求生成：
 
 1. 格式要求：
    - 每个提示词的开头和结尾必须用**符号包裹
-   - 格式示例：**一款优雅的透明玻璃香水瓶，采用Art Deco装饰艺术风格...**
+   - 格式示例：**一款优雅的透明玻璃香水瓶，采用Art Deco装饰艺术风格，金色金属装饰...**
 
 2. 内容要求：
    - 提示词要详细具体，包含产品材质、形状、颜色、装饰元素
-   - 融入风格特征和工艺细节
-   - 适合Midjourney、Stable Diffusion等AI绘图工具使用
-   - 每个提示词80-150字左右
+   - 紧密结合场景定位和用户选择的风格工艺
+   - 适合AI图像生成工具（Midjourney、Stable Diffusion等）使用
+   - 每个提示词100-150字左右
+   - 用中文描述，专业且富有创意
 
 3. 展示格式：
    1. **第一个提示词内容**
@@ -495,15 +500,10 @@ export const ChatWidget: React.FC = () => {
                 <div className="flex items-center gap-2 mt-2">
                   <StylePresetDropdown onSelectStyle={handleStyleSelect} buttonText="风格" />
                   <CraftSelector onConfirm={handleCraftsConfirm} buttonText="工艺" />
-                  <button
-                    onClick={handleGeneratePrompts}
-                    disabled={widgetLoading}
-                    className="px-3 py-1.5 bg-gradient-to-r from-orange-500 to-red-600 text-white text-xs rounded-lg hover:from-orange-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-1.5"
-                    title="根据当前输入生成AI提示词"
-                  >
-                    <Paperclip size={14} />
-                    生成提示词
-                  </button>
+                  <PromptPresetSelector
+                    onSelectPreset={(preset) => handleGeneratePrompts(preset.name, preset.description)}
+                    buttonText="生成提示词"
+                  />
                 </div>
 
                 {widgetMessages.length > 0 && (
