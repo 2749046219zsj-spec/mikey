@@ -245,6 +245,38 @@ export const ChatWidget: React.FC = () => {
     setTimeout(() => adjustTextareaHeight(), 0);
   };
 
+  // 生成AI提示词预设
+  const handleGeneratePrompts = () => {
+    const userContext = inputText.trim()
+      ? `\n\n用户选择的风格和工艺：${inputText}`
+      : '\n\n用户未指定特定风格或工艺，请生成多样化的创意方案。';
+
+    const promptText = `我需要为香水瓶产品设计生成5个AI图像提示词。${userContext}
+
+请严格按照以下要求生成：
+
+1. 格式要求：
+   - 每个提示词的开头和结尾必须用**符号包裹
+   - 格式示例：**一款优雅的透明玻璃香水瓶，采用Art Deco装饰艺术风格...**
+
+2. 内容要求：
+   - 提示词要详细具体，包含产品材质、形状、颜色、装饰元素
+   - 融入风格特征和工艺细节
+   - 适合Midjourney、Stable Diffusion等AI绘图工具使用
+   - 每个提示词80-150字左右
+
+3. 展示格式：
+   1. **第一个提示词内容**
+   2. **第二个提示词内容**
+   3. **第三个提示词内容**
+   4. **第四个提示词内容**
+   5. **第五个提示词内容**
+
+请现在开始生成：`;
+
+    widgetSendMessage(promptText, []);
+  };
+
   // 自动调整textarea高度
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;
@@ -463,6 +495,15 @@ export const ChatWidget: React.FC = () => {
                 <div className="flex items-center gap-2 mt-2">
                   <StylePresetDropdown onSelectStyle={handleStyleSelect} buttonText="风格" />
                   <CraftSelector onConfirm={handleCraftsConfirm} buttonText="工艺" />
+                  <button
+                    onClick={handleGeneratePrompts}
+                    disabled={widgetLoading}
+                    className="px-3 py-1.5 bg-gradient-to-r from-orange-500 to-red-600 text-white text-xs rounded-lg hover:from-orange-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-1.5"
+                    title="根据当前输入生成AI提示词"
+                  >
+                    <Paperclip size={14} />
+                    生成提示词
+                  </button>
                 </div>
 
                 {widgetMessages.length > 0 && (
