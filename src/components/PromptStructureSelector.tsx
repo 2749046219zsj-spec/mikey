@@ -57,10 +57,10 @@ export const PromptStructureSelector: React.FC<PromptStructureSelectorProps> = (
 
           <div className="p-3 space-y-2">
             <button
-              onClick={() => handleSelect('提示词首尾用**符号包裹')}
+              onClick={() => handleSelect('每个提示词必须用**符号包裹，格式：**提示词内容**')}
               className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-purple-50 hover:to-blue-50 hover:text-purple-700 rounded-lg transition-all hover:shadow-sm border border-transparent hover:border-purple-200"
             >
-              提示词首尾用**符号包裹
+              每个提示词必须用**符号包裹，格式：**提示词内容**
             </button>
             <button
               onClick={() => handleSelect('把这段话（根据我这个产品结构进行设计效果图）放在提示词最前面')}
