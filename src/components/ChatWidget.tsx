@@ -107,7 +107,7 @@ export const ChatWidget: React.FC = () => {
       });
     }
     
-    return prompts.filter(prompt => prompt.trim().length > 5); // 过滤太短的内容
+    return prompts.filter(prompt => prompt.length > 10); // 过滤太短的内容
   };
 
   // 打开图片选择器
@@ -147,7 +147,7 @@ export const ChatWidget: React.FC = () => {
       const lastMessage = widgetMessages[widgetMessages.length - 1];
       if (lastMessage.type === 'ai' && !widgetLoading) {
         const prompts = extractPrompts(lastMessage.content);
-        if (prompts.length > 0) { // 只要有提示词就显示发送按钮
+        if (prompts.length >= 3) { // 至少3个提示词才显示发送按钮
           // 在消息中添加发送按钮的标记
           lastMessage.hasPrompts = true;
           lastMessage.extractedPrompts = prompts;
