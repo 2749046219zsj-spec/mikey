@@ -7,6 +7,7 @@ import { ImageGallery } from './components/ImageGallery';
 import { ChatWidget } from './components/ChatWidget';
 import { ImageSelector } from './components/ImageSelector';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { GenerationMode } from './components/ModeSelector';
 import { useChat } from './hooks/useChat';
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
   } = useChat();
 
   const [editContent, setEditContent] = useState<{ text: string; images: File[] } | null>(null);
+  const [generationMode, setGenerationMode] = useState<GenerationMode>('normal');
 
   // 将发送消息函数暴露给全局，供客服弹窗调用
   useEffect(() => {
@@ -73,6 +75,8 @@ function App() {
           isLoading={isLoading}
           editContent={editContent}
           onClearEditContent={handleClearEditContent}
+          selectedMode={generationMode}
+          onModeChange={setGenerationMode}
         />
 
         <ImageModal />

@@ -4,6 +4,7 @@ import { useWidgetChat } from '../hooks/useWidgetChat';
 import { useImageSelector } from '../hooks/useImageSelector';
 import { StylePresetDropdown } from './StylePresetDropdown';
 import { CraftSelector } from './CraftSelector';
+import { ModeSelector, GenerationMode } from './ModeSelector';
 
 interface Position {
   x: number;
@@ -18,6 +19,7 @@ export const ChatWidget: React.FC = () => {
   const [dragOffset, setDragOffset] = useState<Position>({ x: 0, y: 0 });
   const [inputText, setInputText] = useState('');
   const [widgetImages, setWidgetImages] = useState<File[]>([]);
+  const [generationMode, setGenerationMode] = useState<GenerationMode>('normal');
   
   const widgetRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -461,6 +463,11 @@ export const ChatWidget: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-2 mt-2">
+                  <ModeSelector
+                    selectedMode={generationMode}
+                    onModeChange={setGenerationMode}
+                    buttonText="模式"
+                  />
                   <StylePresetDropdown onSelectStyle={handleStyleSelect} buttonText="风格" />
                   <CraftSelector onConfirm={handleCraftsConfirm} buttonText="工艺" />
                 </div>
