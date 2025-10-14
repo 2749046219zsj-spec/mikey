@@ -29,8 +29,8 @@ export const PromptStructureSelector: React.FC<PromptStructureSelectorProps> = (
     };
   }, [isOpen]);
 
-  const handleSelect = () => {
-    onSelectStructure('提示词首尾用**符号包裹');
+  const handleSelect = (structure: string) => {
+    onSelectStructure(structure);
     setIsOpen(false);
   };
 
@@ -55,12 +55,18 @@ export const PromptStructureSelector: React.FC<PromptStructureSelectorProps> = (
             <p className="text-xs text-purple-100 mt-1">选择提示词结构格式</p>
           </div>
 
-          <div className="p-3">
+          <div className="p-3 space-y-2">
             <button
-              onClick={handleSelect}
+              onClick={() => handleSelect('提示词首尾用**符号包裹')}
               className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-purple-50 hover:to-blue-50 hover:text-purple-700 rounded-lg transition-all hover:shadow-sm border border-transparent hover:border-purple-200"
             >
               提示词首尾用**符号包裹
+            </button>
+            <button
+              onClick={() => handleSelect('把这段话（根据我这个产品结构进行设计效果图）放在提示词最前面')}
+              className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-purple-50 hover:to-blue-50 hover:text-purple-700 rounded-lg transition-all hover:shadow-sm border border-transparent hover:border-purple-200"
+            >
+              把这段话（根据我这个产品结构进行设计效果图）放在提示词最前面
             </button>
           </div>
         </div>
