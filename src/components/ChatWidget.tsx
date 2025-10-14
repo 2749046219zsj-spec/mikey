@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Minus, Bot, User, Send, Loader2, Settings, Image, Paperclip, Zap, ArrowRight } from 'lucide-react';
-import { useWidgetChat } from '../hooks/useWidgetChat';
+import { useChat } from '../hooks/useChat';
 import { usePromptQueue } from '../hooks/usePromptQueue';
 
 interface Position {
@@ -21,7 +21,7 @@ export const ChatWidget: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const { messages: widgetMessages, isLoading: widgetLoading, sendMessage: widgetSendMessage, clearChat: widgetClearChat } = useWidgetChat();
+  const { messages: widgetMessages, isLoading: widgetLoading, sendMessage: widgetSendMessage, clearChat: widgetClearChat } = useChat();
   const { addPrompts } = usePromptQueue();
 
   // 自动滚动到底部
