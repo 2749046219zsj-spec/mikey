@@ -1,10 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Minus, Bot, User, Send, Loader2, Settings, Image } from 'lucide-react';
+import { MessageCircle, X, Minus, Bot, User, Send, Loader2, Settings, Image, Paperclip } from 'lucide-react';
 import { useWidgetChat } from '../hooks/useWidgetChat';
 import { useImageSelector } from '../hooks/useImageSelector';
 import { StylePresetDropdown } from './StylePresetDropdown';
 import { CraftSelector } from './CraftSelector';
-import { PromptPresetSelector } from './PromptPresetSelector';
 
 interface Position {
   x: number;
@@ -246,42 +245,6 @@ export const ChatWidget: React.FC = () => {
     setTimeout(() => adjustTextareaHeight(), 0);
   };
 
-  // 生成AI提示词预设
-  const handleGeneratePrompts = (presetName: string, presetDescription: string) => {
-    const userContext = inputText.trim()
-      ? `\n\n用户当前输入的风格和工艺：${inputText}`
-      : '';
-
-    const promptText = `我需要为香水瓶产品设计生成5个AI图像提示词。
-
-场景定位：${presetName}
-场景说明：${presetDescription}${userContext}
-
-请严格按照以下要求生成：
-
-1. 格式要求：
-   - 每个提示词的开头和结尾必须用**符号包裹
-   - 格式示例：**一款优雅的透明玻璃香水瓶，采用Art Deco装饰艺术风格，金色金属装饰...**
-
-2. 内容要求：
-   - 提示词要详细具体，包含产品材质、形状、颜色、装饰元素
-   - 紧密结合场景定位和用户选择的风格工艺
-   - 适合AI图像生成工具（Midjourney、Stable Diffusion等）使用
-   - 每个提示词100-150字左右
-   - 用中文描述，专业且富有创意
-
-3. 展示格式：
-   1. **第一个提示词内容**
-   2. **第二个提示词内容**
-   3. **第三个提示词内容**
-   4. **第四个提示词内容**
-   5. **第五个提示词内容**
-
-请现在开始生成：`;
-
-    widgetSendMessage(promptText, []);
-  };
-
   // 自动调整textarea高度
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;
@@ -500,10 +463,6 @@ export const ChatWidget: React.FC = () => {
                 <div className="flex items-center gap-2 mt-2">
                   <StylePresetDropdown onSelectStyle={handleStyleSelect} buttonText="风格" />
                   <CraftSelector onConfirm={handleCraftsConfirm} buttonText="工艺" />
-                  <PromptPresetSelector
-                    onSelectPreset={(preset) => handleGeneratePrompts(preset.name, preset.description)}
-                    buttonText="生成提示词"
-                  />
                 </div>
 
                 {widgetMessages.length > 0 && (
