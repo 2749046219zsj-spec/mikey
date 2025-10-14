@@ -25,7 +25,7 @@ export const ChatWidget: React.FC = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   const { messages: widgetMessages, isLoading: widgetLoading, sendMessage: widgetSendMessage, clearChat: widgetClearChat } = useWidgetChat();
-  const { openSelector } = useImageSelector();
+  const { openAdvancedSelector } = useImageSelector();
 
   // 自动滚动到底部
   useEffect(() => {
@@ -117,23 +117,41 @@ export const ChatWidget: React.FC = () => {
   const handleSendPromptsToMain = (prompts: string[]) => {
     if (prompts.length === 0) return;
 
-    openSelector(prompts, (imageFile: File) => {
-      sendPromptsWithImage(prompts, imageFile);
+    openAdvancedSelector(prompts, (result) => {
+      if (result.mode === 'unified' && result.unifiedImages) {
+        sendPromptsWithUnifiedImages(prompts, result.unifiedImages);
+      } else if (result.mode === 'individual' && result.promptImages) {
+        sendPromptsWithIndividualImages(result.promptImages);
+      }
     });
   };
 
-  // 将提示词和图片一起发送到主界面
-  const sendPromptsWithImage = (prompts: string[], imageFile: File) => {
-    // 发送提示词和图片到主界面（主界面的sendMessage会处理队列）
+  // 将提示词和统一参考图发送到主界面
+  const sendPromptsWithUnifiedImages = (prompts: string[], images: File[]) => {
     const mainSendMessage = (window as any).mainChatSendMessage;
     if (mainSendMessage && typeof mainSendMessage === 'function') {
-      // 构造带提示词的文本（使用**标记让主界面识别为队列）
       const textWithPrompts = prompts.map(p => `**${p}**`).join('\n');
-      mainSendMessage(textWithPrompts, [imageFile]);
+      mainSendMessage(textWithPrompts, images);
     }
 
-    // 显示成功提示
-    alert(`已将 ${prompts.length} 个提示词和参考图发送到主界面进行绘图！`);
+    alert(`已将 ${prompts.length} 个提示词和 ${images.length} 张统一参考图发送到主界面进行绘图！`);
+  };
+
+  // 将提示词和各自的参考图分别发送到主界面
+  const sendPromptsWithIndividualImages = (promptImages: { prompt: string; images: File[] }[]) => {
+    const mainSendMessage = (window as any).mainChatSendMessage;
+    if (mainSendMessage && typeof mainSendMessage === 'function') {
+      promptImages.forEach(({ prompt, images }) => {
+        if (images.length > 0) {
+          mainSendMessage(`**${prompt}**`, images);
+        } else {
+          mainSendMessage(`**${prompt}**`, []);
+        }
+      });
+    }
+
+    const totalImages = promptImages.reduce((sum, p) => sum + p.images.length, 0);
+    alert(`已将 ${promptImages.length} 个提示词（共 ${totalImages} 张参考图）发送到主界面进行绘图！`);
   };
 
   // 发送消息
