@@ -30,7 +30,7 @@ export const PromptStructureSelector: React.FC<PromptStructureSelectorProps> = (
   }, [isOpen]);
 
   const handleSelect = () => {
-    onSelectStructure('提示词首尾用**符号包裹，调整按钮顺序');
+    onSelectStructure('提示词首尾用**符号包裹');
     setIsOpen(false);
   };
 
@@ -60,7 +60,7 @@ export const PromptStructureSelector: React.FC<PromptStructureSelectorProps> = (
               onClick={handleSelect}
               className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-purple-50 hover:to-blue-50 hover:text-purple-700 rounded-lg transition-all hover:shadow-sm border border-transparent hover:border-purple-200"
             >
-              提示词首尾用**符号包裹，调整按钮顺序
+              提示词首尾用**符号包裹
             </button>
           </div>
         </div>
