@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Minus, Bot, User, Send, Loader2, Settings, Image, Paperclip, Zap, ArrowRight } from 'lucide-react';
 import { useWidgetChat } from '../hooks/useWidgetChat';
-import { useImageSelector } from '../hooks/useImageSelector';
+import { usePromptQueue } from '../hooks/usePromptQueue';
 
 interface Position {
   x: number;
@@ -22,7 +22,7 @@ export const ChatWidget: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { messages: widgetMessages, isLoading: widgetLoading, sendMessage: widgetSendMessage, clearChat: widgetClearChat } = useWidgetChat();
-  const { openSelector } = useImageSelector();
+  const { addPrompts } = usePromptQueue();
 
   // 自动滚动到底部
   useEffect(() => {
@@ -110,27 +110,21 @@ export const ChatWidget: React.FC = () => {
     return prompts.filter(prompt => prompt.length > 10); // 过滤太短的内容
   };
 
-  // 打开图片选择器
-  const handleSendPromptsToMain = (prompts: string[]) => {
+  // 发送提示词到主界面
+  const sendPromptsToMain = (prompts: string[]) => {
     if (prompts.length === 0) return;
-
-    openSelector(prompts, (imageFile: File) => {
-      sendPromptsWithImage(prompts, imageFile);
-    });
-  };
-
-  // 将提示词和图片一起发送到主界面
-  const sendPromptsWithImage = (prompts: string[], imageFile: File) => {
-    // 发送提示词和图片到主界面（主界面的sendMessage会处理队列）
+    
+    // 添加到队列
+    addPrompts(prompts);
+    
+    // 发送第一个提示词到主界面
     const mainSendMessage = (window as any).mainChatSendMessage;
     if (mainSendMessage && typeof mainSendMessage === 'function') {
-      // 构造带提示词的文本（使用**标记让主界面识别为队列）
-      const textWithPrompts = prompts.map(p => `**${p}**`).join('\n');
-      mainSendMessage(textWithPrompts, [imageFile]);
+      mainSendMessage(prompts[0], []);
     }
-
+    
     // 显示成功提示
-    alert(`已将 ${prompts.length} 个提示词和参考图发送到主界面进行绘图！`);
+    alert(`已将 ${prompts.length} 个提示词发送到主界面进行绘图！`);
   };
 
   // 发送消息
@@ -311,11 +305,11 @@ export const ChatWidget: React.FC = () => {
                           {message.type === 'ai' && message.hasPrompts && message.extractedPrompts && (
                             <div className="mt-2">
                               <button
-                                onClick={() => handleSendPromptsToMain(message.extractedPrompts)}
-                                className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg text-xs font-medium hover:from-orange-600 hover:to-red-700 transition-all duration-200 shadow-md hover:shadow-lg"
+                                onClick={() => sendPromptsToMain(message.extractedPrompts)}
+                                className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-500 to-blue-600 text-white rounded-lg text-xs font-medium hover:from-purple-600 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg"
                               >
                                 <Zap size={14} />
-                                发送 {message.extractedPrompts.length} 个提示词到绘图
+                                发送 {message.extractedPrompts.length} 个提示词到主界面绘图
                                 <ArrowRight size={14} />
                               </button>
                             </div>
