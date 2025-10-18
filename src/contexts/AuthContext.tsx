@@ -45,24 +45,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
         .select('is_admin, is_approved, approval_status')
         .eq('id', user.id)
-        .maybeSingle();
-
-      console.log('Profile fetch result:', { profile, profileError, userId: user.id });
+        .single();
 
       if (profile) {
-        console.log('Setting admin status:', profile.is_admin, 'approved:', profile.is_approved, 'status:', profile.approval_status);
         setIsAdmin(profile.is_admin || false);
         setIsApproved(profile.is_approved || false);
         setApprovalStatus(profile.approval_status || 'pending');
-      } else {
-        console.log('No profile found, setting defaults');
-        setIsAdmin(false);
-        setIsApproved(false);
-        setApprovalStatus('pending');
       }
 
       const { data, error } = await supabase
@@ -84,28 +76,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-
-      if (session?.user) {
-        try {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('is_admin, is_approved, approval_status')
-            .eq('id', session.user.id)
-            .maybeSingle();
-
-          if (profile) {
-            setIsAdmin(profile.is_admin || false);
-            setIsApproved(profile.is_approved || false);
-            setApprovalStatus(profile.approval_status || 'pending');
-          }
-        } catch (error) {
-          console.error('Error fetching initial profile:', error);
-        }
-      }
-
       setLoading(false);
     });
 
@@ -217,8 +190,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .eq('id', data.user.id);
         }
       }
-
-      await new Promise(resolve => setTimeout(resolve, 100));
 
       return { error: null };
     } catch (error) {

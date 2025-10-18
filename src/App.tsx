@@ -34,18 +34,6 @@ function AppContent() {
   const [editContent, setEditContent] = useState<{ text: string; images: File[] } | null>(null);
   const [showDashboard, setShowDashboard] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      console.log('User auth state:', {
-        userId: user.id,
-        email: user.email,
-        isAdmin,
-        isApproved,
-        approvalStatus
-      });
-    }
-  }, [user, isAdmin, isApproved, approvalStatus]);
-
   // 将发送消息函数暴露给全局，供客服弹窗调用
   useEffect(() => {
     (window as any).mainChatSendMessage = sendMessage;
