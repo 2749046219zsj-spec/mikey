@@ -21,6 +21,7 @@ export const authService = {
         data: {
           username: data.username,
         },
+        emailRedirectTo: undefined,
       },
     });
 
