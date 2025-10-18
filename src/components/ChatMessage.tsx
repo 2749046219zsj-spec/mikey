@@ -3,7 +3,6 @@ import { Bot, User, RotateCcw, CreditCard as Edit3, Download } from 'lucide-reac
 import { Message } from '../types/chat';
 import { useImageModal } from '../hooks/useImageModal';
 import { useImageGallery } from '../hooks/useImageGallery';
-import { ImageWithFallback } from './ImageWithFallback';
 
 interface ChatMessageProps {
   message: Message;
@@ -163,7 +162,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onRetryToInpu
                   key={index}
                   className="relative group"
                 >
-                  <ImageWithFallback
+                  <img
                     src={imageUrl}
                     alt={`Uploaded image ${index + 1}`}
                     className="rounded-lg object-cover w-full max-h-64 border cursor-pointer hover:opacity-90 transition-opacity duration-200"
@@ -177,7 +176,14 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onRetryToInpu
                         console.error('Error opening image modal:', error);
                       }
                     }}
-                    maxRetries={3}
+                    onError={(e) => {
+                      console.error('Image failed to load:', imageUrl);
+                      const target = e.currentTarget;
+                      target.style.backgroundColor = '#f3f4f6';
+                      target.alt = 'Image failed to load';
+                      target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="100"%3E%3Crect width="200" height="100" fill="%23f3f4f6"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" fill="%239ca3af" dy=".3em"%3EImage Failed%3C/text%3E%3C/svg%3E';
+                    }}
+                    loading="lazy"
                   />
                   {!isUser && (
                     <button
