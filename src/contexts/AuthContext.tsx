@@ -45,17 +45,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('is_admin, is_approved, approval_status')
         .eq('id', user.id)
         .maybeSingle();
 
+      console.log('Profile fetch result:', { profile, profileError, userId: user.id });
+
       if (profile) {
+        console.log('Setting admin status:', profile.is_admin, 'approved:', profile.is_approved, 'status:', profile.approval_status);
         setIsAdmin(profile.is_admin || false);
         setIsApproved(profile.is_approved || false);
         setApprovalStatus(profile.approval_status || 'pending');
       } else {
+        console.log('No profile found, setting defaults');
         setIsAdmin(false);
         setIsApproved(false);
         setApprovalStatus('pending');
