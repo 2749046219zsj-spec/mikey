@@ -49,12 +49,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .from('profiles')
         .select('is_admin, is_approved, approval_status')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (profile) {
         setIsAdmin(profile.is_admin || false);
         setIsApproved(profile.is_approved || false);
         setApprovalStatus(profile.approval_status || 'pending');
+      } else {
+        setIsAdmin(false);
+        setIsApproved(false);
+        setApprovalStatus('pending');
       }
 
       const { data, error } = await supabase
