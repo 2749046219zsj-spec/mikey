@@ -1,8 +1,6 @@
-import React, { useState } from 'react';
-import { Bot, Trash2, StopCircle, XCircle, Settings, User, LogOut, ShoppingBag, Coins } from 'lucide-react';
+import React from 'react';
+import { Bot, Trash2, StopCircle, XCircle } from 'lucide-react';
 import { ModelSelector } from './ModelSelector';
-import { PaymentPackages } from './payment/PaymentPackages';
-import { useAuth } from '../contexts/AuthContext';
 
 interface ChatHeaderProps {
   onClearChat: () => void;
@@ -17,7 +15,6 @@ interface ChatHeaderProps {
   };
   onStopQueue?: () => void;
   onClearQueue?: () => void;
-  onNavigateToAdmin?: () => void;
 }
 
 export const ChatHeader: React.FC<ChatHeaderProps> = ({
@@ -28,13 +25,8 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   isLoading = false,
   queueInfo,
   onStopQueue,
-  onClearQueue,
-  onNavigateToAdmin
+  onClearQueue
 }) => {
-  const { profile, signOut, refreshProfile } = useAuth();
-  const [showPayment, setShowPayment] = useState(false);
-  const [showUserMenu, setShowUserMenu] = useState(false);
-
   const getModelDisplayName = (modelId: string) => {
     switch (modelId) {
       case 'Gemini-2.5-Flash-Image':
@@ -42,11 +34,6 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
       default:
         return modelId;
     }
-  };
-
-  const handlePaymentClose = () => {
-    setShowPayment(false);
-    refreshProfile();
   };
 
   return (
@@ -69,16 +56,8 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
               )}
             </div>
           </div>
-
+          
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowPayment(true)}
-              className="flex items-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 rounded-lg transition-all"
-            >
-              <Coins size={16} />
-              {profile?.credits_balance || 0} 次
-            </button>
-
             {queueInfo?.isProcessing && (
               <>
                 <button
@@ -108,72 +87,17 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
                 Clear Chat
               </button>
             )}
-
-            <div className="relative">
-              <button
-                onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-all"
-              >
-                <User size={16} />
-                {profile?.username || profile?.email?.split('@')[0]}
-              </button>
-
-              {showUserMenu && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-20">
-                  <div className="px-4 py-2 border-b border-gray-200">
-                    <p className="text-sm font-medium text-gray-900">{profile?.email}</p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      剩余: {profile?.credits_balance || 0} 次
-                    </p>
-                  </div>
-
-                  <button
-                    onClick={() => {
-                      setShowPayment(true);
-                      setShowUserMenu(false);
-                    }}
-                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                  >
-                    <ShoppingBag size={16} />
-                    购买套餐
-                  </button>
-
-                  {profile?.is_admin && onNavigateToAdmin && (
-                    <button
-                      onClick={() => {
-                        onNavigateToAdmin();
-                        setShowUserMenu(false);
-                      }}
-                      className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                    >
-                      <Settings size={16} />
-                      管理后台
-                    </button>
-                  )}
-
-                  <button
-                    onClick={signOut}
-                    className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-gray-200"
-                  >
-                    <LogOut size={16} />
-                    退出登录
-                  </button>
-                </div>
-              )}
-            </div>
           </div>
         </div>
         
         <div className="mt-4">
-          <ModelSelector
+          <ModelSelector 
             selectedModel={selectedModel}
             onModelChange={onModelChange}
             disabled={isLoading}
           />
         </div>
       </div>
-
-      {showPayment && <PaymentPackages onClose={handlePaymentClose} />}
     </div>
   );
 };
