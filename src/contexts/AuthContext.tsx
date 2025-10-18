@@ -11,9 +11,6 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   credits: number;
   refreshCredits: () => Promise<void>;
-  isAdmin: boolean;
-  isApproved: boolean;
-  approvalStatus: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,44 +28,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [credits, setCredits] = useState(0);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isApproved, setIsApproved] = useState(false);
-  const [approvalStatus, setApprovalStatus] = useState('pending');
 
   const refreshCredits = async () => {
     if (!user) {
       setCredits(0);
-      setIsAdmin(false);
-      setIsApproved(false);
-      setApprovalStatus('pending');
       return;
     }
 
     try {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_admin, is_approved, approval_status')
-        .eq('id', user.id)
-        .single();
-
-      if (profile) {
-        setIsAdmin(profile.is_admin || false);
-        setIsApproved(profile.is_approved || false);
-        setApprovalStatus(profile.approval_status || 'pending');
-      }
-
       const { data, error } = await supabase
         .from('user_subscriptions')
         .select('image_credits_remaining')
         .eq('user_id', user.id)
         .eq('payment_status', 'completed')
-        .gt('image_credits_remaining', 0)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .maybeSingle();
 
       if (error) throw error;
-
-      const totalCredits = data?.reduce((sum, sub) => sum + (sub.image_credits_remaining || 0), 0) || 0;
-      setCredits(totalCredits);
+      setCredits(data?.image_credits_remaining || 0);
     } catch (error) {
       console.error('Error fetching credits:', error);
       setCredits(0);
@@ -155,9 +132,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut,
     credits,
     refreshCredits,
-    isAdmin,
-    isApproved,
-    approvalStatus,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

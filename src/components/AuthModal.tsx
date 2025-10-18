@@ -6,10 +6,9 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   defaultTab?: 'login' | 'register';
-  fullscreen?: boolean;
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTab = 'login', fullscreen = false }) => {
+export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTab = 'login' }) => {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>(defaultTab);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -56,30 +55,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTa
   };
 
   return (
-    <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${
-      fullscreen
-        ? 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50'
-        : 'bg-black/50 backdrop-blur-sm'
-    }`}>
-      {fullscreen && (
-        <div className="absolute top-8 left-0 right-0 text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">欢迎使用 AI 绘图系统</h1>
-          <p className="text-gray-600 text-lg">登录或注册账号，开启您的创作之旅</p>
-        </div>
-      )}
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden mt-20">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-2xl font-bold text-gray-900">
             {activeTab === 'login' ? '登录账号' : '注册账号'}
           </h2>
-          {!fullscreen && (
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <X size={24} />
-            </button>
-          )}
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <X size={24} />
+          </button>
         </div>
 
         <div className="flex border-b border-gray-200">
@@ -171,12 +158,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTa
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
               {error}
-            </div>
-          )}
-
-          {activeTab === 'register' && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
-              <strong>注册福利：</strong>成功注册并通过审核后，即可免费获得 20 次绘图机会！
             </div>
           )}
 
