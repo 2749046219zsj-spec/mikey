@@ -30,9 +30,8 @@ function AppContent() {
     clearQueue
   } = useChat();
 
-  const { user, credits, isAdmin, isApproved, approvalStatus } = useAuth();
+  const { user, credits, isAdmin, isApproved, approvalStatus, loading } = useAuth();
   const [editContent, setEditContent] = useState<{ text: string; images: File[] } | null>(null);
-  const [showAuthModal, setShowAuthModal] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
 
   // 将发送消息函数暴露给全局，供客服弹窗调用
@@ -54,6 +53,32 @@ function AppContent() {
   const handleClearEditContent = () => {
     setEditContent(null);
   };
+
+  if (loading) {
+    return (
+      <ErrorBoundary>
+        <div className="h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600 text-lg">加载中...</p>
+          </div>
+        </div>
+      </ErrorBoundary>
+    );
+  }
+
+  if (!user) {
+    return (
+      <ErrorBoundary>
+        <AuthModal
+          isOpen={true}
+          onClose={() => {}}
+          defaultTab="login"
+          fullscreen={true}
+        />
+      </ErrorBoundary>
+    );
+  }
 
   if (isAdmin) {
     return (
@@ -126,29 +151,17 @@ function AppContent() {
       ) : (
         <div className="h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex flex-col">
           <div className="absolute top-4 right-4 z-10 flex items-center gap-3">
-            {user ? (
-              <>
-                <div className="bg-white px-4 py-2 rounded-lg shadow-md flex items-center gap-2">
-                  <span className="text-sm text-gray-600">剩余额度:</span>
-                  <span className="text-lg font-bold text-blue-600">{credits}</span>
-                </div>
-                <button
-                  onClick={() => setShowDashboard(true)}
-                  className="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg shadow-md flex items-center gap-2 transition-colors"
-                >
-                  <User size={18} />
-                  <span>我的账户</span>
-                </button>
-              </>
-            ) : (
-              <button
-                onClick={() => setShowAuthModal(true)}
-                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-2 rounded-lg shadow-md flex items-center gap-2 transition-all"
-              >
-                <LogIn size={18} />
-                <span>登录/注册</span>
-              </button>
-            )}
+            <div className="bg-white px-4 py-2 rounded-lg shadow-md flex items-center gap-2">
+              <span className="text-sm text-gray-600">剩余额度:</span>
+              <span className="text-lg font-bold text-blue-600">{credits}</span>
+            </div>
+            <button
+              onClick={() => setShowDashboard(true)}
+              className="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg shadow-md flex items-center gap-2 transition-colors"
+            >
+              <User size={18} />
+              <span>我的账户</span>
+            </button>
           </div>
 
           <ChatHeader
@@ -184,12 +197,7 @@ function AppContent() {
           {/* 客服弹窗 */}
           <ChatWidget />
 
-          <AuthModal
-            isOpen={showAuthModal}
-            onClose={() => setShowAuthModal(false)}
-          />
-
-          {user && <PaymentTestPanel />}
+          <PaymentTestPanel />
         </div>
       )}
 
