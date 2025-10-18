@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Check, Sparkles } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { WeChatPayment } from './WeChatPayment';
 
 interface PricingPlan {
   id: string;
@@ -19,7 +20,7 @@ interface PricingPlansProps {
 export const PricingPlans: React.FC<PricingPlansProps> = ({ onSelectPlan }) => {
   const [plans, setPlans] = useState<PricingPlan[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [selectedPlanForPayment, setSelectedPlanForPayment] = useState<PricingPlan | null>(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -43,40 +44,18 @@ export const PricingPlans: React.FC<PricingPlansProps> = ({ onSelectPlan }) => {
     }
   };
 
-  const handleSelectPlan = async (plan: PricingPlan) => {
+  const handleSelectPlan = (plan: PricingPlan) => {
     if (!user) {
       alert('请先登录');
       return;
     }
 
-    setSelectedPlan(plan.id);
-
-    try {
-      const { data, error } = await supabase
-        .from('user_subscriptions')
-        .insert([
-          {
-            user_id: user.id,
-            plan_id: plan.id,
-            payment_status: 'pending',
-            payment_amount: plan.price,
-            image_credits_purchased: plan.image_credits,
-            image_credits_remaining: plan.image_credits,
-          },
-        ])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      if (onSelectPlan) {
-        onSelectPlan(data.id);
-      }
-    } catch (error) {
-      console.error('Error creating subscription:', error);
-      alert('创建订单失败，请重试');
-      setSelectedPlan(null);
+    if (plan.price === 0) {
+      alert('这是免费额度，无需购买');
+      return;
     }
+
+    setSelectedPlanForPayment(plan);
   };
 
   if (loading) {
@@ -143,14 +122,16 @@ export const PricingPlans: React.FC<PricingPlansProps> = ({ onSelectPlan }) => {
 
                 <button
                   onClick={() => handleSelectPlan(plan)}
-                  disabled={selectedPlan === plan.id}
+                  disabled={plan.price === 0}
                   className={`w-full py-3 rounded-xl font-semibold transition-all duration-200 ${
-                    index === 1
+                    plan.price === 0
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : index === 1 || index === 2
                       ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-md hover:shadow-lg'
                       : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  }`}
                 >
-                  {selectedPlan === plan.id ? '处理中...' : '立即购买'}
+                  {plan.price === 0 ? '注册赠送' : '立即购买'}
                 </button>
               </div>
             </div>
@@ -158,9 +139,23 @@ export const PricingPlans: React.FC<PricingPlansProps> = ({ onSelectPlan }) => {
         </div>
 
         <div className="mt-12 text-center text-sm text-gray-500">
-          <p>购买后额度永久有效 · 支持微信/支付宝支付</p>
+          <p>购买后额度永久有效 · 支持微信支付</p>
         </div>
       </div>
+
+      {selectedPlanForPayment && (
+        <WeChatPayment
+          isOpen={!!selectedPlanForPayment}
+          onClose={() => {
+            setSelectedPlanForPayment(null);
+            fetchPlans();
+          }}
+          planId={selectedPlanForPayment.id}
+          planName={selectedPlanForPayment.name}
+          price={selectedPlanForPayment.price}
+          credits={selectedPlanForPayment.image_credits}
+        />
+      )}
     </div>
   );
 };
