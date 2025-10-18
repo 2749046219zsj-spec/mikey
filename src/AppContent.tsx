@@ -44,11 +44,6 @@ export default function AppContent() {
       return;
     }
 
-    if (user.permissions.app_access_level === 'basic') {
-      alert('您当前只能访问基础功能，需要完整权限才能使用此功能');
-      return;
-    }
-
     const success = await userService.decrementDraws(user.id);
     if (success) {
       await userService.logAction(user.id, 'draw', { model: selectedModel });
