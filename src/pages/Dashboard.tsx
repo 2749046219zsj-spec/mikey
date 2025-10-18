@@ -1,6 +1,6 @@
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, User, Shield, Crown } from 'lucide-react';
+import { LogOut, User, Shield, Crown, MessageSquare } from 'lucide-react';
 
 export default function Dashboard() {
   const { user, signOut } = useAuth();
@@ -68,6 +68,15 @@ export default function Dashboard() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <button
+            onClick={() => navigate('/chat')}
+            className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition text-left"
+          >
+            <MessageSquare className="w-8 h-8 text-blue-600 mb-4" />
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">AI Chat</h3>
+            <p className="text-sm text-slate-600">Start chatting with Gemini AI</p>
+          </button>
+
           {user?.role === 'admin' && (
             <button
               onClick={() => navigate('/admin')}

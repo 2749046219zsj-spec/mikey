@@ -1,6 +1,8 @@
 import React from 'react';
-import { Bot, Trash2, StopCircle, XCircle } from 'lucide-react';
+import { Bot, Trash2, StopCircle, XCircle, ArrowLeft, LogOut, User } from 'lucide-react';
 import { ModelSelector } from './ModelSelector';
+import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface ChatHeaderProps {
   onClearChat: () => void;
@@ -27,6 +29,14 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   onStopQueue,
   onClearQueue
 }) => {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/login');
+  };
+
   const getModelDisplayName = (modelId: string) => {
     switch (modelId) {
       case 'Gemini-2.5-Flash-Image':
@@ -41,7 +51,14 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
       <div className="max-w-4xl mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-600 rounded-full flex items-center justify-center">
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="p-2 hover:bg-slate-100 rounded-lg transition"
+              title="Back to Dashboard"
+            >
+              <ArrowLeft size={20} className="text-slate-600" />
+            </button>
+            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
               <Bot size={20} className="text-white" />
             </div>
             <div>
@@ -56,8 +73,19 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
               )}
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 px-3 py-2 bg-slate-100 rounded-lg">
+              <User size={16} className="text-slate-600" />
+              <span className="text-sm font-medium text-slate-700">{user?.email}</span>
+            </div>
+            <button
+              onClick={handleSignOut}
+              className="flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+              title="Sign Out"
+            >
+              <LogOut size={16} />
+            </button>
             {queueInfo?.isProcessing && (
               <>
                 <button
