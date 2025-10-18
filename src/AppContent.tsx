@@ -7,6 +7,7 @@ import { ImageGallery } from './components/ImageGallery';
 import { ChatWidget } from './components/ChatWidget';
 import { ImageSelector } from './components/ImageSelector';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { ContactModal } from './components/ContactModal';
 import { useChat } from './hooks/useChat';
 import { useAuth } from './contexts/AuthContext';
 import { userService } from './services/userService';
@@ -28,6 +29,7 @@ export default function AppContent() {
   } = useChat();
 
   const [editContent, setEditContent] = useState<{ text: string; images: File[] } | null>(null);
+  const [showContactModal, setShowContactModal] = useState(false);
 
   useEffect(() => {
     (window as any).mainChatSendMessage = sendMessage;
@@ -40,7 +42,7 @@ export default function AppContent() {
     if (!user) return;
 
     if (user.permissions.remaining_draws <= 0) {
-      alert('您的绘图次数已用完，请联系管理员');
+      setShowContactModal(true);
       return;
     }
 
@@ -97,6 +99,7 @@ export default function AppContent() {
         <ImageModal />
         <ImageGallery />
         <ImageSelector />
+        <ContactModal isOpen={showContactModal} onClose={() => setShowContactModal(false)} />
 
         {canUseChat && <ChatWidget />}
       </div>
