@@ -32,6 +32,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
+    console.log('正在获取用户档案，ID:', userId);
+
     const { data, error } = await supabase
       .from('user_profiles')
       .select('*')
@@ -40,9 +42,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (error) {
       console.error('获取用户资料失败:', error);
+      console.error('错误详情:', JSON.stringify(error, null, 2));
+
+      if (error.code === 'PGRST116') {
+        console.log('用户档案不存在，尝试创建...');
+        const { data: newProfile, error: insertError } = await supabase
+          .from('user_profiles')
+          .insert({
+            id: userId,
+            email: (await supabase.auth.getUser()).data.user?.email || '',
+            username: null,
+            membership_tier: 'free',
+            credits_balance: 0,
+            is_admin: false,
+          })
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error('创建用户档案失败:', insertError);
+          return null;
+        }
+
+        console.log('用户档案创建成功:', newProfile);
+        return newProfile;
+      }
+
       return null;
     }
 
+    console.log('获取用户档案成功:', data);
     return data;
   };
 
