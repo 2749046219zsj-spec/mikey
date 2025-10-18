@@ -118,4 +118,30 @@ export const adminService = {
 
     return stats;
   },
+
+  async resetUserPassword(userId: string, newPassword: string) {
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) {
+      throw new Error('Not authenticated');
+    }
+
+    const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/reset-user-password`;
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId, newPassword }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to reset password');
+    }
+
+    return await response.json();
+  },
 };

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { UserProfile, UserPermissions } from '../../types/user';
 import { adminService } from '../../services/userService';
-import { Edit, CheckCircle, XCircle, Save, X } from 'lucide-react';
+import { Edit, CheckCircle, XCircle, Save, X, Key } from 'lucide-react';
 
 interface UserManagementPanelProps {
   users: UserProfile[];
@@ -14,6 +14,8 @@ export default function UserManagementPanel({ users, onUsersChange }: UserManage
   const [editingUser, setEditingUser] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<UserPermissions>>({});
   const [loading, setLoading] = useState<string | null>(null);
+  const [showPasswordModal, setShowPasswordModal] = useState<string | null>(null);
+  const [newPassword, setNewPassword] = useState('');
 
   useEffect(() => {
     users.forEach((user) => {
@@ -68,12 +70,33 @@ export default function UserManagementPanel({ users, onUsersChange }: UserManage
     setEditData({});
   };
 
+  const handleResetPassword = async (userId: string) => {
+    if (!newPassword || newPassword.length < 6) {
+      alert('密码至少需要 6 个字符');
+      return;
+    }
+
+    setLoading(userId);
+    try {
+      await adminService.resetUserPassword(userId, newPassword);
+      alert('密码重置成功');
+      setShowPasswordModal(null);
+      setNewPassword('');
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      alert('密码重置失败，请重试');
+    } finally {
+      setLoading(null);
+    }
+  };
+
   return (
-    <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-      <div className="p-6 border-b border-gray-200">
-        <h2 className="text-xl font-bold text-gray-900">用户列表</h2>
-        <p className="text-gray-600 mt-1">共 {users.length} 个用户</p>
-      </div>
+    <>
+      <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-xl font-bold text-gray-900">用户列表</h2>
+          <p className="text-gray-600 mt-1">共 {users.length} 个用户</p>
+        </div>
 
       <div className="overflow-x-auto">
         <table className="w-full">
@@ -235,12 +258,14 @@ export default function UserManagementPanel({ users, onUsersChange }: UserManage
                             onClick={() => handleSavePermissions(user.id)}
                             disabled={loading === user.id}
                             className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                            title="保存"
                           >
                             <Save className="w-4 h-4" />
                           </button>
                           <button
                             onClick={handleCancelEdit}
                             className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+                            title="取消"
                           >
                             <X className="w-4 h-4" />
                           </button>
@@ -250,8 +275,16 @@ export default function UserManagementPanel({ users, onUsersChange }: UserManage
                           <button
                             onClick={() => handleEditPermissions(user.id)}
                             className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                            title="编辑权限"
                           >
                             <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => setShowPasswordModal(user.id)}
+                            className="p-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-colors"
+                            title="重置密码"
+                          >
+                            <Key className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleToggleStatus(user.id, user.is_active)}
@@ -261,6 +294,7 @@ export default function UserManagementPanel({ users, onUsersChange }: UserManage
                                 ? 'bg-red-100 text-red-700 hover:bg-red-200'
                                 : 'bg-green-100 text-green-700 hover:bg-green-200'
                             }`}
+                            title={user.is_active ? '停用账户' : '启用账户'}
                           >
                             {user.is_active ? '停用' : '启用'}
                           </button>
@@ -274,6 +308,62 @@ export default function UserManagementPanel({ users, onUsersChange }: UserManage
           </tbody>
         </table>
       </div>
-    </div>
+      </div>
+
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                <Key className="w-6 h-6 text-yellow-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">重置用户密码</h3>
+                <p className="text-sm text-gray-600">
+                  {users.find(u => u.id === showPasswordModal)?.email}
+                </p>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                新密码
+              </label>
+              <input
+                type="text"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="至少 6 个字符"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                autoFocus
+              />
+              <p className="mt-2 text-sm text-gray-500">
+                设置新密码后，用户可以使用新密码登录
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleResetPassword(showPasswordModal)}
+                disabled={loading === showPasswordModal || !newPassword || newPassword.length < 6}
+                className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading === showPasswordModal ? '重置中...' : '确认重置'}
+              </button>
+              <button
+                onClick={() => {
+                  setShowPasswordModal(null);
+                  setNewPassword('');
+                }}
+                disabled={loading === showPasswordModal}
+                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 rounded-lg transition-colors disabled:opacity-50"
+              >
+                取消
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
