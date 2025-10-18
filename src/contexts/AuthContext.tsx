@@ -54,7 +54,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { user: authUser } = await authService.login({ email, password });
     if (authUser) {
       await loadUserData(authUser.id);
-      await userService.logAction(authUser.id, 'login');
+      try {
+        await userService.logAction(authUser.id, 'login');
+      } catch (error) {
+        console.warn('Failed to log action:', error);
+      }
     }
   };
 

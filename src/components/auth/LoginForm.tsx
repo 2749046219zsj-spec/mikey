@@ -21,7 +21,19 @@ export default function LoginForm({ onLogin, onSwitchToRegister, onForgotPasswor
     try {
       await onLogin(email, password);
     } catch (err: any) {
-      setError(err.message || '登录失败，请检查您的邮箱和密码');
+      let errorMessage = '登录失败，请检查您的邮箱和密码';
+
+      if (err.message?.includes('Invalid login credentials')) {
+        errorMessage = '邮箱或密码错误，请重试';
+      } else if (err.message?.includes('Email not confirmed')) {
+        errorMessage = '请先确认您的邮箱';
+      } else if (err.message?.includes('foreign key constraint')) {
+        errorMessage = '账户配置异常，请联系管理员';
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

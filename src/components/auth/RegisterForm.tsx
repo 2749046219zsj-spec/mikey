@@ -35,7 +35,19 @@ export default function RegisterForm({ onRegister, onSwitchToLogin }: RegisterFo
       await onRegister(username, email, password);
       setSuccess(true);
     } catch (err: any) {
-      setError(err.message || '注册失败，请稍后重试');
+      let errorMessage = '注册失败，请稍后重试';
+
+      if (err.message?.includes('Signups not allowed')) {
+        errorMessage = '注册功能未开启。请联系管理员在 Supabase Dashboard → Authentication → Providers 中启用 Email Signups';
+      } else if (err.message?.includes('already registered') || err.message?.includes('already exists')) {
+        errorMessage = '该邮箱已被注册，请直接登录';
+      } else if (err.message?.includes('Invalid email')) {
+        errorMessage = '邮箱格式不正确';
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
