@@ -1,7 +1,11 @@
 import { ApiResponse } from '../types/chat';
+import { useAuthStore } from '../stores/authStore';
+import { creditsService } from './creditsService';
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const API_URL = 'https://api.poe.com/v1/chat/completions';
+
+const CREDITS_COST = 10;
 
 export class GeminiApiService {
   private async convertImageToBase64(file: File): Promise<string> {
@@ -17,7 +21,18 @@ export class GeminiApiService {
   }
 
   async sendMessage(text: string, images: File[] = [], model: string = 'Gemini-2.5-Flash-Image', conversationHistory: any[] = []): Promise<string> {
+    const { user, profile } = useAuthStore.getState();
+
+    if (!user) {
+      throw new Error('请先登录后再使用AI功能');
+    }
+
+    if (!profile || profile.credits_balance < CREDITS_COST) {
+      throw new Error(`积分不足，需要 ${CREDITS_COST} 积分，请先充值`);
+    }
+
     try {
+      await creditsService.deductCredits(user.id, CREDITS_COST, 'AI对话生成');
       const content = [];
       
       // Add text content
@@ -96,7 +111,16 @@ export class GeminiApiService {
       }
 
       return data.choices[0].message.content;
-    } catch (error) {
+    } catch (error: any) {
+      if (error.message && !error.message.includes('积分')) {
+        try {
+          if (user) {
+            await creditsService.addCredits(user.id, CREDITS_COST, 'refund', 'API调用失败，退还积分');
+          }
+        } catch (refundError) {
+          console.error('Failed to refund credits:', refundError);
+        }
+      }
       console.error('Poe API Error:', error);
       throw error;
     }
