@@ -38,7 +38,7 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
               </div>
             ) : (
               <img
-                src="/e9f4ef532b45af5f515f2acf9d19616e.jpg"
+                src="https://s2.loli.net/2025/10/18/Z7SJ5BoRwvuEX4d.jpg"
                 alt="客服微信二维码"
                 className={`w-full max-w-xs mx-auto rounded-lg shadow-md ${imageLoading ? 'hidden' : ''}`}
                 onLoad={() => setImageLoading(false)}
