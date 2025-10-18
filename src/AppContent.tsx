@@ -14,6 +14,28 @@ import { userService } from './services/userService';
 
 export default function AppContent() {
   const { user, refreshUserData } = useAuth();
+  const [editContent, setEditContent] = useState<{ text: string; images: File[] } | null>(null);
+  const [showContactModal, setShowContactModal] = useState(false);
+
+  const checkAndDecrementDraws = React.useCallback(async () => {
+    if (!user) return false;
+
+    if (user.permissions.remaining_draws <= 0) {
+      setShowContactModal(true);
+      return false;
+    }
+
+    const success = await userService.decrementDraws(user.id);
+    if (success) {
+      await userService.logAction(user.id, 'draw', { model: 'current' });
+      await refreshUserData();
+      return true;
+    } else {
+      alert('无法使用绘图功能，请联系管理员');
+      return false;
+    }
+  }, [user, refreshUserData]);
+
   const {
     messages,
     isLoading,
@@ -26,10 +48,7 @@ export default function AppContent() {
     setSelectedModel,
     stopQueue,
     clearQueue,
-  } = useChat();
-
-  const [editContent, setEditContent] = useState<{ text: string; images: File[] } | null>(null);
-  const [showContactModal, setShowContactModal] = useState(false);
+  } = useChat(checkAndDecrementDraws);
 
   useEffect(() => {
     (window as any).mainChatSendMessage = sendMessage;
@@ -41,19 +60,10 @@ export default function AppContent() {
   const handleSendMessage = async (text: string, images: File[]) => {
     if (!user) return;
 
-    if (user.permissions.remaining_draws <= 0) {
-      setShowContactModal(true);
-      return;
-    }
-
-    const success = await userService.decrementDraws(user.id);
-    if (success) {
-      await userService.logAction(user.id, 'draw', { model: selectedModel });
+    const canProceed = await checkAndDecrementDraws();
+    if (canProceed) {
       sendMessage(text, images);
       setEditContent(null);
-      await refreshUserData();
-    } else {
-      alert('无法使用绘图功能，请联系管理员');
     }
   };
 

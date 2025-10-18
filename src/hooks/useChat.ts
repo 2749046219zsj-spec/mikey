@@ -3,7 +3,9 @@ import { Message, ChatState } from '../types/chat';
 import { GeminiApiService } from '../services/geminiApi';
 import { usePromptQueue } from './usePromptQueue';
 
-export const useChat = () => {
+type BeforeSendCallback = () => Promise<boolean>;
+
+export const useChat = (beforeSendCallback?: BeforeSendCallback) => {
   const [state, setState] = useState<ChatState>({
     messages: [],
     isLoading: false,
@@ -47,8 +49,16 @@ export const useChat = () => {
   }, []);
 
   // 单独处理单个提示词的内部函数
-  const sendSinglePrompt = useCallback(async (text: string, images: File[] = []) => {
+  const sendSinglePrompt = useCallback(async (text: string, images: File[] = [], skipCallback = false) => {
     if (!text.trim() && images.length === 0) return;
+
+    // 如果提供了回调函数且不跳过，先执行回调检查权限
+    if (!skipCallback && beforeSendCallback) {
+      const canProceed = await beforeSendCallback();
+      if (!canProceed) {
+        return false;
+      }
+    }
 
     // Convert files to URLs for display
     const imageUrls = images.map(file => URL.createObjectURL(file));
@@ -135,12 +145,12 @@ export const useChat = () => {
     if (prompts.length > 0) {
       addPrompts(prompts, images);
       setProcessing(true);
-      // 发送第一个提示词
-      await sendSinglePrompt(prompts[0], images);
+      // 发送第一个提示词，跳过回调因为外部已经检查过了
+      await sendSinglePrompt(prompts[0], images, true);
       setProcessing(false);
     } else {
-      // 没有提示词标记，直接发送整个消息
-      await sendSinglePrompt(text, images);
+      // 没有提示词标记，直接发送整个消息，跳过回调因为外部已经检查过了
+      await sendSinglePrompt(text, images, true);
     }
   }, [parsePrompts, addPrompts, sendSinglePrompt, setProcessing]);
 
