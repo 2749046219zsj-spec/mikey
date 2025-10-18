@@ -1,12 +1,13 @@
 import { useAuth } from '../../contexts/AuthContext';
-import { Image, MessageCircle, LogOut, User, Shield } from 'lucide-react';
+import { Image, MessageCircle, LogOut, User, Shield, ArrowLeft } from 'lucide-react';
 
 interface UserDashboardProps {
   onLogout: () => void;
   onNavigateToAdmin?: () => void;
+  onBack?: () => void;
 }
 
-export default function UserDashboard({ onLogout, onNavigateToAdmin }: UserDashboardProps) {
+export default function UserDashboard({ onLogout, onNavigateToAdmin, onBack }: UserDashboardProps) {
   const { user } = useAuth();
 
   if (!user) return null;
@@ -20,6 +21,15 @@ export default function UserDashboard({ onLogout, onNavigateToAdmin }: UserDashb
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
+              {onBack && (
+                <button
+                  onClick={onBack}
+                  className="flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                  title="返回主界面"
+                >
+                  <ArrowLeft className="w-5 h-5 text-gray-700" />
+                </button>
+              )}
               <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-green-500 rounded-full flex items-center justify-center">
                 <User className="w-8 h-8 text-white" />
               </div>

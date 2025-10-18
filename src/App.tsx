@@ -51,6 +51,7 @@ function App() {
           setViewMode('app');
         }}
         onNavigateToAdmin={user.is_admin ? () => setViewMode('admin') : undefined}
+        onBack={() => setViewMode('app')}
       />
     );
   }
