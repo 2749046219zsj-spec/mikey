@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, X, Eye, EyeOff, Download, DownloadCloud, CheckSquare, Square } from 'lucide-react';
 import { useImageGallery } from '../hooks/useImageGallery';
 import { useImageModal } from '../hooks/useImageModal';
+import { ImageWithFallback } from './ImageWithFallback';
 
 export const ImageGallery: React.FC = () => {
   const {
@@ -368,18 +369,11 @@ export const ImageGallery: React.FC = () => {
                   }
                 }}
               >
-                <img
+                <ImageWithFallback
                   src={imageUrl}
                   alt={`Generated image ${index + 1}`}
                   className="w-full aspect-square object-cover"
-                  loading="lazy"
-                  onError={(e) => {
-                    console.error('Gallery image failed to load:', imageUrl);
-                    const target = e.currentTarget;
-                    target.style.backgroundColor = '#f3f4f6';
-                    target.alt = 'Image failed to load';
-                    target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%23f3f4f6"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" fill="%239ca3af" font-size="10" dy=".3em"%3ELoad Failed%3C/text%3E%3C/svg%3E';
-                  }}
+                  maxRetries={3}
                 />
 
                 {/* Overlay */}
