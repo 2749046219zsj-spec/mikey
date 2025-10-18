@@ -1,4 +1,5 @@
 import { X } from 'lucide-react';
+import { useState } from 'react';
 
 interface ContactModalProps {
   isOpen: boolean;
@@ -6,6 +7,9 @@ interface ContactModalProps {
 }
 
 export function ContactModal({ isOpen, onClose }: ContactModalProps) {
+  const [imageError, setImageError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
+
   if (!isOpen) return null;
 
   return (
@@ -23,11 +27,27 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
           <p className="text-gray-600 mb-6">扫描下方二维码添加客服微信，获取更多绘图次数</p>
 
           <div className="bg-gray-50 rounded-xl p-6 mb-6">
-            <img
-              src="/e9f4ef532b45af5f515f2acf9d19616e.jpg"
-              alt="客服微信二维码"
-              className="w-full max-w-xs mx-auto rounded-lg shadow-md"
-            />
+            {imageLoading && !imageError && (
+              <div className="w-full max-w-xs mx-auto h-64 flex items-center justify-center">
+                <div className="text-gray-400">加载中...</div>
+              </div>
+            )}
+            {imageError ? (
+              <div className="w-full max-w-xs mx-auto h-64 flex items-center justify-center">
+                <div className="text-gray-400">图片加载失败，请刷新重试</div>
+              </div>
+            ) : (
+              <img
+                src="/e9f4ef532b45af5f515f2acf9d19616e.jpg"
+                alt="客服微信二维码"
+                className={`w-full max-w-xs mx-auto rounded-lg shadow-md ${imageLoading ? 'hidden' : ''}`}
+                onLoad={() => setImageLoading(false)}
+                onError={() => {
+                  setImageError(true);
+                  setImageLoading(false);
+                }}
+              />
+            )}
           </div>
 
           <div className="text-sm text-gray-500 mb-6">
