@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { Message, ChatState } from '../types/chat';
 import { GeminiApiService } from '../services/geminiApi';
 import { usePromptQueue } from './usePromptQueue';
+import { useCredits } from './useCredits';
 
 export const useChat = () => {
   const [state, setState] = useState<ChatState>({
@@ -14,6 +15,7 @@ export const useChat = () => {
 
   const geminiService = new GeminiApiService();
   const { queue, referenceImages, isProcessing, isStopped, currentIndex, totalCount, addPrompts, processNext, stopQueue, clearQueue, setProcessing } = usePromptQueue();
+  const { credits, deductCredits } = useCredits();
 
   // 解析提示词：提取 ** ** 内的内容
   const parsePrompts = useCallback((text: string): string[] => {
@@ -49,6 +51,17 @@ export const useChat = () => {
   // 单独处理单个提示词的内部函数
   const sendSinglePrompt = useCallback(async (text: string, images: File[] = []) => {
     if (!text.trim() && images.length === 0) return;
+
+    // Check credits before processing
+    if (credits <= 0) {
+      addMessage({
+        type: 'ai',
+        content: '额度不足，请购买套餐后继续使用。',
+        hasError: true,
+        model: state.selectedModel
+      });
+      return false;
+    }
 
     // Convert files to URLs for display
     const imageUrls = images.map(file => URL.createObjectURL(file));
@@ -92,6 +105,24 @@ export const useChat = () => {
       // Send to Gemini API
       const response = await geminiService.sendMessage(text, images, state.selectedModel, conversationHistory);
 
+      // Extract image URLs from response
+      const imageUrlRegex = /(https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif|webp|svg)(?:\?[^\s]*)?)/gi;
+      const generatedImages = response.match(imageUrlRegex) || [];
+
+      // Deduct credits for each generated image
+      const creditsToDeduct = Math.max(1, generatedImages.length);
+      const deductResult = await deductCredits(creditsToDeduct, text, generatedImages[0]);
+
+      if (!deductResult.success) {
+        addMessage({
+          type: 'ai',
+          content: `生成失败: ${deductResult.error}`,
+          hasError: true,
+          model: state.selectedModel
+        });
+        return false;
+      }
+
       // Add AI response
       addMessage({
         type: 'ai',
@@ -121,7 +152,7 @@ export const useChat = () => {
     } finally {
       setState(prev => ({ ...prev, isLoading: false }));
     }
-  }, [addMessage, geminiService, state.selectedModel, state.messages]);
+  }, [addMessage, geminiService, state.selectedModel, state.messages, credits, deductCredits]);
 
   const sendMessage = useCallback(async (text: string, images: File[] = []) => {
     if (!text.trim() && images.length === 0) return;
