@@ -400,7 +400,18 @@ export const ImageSelector: React.FC = () => {
               <h3 className="text-sm font-medium text-gray-700 mb-3">从数据库选择参考图</h3>
               <div className="grid grid-cols-5 gap-3">
                 {dbImages.map((dbImage, index) => {
-                  const isSelected = !isAdvancedMode && selectedImageUrl === dbImage.image_url && !selectedImageFile;
+                  // Check if image is selected (works for both modes)
+                  let isSelected = false;
+                  if (isAdvancedMode) {
+                    if (mode === 'unified') {
+                      isSelected = selectedImages.some(file => file.name.includes(dbImage.title || ''));
+                    } else {
+                      isSelected = currentPromptImages.some(file => file.name.includes(dbImage.title || ''));
+                    }
+                  } else {
+                    isSelected = selectedImageUrl === dbImage.image_url && !selectedImageFile;
+                  }
+
                   return (
                     <div
                       key={dbImage.id}
