@@ -271,7 +271,7 @@ const ReferenceImageManager = React.memo<ReferenceImageManagerProps>(
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
-                    className={`relative border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all ${
+                    className={`relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
                       isDragging
                         ? 'border-orange-500 bg-orange-50'
                         : 'border-gray-300 hover:border-orange-400 hover:bg-gray-50'
@@ -286,11 +286,11 @@ const ReferenceImageManager = React.memo<ReferenceImageManagerProps>(
                       disabled={uploading}
                       className="hidden"
                     />
-                    <Upload className={`w-12 h-12 mx-auto mb-4 ${isDragging ? 'text-orange-500' : 'text-gray-400'}`} />
-                    <p className="text-lg font-medium text-gray-700 mb-2">
+                    <Upload className={`w-10 h-10 mx-auto mb-3 ${isDragging ? 'text-orange-500' : 'text-gray-400'}`} />
+                    <p className="text-base font-medium text-gray-700 mb-1">
                       {uploading ? '上传中...' : 'Click, drag images or Ctrl+V to paste'}
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-xs text-gray-500">
                       支持 JPG、PNG、GIF，单个文件最大 5MB
                     </p>
                   </div>
@@ -345,17 +345,24 @@ const ReferenceImageManager = React.memo<ReferenceImageManagerProps>(
               )}
             </div>
 
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-base font-semibold text-gray-700">已上传的图片</h3>
+                <span className="text-sm text-gray-500">已选择 {selectedIds.length} 张</span>
+              </div>
+            </div>
+
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
               </div>
             ) : images.length === 0 ? (
-              <div className="text-center py-12 text-gray-400">
-                <Upload className="w-16 h-16 mx-auto mb-4 opacity-20" />
-                <p>还没有参考图，上传第一张吧！</p>
+              <div className="text-center py-8 text-gray-400 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+                <Upload className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                <p className="text-sm">还没有参考图，上传第一张吧！</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
                 {images.map(image => {
                   const isSelected = selectedIds.includes(image.image_url);
                   const isExternal = image.mime_type === 'image/external';
@@ -365,8 +372,8 @@ const ReferenceImageManager = React.memo<ReferenceImageManagerProps>(
                       key={image.id}
                       className={`relative group cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
                         isSelected
-                          ? 'border-orange-500 shadow-lg scale-105'
-                          : 'border-gray-200 hover:border-orange-300'
+                          ? 'border-orange-500 shadow-lg ring-2 ring-orange-200'
+                          : 'border-gray-200 hover:border-orange-300 hover:shadow-md'
                       }`}
                       onClick={() => handleImageClick(image.image_url)}
                     >
@@ -382,14 +389,14 @@ const ReferenceImageManager = React.memo<ReferenceImageManagerProps>(
                       </div>
 
                       {isExternal && (
-                        <div className="absolute top-2 left-2 px-2 py-1 bg-blue-500 rounded text-white text-xs">
-                          外部链接
+                        <div className="absolute top-1 left-1 px-1.5 py-0.5 bg-blue-500 rounded text-white text-xs">
+                          外链
                         </div>
                       )}
 
                       {isSelected && (
-                        <div className="absolute top-2 right-2 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
-                          <Check className="w-4 h-4 text-white" />
+                        <div className="absolute top-1 right-1 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center shadow-lg">
+                          <Check className="w-3 h-3 text-white font-bold" />
                         </div>
                       )}
 
@@ -398,15 +405,15 @@ const ReferenceImageManager = React.memo<ReferenceImageManagerProps>(
                           e.stopPropagation();
                           handleDelete(image);
                         }}
-                        className={`absolute ${isExternal ? 'top-10' : 'top-2'} left-2 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600`}
+                        className={`absolute ${isExternal ? 'top-7' : 'top-1'} left-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-lg`}
                       >
-                        <Trash2 className="w-4 h-4 text-white" />
+                        <Trash2 className="w-3 h-3 text-white" />
                       </button>
 
-                      <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <p className="truncate">{image.file_name}</p>
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent text-white text-xs p-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <p className="truncate text-xs">{image.file_name}</p>
                         {image.file_size > 0 && (
-                          <p className="text-gray-300">
+                          <p className="text-gray-300 text-xs">
                             {(image.file_size / 1024).toFixed(0)} KB
                           </p>
                         )}
@@ -418,22 +425,23 @@ const ReferenceImageManager = React.memo<ReferenceImageManagerProps>(
             )}
           </div>
 
-          <div className="flex items-center justify-between p-6 border-t bg-gray-50">
-            <p className="text-sm text-gray-600">
-              已选择 {selectedIds.length} 张图片
+          <div className="flex items-center justify-between p-4 border-t bg-gray-50">
+            <p className="text-sm text-gray-600 font-medium">
+              已选择 <span className="text-orange-500 font-bold">{selectedIds.length}</span> 张图片
             </p>
             <div className="flex gap-3">
               <button
                 onClick={onClose}
-                className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+                className="px-5 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors text-sm"
               >
                 取消
               </button>
               <button
                 onClick={handleConfirm}
-                className="px-6 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:shadow-lg transition-all"
+                disabled={selectedIds.length === 0}
+                className="px-5 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
               >
-                确认选择
+                确认选择 ({selectedIds.length})
               </button>
             </div>
           </div>
