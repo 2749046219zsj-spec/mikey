@@ -94,12 +94,10 @@ export const useChat = (beforeSendCallback?: BeforeSendCallback) => {
             content: content.length > 0 ? content : [{ type: "text", text: msg.content }]
           };
         } else {
-          // 清理AI响应中的图片URL，避免历史记录过大
+          // 保留完整的AI响应，包括图片URL，这样AI可以看到对话历史
+          // 只清理markdown标记，保留实际的URL
           const cleanContent = msg.content
-            .replace(/(https?:\/\/[^\s\)]+\.(?:jpg|jpeg|png|gif|webp|svg)(?:\?[^\s]*)?)/gi, '')
             .replace(/!\[generated_image_\d+\]/g, '')
-            .replace(/\(\s*\)/g, '')
-            .replace(/\n\s*\n/g, '\n')
             .trim();
           return {
             role: "assistant",
