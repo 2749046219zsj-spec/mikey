@@ -602,6 +602,9 @@ export const ChatWidget: React.FC = () => {
           onClose={() => setShowReferenceManager(false)}
           selectedImages={selectedReferenceImages}
           onImagesSelect={setSelectedReferenceImages}
+          onFilesConverted={(files) => {
+            setWidgetImages(prev => [...prev, ...files]);
+          }}
           multiSelect={true}
         />
       )}

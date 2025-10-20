@@ -3,22 +3,21 @@ import { Upload, X, Check, Trash2, Loader2, Link, HardDrive } from 'lucide-react
 import { ReferenceImageService } from '../services/referenceImageService';
 import type { ReferenceImage } from '../types/referenceImage';
 import { useAuth } from '../contexts/AuthContext';
-import { useImageSelector } from '../hooks/useImageSelector';
 
 interface ReferenceImageManagerProps {
   isOpen: boolean;
   onClose: () => void;
   selectedImages: string[];
   onImagesSelect: (imageUrls: string[]) => void;
+  onFilesConverted?: (files: File[]) => void;
   multiSelect?: boolean;
 }
 
 type UploadMode = 'file' | 'url' | 'external';
 
 const ReferenceImageManager = React.memo<ReferenceImageManagerProps>(
-  ({ isOpen, onClose, selectedImages, onImagesSelect, multiSelect = true }) => {
+  ({ isOpen, onClose, selectedImages, onImagesSelect, onFilesConverted, multiSelect = true }) => {
     const { user } = useAuth();
-    const { addImageToUnified } = useImageSelector();
     const [images, setImages] = useState<ReferenceImage[]>([]);
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
@@ -209,16 +208,20 @@ const ReferenceImageManager = React.memo<ReferenceImageManagerProps>(
     const handleConfirm = async () => {
       onImagesSelect(selectedIds);
 
-      for (const imageUrl of selectedIds) {
-        try {
-          const response = await fetch(imageUrl);
-          const blob = await response.blob();
-          const fileName = imageUrl.split('/').pop() || 'reference_image.jpg';
-          const file = new File([blob], fileName, { type: blob.type });
-          addImageToUnified(file);
-        } catch (error) {
-          console.error('Failed to convert image URL to file:', error);
+      if (onFilesConverted) {
+        const files: File[] = [];
+        for (const imageUrl of selectedIds) {
+          try {
+            const response = await fetch(imageUrl);
+            const blob = await response.blob();
+            const fileName = imageUrl.split('/').pop() || 'reference_image.jpg';
+            const file = new File([blob], fileName, { type: blob.type });
+            files.push(file);
+          } catch (error) {
+            console.error('Failed to convert image URL to file:', error);
+          }
         }
+        onFilesConverted(files);
       }
 
       onClose();
