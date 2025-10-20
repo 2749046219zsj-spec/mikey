@@ -35,6 +35,24 @@ export class ReferenceImageService {
     return data || [];
   }
 
+  static async getUserImages(userId: string): Promise<ReferenceImage[]> {
+    return this.getUserReferenceImages(userId);
+  }
+
+  static async getAllImages(): Promise<ReferenceImage[]> {
+    const { data, error } = await supabase
+      .from('reference_images')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching all reference images:', error);
+      throw error;
+    }
+
+    return data || [];
+  }
+
   static async uploadReferenceImage(
     userId: string,
     file: File

@@ -41,16 +41,30 @@ export const ImageSelector: React.FC = () => {
 
   useEffect(() => {
     const loadDbImages = async () => {
-      if (isOpen && user) {
+      if (isOpen) {
+        console.log('ImageSelector opened, loading database images...');
+        console.log('User:', user);
         setLoadingDbImages(true);
         try {
-          const images = await ReferenceImageService.getUserImages(user.id);
-          setDbImages(images);
+          if (user) {
+            const images = await ReferenceImageService.getUserImages(user.id);
+            console.log('Loaded database images for user:', images.length, 'images');
+            console.log('Images:', images);
+            setDbImages(images);
+          } else {
+            console.log('No user logged in, attempting to load all images...');
+            const images = await ReferenceImageService.getAllImages();
+            console.log('Loaded all database images (no user):', images.length, 'images');
+            setDbImages(images);
+          }
         } catch (error) {
           console.error('Failed to load database images:', error);
+          setDbImages([]);
         } finally {
           setLoadingDbImages(false);
         }
+      } else {
+        setDbImages([]);
       }
     };
 
@@ -197,6 +211,9 @@ export const ImageSelector: React.FC = () => {
   if (!isOpen) return null;
 
   const currentPromptImages = promptImages.get(currentPromptIndex) || [];
+
+  console.log('ImageSelector rendering, dbImages count:', dbImages.length);
+  console.log('loadingDbImages:', loadingDbImages);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -395,9 +412,19 @@ export const ImageSelector: React.FC = () => {
             </div>
           )}
 
-          {dbImages.length > 0 && (
+          {loadingDbImages && (
             <div className="mb-6">
               <h3 className="text-sm font-medium text-gray-700 mb-3">从数据库选择参考图</h3>
+              <div className="text-center text-gray-500 py-8">
+                <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                <p className="text-sm">加载中...</p>
+              </div>
+            </div>
+          )}
+
+          {!loadingDbImages && dbImages.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">从数据库选择参考图 ({dbImages.length})</h3>
               <div className="grid grid-cols-5 gap-3">
                 {dbImages.map((dbImage, index) => {
                   // Check if image is selected (works for both modes)
@@ -447,6 +474,17 @@ export const ImageSelector: React.FC = () => {
                     </div>
                   );
                 })}
+              </div>
+            </div>
+          )}
+
+          {!loadingDbImages && dbImages.length === 0 && (
+            <div className="mb-6">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">从数据库选择参考图</h3>
+              <div className="text-center text-gray-400 py-6 border-2 border-dashed border-gray-200 rounded-lg">
+                <ImageIcon size={32} className="mx-auto mb-2" />
+                <p className="text-sm">暂无参考图</p>
+                <p className="text-xs mt-1">请前往"参考图预设"上传图片</p>
               </div>
             </div>
           )}
