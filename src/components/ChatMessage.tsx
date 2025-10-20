@@ -4,6 +4,7 @@ import { Message } from '../types/chat';
 import { useImageModal } from '../hooks/useImageModal';
 import { useImageGallery } from '../hooks/useImageGallery';
 import { ImageWithFallback } from './ImageWithFallback';
+import { proxyImageUrl } from '../utils/imageProxy';
 
 interface ChatMessageProps {
   message: Message;
@@ -64,27 +65,36 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onRetryToInpu
   const { addImages } = useImageGallery();
   
   const { text: cleanText, images: extractedImages } = React.useMemo(() => {
-    return isUser ? 
-      { text: message.content, images: [] } : 
+    return isUser ?
+      { text: message.content, images: [] } :
       extractImageUrls(message.content);
   }, [isUser, message.content]);
+
+  // 保存原始URL和代理URL的映射
+  const { originalImages, proxiedImages } = React.useMemo(() => {
+    const original = [...(message.images || []), ...extractedImages];
+    const proxied = original.map(proxyImageUrl);
+    return { originalImages: original, proxiedImages: proxied };
+  }, [message.images, extractedImages]);
+
+  const allImages = proxiedImages;
   
-  const allImages = [...(message.images || []), ...extractedImages];
-  
-  // Add AI generated images to gallery
+  // Add AI generated images to gallery (使用代理URL)
   React.useEffect(() => {
     if (!isUser && extractedImages.length > 0) {
-      // 使用 setTimeout 来避免在渲染过程中更新状态
       const timeoutId = setTimeout(() => {
-        addImages(extractedImages);
+        const proxiedImages = extractedImages.map(proxyImageUrl);
+        addImages(proxiedImages);
       }, 0);
-      
+
       return () => clearTimeout(timeoutId);
     }
   }, [isUser, extractedImages, addImages]);
   
   const downloadImage = async (imageUrl: string, index: number) => {
     try {
+      // 如果是代理URL，使用原始URL进行下载
+      const originalUrl = originalImages[index] || imageUrl;
       const response = await fetch(imageUrl);
       const blob = await response.blob();
       
