@@ -14,12 +14,11 @@ interface ChatMessageProps {
 // 检测文本中的图片链接
 const extractImageUrls = (text: string): { text: string; images: string[] } => {
   const images: string[] = [];
+  const seenUrls = new Set<string>();
   let cleanText = text;
 
-  // 更强大的正则表达式，匹配所有http(s)开头的URL
-  // 匹配直到遇到空格、换行、括号或其他终止符
+  // 匹配所有URL
   const urlRegex = /(https?:\/\/[^\s\)<>\[\]"']+)/gi;
-
   const matches = text.match(urlRegex);
 
   console.log('原始文本:', text);
@@ -27,15 +26,18 @@ const extractImageUrls = (text: string): { text: string; images: string[] } => {
 
   if (matches) {
     matches.forEach(url => {
-      // 检查是否是图片URL
-      const isImageUrl = /\.(jpg|jpeg|png|gif|webp|svg|avif)(\?.*)?$/i.test(url) ||
-                        url.includes('poecdn.net') ||
-                        url.includes('image') ||
-                        url.includes('img');
+      // 移除末尾可能的括号
+      let cleanUrl = url.replace(/\)+$/, '');
 
-      if (isImageUrl && !images.includes(url)) {
-        images.push(url);
-        console.log('添加图片URL:', url);
+      // 检查是否是图片URL
+      const isImageUrl = /\.(jpg|jpeg|png|gif|webp|svg|avif)(\?.*)?$/i.test(cleanUrl) ||
+                        cleanUrl.includes('poecdn.net');
+
+      // 使用Set避免重复
+      if (isImageUrl && !seenUrls.has(cleanUrl)) {
+        seenUrls.add(cleanUrl);
+        images.push(cleanUrl);
+        console.log('添加图片URL:', cleanUrl);
       }
     });
   }

@@ -99,7 +99,7 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
         onClick={onClick}
         onError={handleError}
         onLoad={handleLoad}
-        crossOrigin="anonymous"
+        referrerPolicy="no-referrer"
         loading="lazy"
       />
     </div>
