@@ -4,8 +4,30 @@ const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const API_URL = 'https://api.poe.com/v1/chat/completions';
 
 export class GeminiApiService {
+  // 从文本中提取序号提示词（匹配 1. 2. 3. 等格式）
+  private extractNumberedPrompt(text: string): string | null {
+    // 匹配形如 "1." "2." "3." 等开头的提示词
+    const numberedPattern = /^(\d+)\.\s*\*\*([^*]+)\*\*/m;
+    const match = text.match(numberedPattern);
+
+    if (match) {
+      const promptNumber = match[1];
+      const promptTitle = match[2];
+      console.log('检测到序号提示词:', { number: promptNumber, title: promptTitle });
+      return text; // 返回完整的提示词文本
+    }
+
+    return null;
+  }
+
   // 检测是否是绘图请求
   private isDrawingRequest(text: string): boolean {
+    // 首先检查是否包含序号格式的提示词
+    if (this.extractNumberedPrompt(text)) {
+      return true;
+    }
+
+    // 如果没有序号，使用关键词检测
     const drawingKeywords = [
       '画', '绘', '生成', '创作', 'draw', 'generate', 'create',
       '图片', '图像', 'image', 'picture', 'photo',
