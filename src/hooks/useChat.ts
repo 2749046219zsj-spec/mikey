@@ -76,35 +76,8 @@ export const useChat = (beforeSendCallback?: BeforeSendCallback) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      // Build conversation history for API - 限制历史记录数量避免超出限制
-      const MAX_HISTORY_MESSAGES = 10; // 最多保留10条消息（5轮对话）
-      const recentMessages = state.messages.slice(-MAX_HISTORY_MESSAGES);
-
-      const conversationHistory = recentMessages.map(msg => {
-        if (msg.type === 'user') {
-          const content = [];
-          if (msg.originalText && msg.originalText.trim()) {
-            content.push({
-              type: "text",
-              text: msg.originalText
-            });
-          }
-          return {
-            role: "user",
-            content: content.length > 0 ? content : [{ type: "text", text: msg.content }]
-          };
-        } else {
-          // 保留完整的AI响应，包括图片URL，这样AI可以看到对话历史
-          // 只清理markdown标记，保留实际的URL
-          const cleanContent = msg.content
-            .replace(/!\[generated_image_\d+\]/g, '')
-            .trim();
-          return {
-            role: "assistant",
-            content: cleanContent || msg.content
-          };
-        }
-      });
+      // 不传递对话历史，每次请求都是独立的
+      const conversationHistory: any[] = [];
 
       // Send to Gemini API
       const response = await geminiService.sendMessage(text, images, state.selectedModel, conversationHistory);
