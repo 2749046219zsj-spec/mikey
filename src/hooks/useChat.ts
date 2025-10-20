@@ -76,8 +76,11 @@ export const useChat = (beforeSendCallback?: BeforeSendCallback) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      // Build conversation history for API
-      const conversationHistory = state.messages.map(msg => {
+      // Build conversation history for API - 限制历史记录数量避免超出限制
+      const MAX_HISTORY_MESSAGES = 10; // 最多保留10条消息（5轮对话）
+      const recentMessages = state.messages.slice(-MAX_HISTORY_MESSAGES);
+
+      const conversationHistory = recentMessages.map(msg => {
         if (msg.type === 'user') {
           const content = [];
           if (msg.originalText && msg.originalText.trim()) {
@@ -91,7 +94,13 @@ export const useChat = (beforeSendCallback?: BeforeSendCallback) => {
             content: content.length > 0 ? content : [{ type: "text", text: msg.content }]
           };
         } else {
-          const cleanContent = msg.content.replace(/(https?:\/\/[^\s\)]+\.(?:jpg|jpeg|png|gif|webp|svg)(?:\?[^\s]*)?)/gi, '').replace(/!\[generated_image_\d+\]/g, '').replace(/\(\s*\)/g, '').replace(/\n\s*\n/g, '\n').trim();
+          // 清理AI响应中的图片URL，避免历史记录过大
+          const cleanContent = msg.content
+            .replace(/(https?:\/\/[^\s\)]+\.(?:jpg|jpeg|png|gif|webp|svg)(?:\?[^\s]*)?)/gi, '')
+            .replace(/!\[generated_image_\d+\]/g, '')
+            .replace(/\(\s*\)/g, '')
+            .replace(/\n\s*\n/g, '\n')
+            .trim();
           return {
             role: "assistant",
             content: cleanContent || msg.content

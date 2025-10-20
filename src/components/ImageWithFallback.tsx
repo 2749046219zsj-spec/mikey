@@ -31,12 +31,10 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   const handleError = () => {
     setIsLoading(false);
     if (retryCount < maxRetries) {
-      const delay = Math.min(1000 * Math.pow(2, retryCount), 5000);
       setTimeout(() => {
         setRetryCount(prev => prev + 1);
-        setCurrentSrc(`${src}${src.includes('?') ? '&' : '?'}retry=${retryCount + 1}&t=${Date.now()}`);
-        setIsLoading(true);
-      }, delay);
+        setCurrentSrc(`${src}${src.includes('?') ? '&' : '?'}retry=${retryCount + 1}`);
+      }, 1000 * (retryCount + 1));
     } else {
       setHasError(true);
     }
@@ -101,8 +99,8 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
         onClick={onClick}
         onError={handleError}
         onLoad={handleLoad}
-        loading="eager"
-        referrerPolicy="no-referrer"
+        crossOrigin="anonymous"
+        loading="lazy"
       />
     </div>
   );
