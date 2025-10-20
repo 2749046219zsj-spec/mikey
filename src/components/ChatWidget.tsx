@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Minus, Bot, User, Send, Loader2, Settings, Image, Paperclip } from 'lucide-react';
+import { MessageCircle, X, Minus, Bot, User, Send, Loader2, Settings, Image, Paperclip, FileText } from 'lucide-react';
 import { useWidgetChat } from '../hooks/useWidgetChat';
 import { useImageSelector } from '../hooks/useImageSelector';
 import { StylePresetDropdown } from './StylePresetDropdown';
@@ -20,6 +20,8 @@ export const ChatWidget: React.FC = () => {
   const [dragOffset, setDragOffset] = useState<Position>({ x: 0, y: 0 });
   const [inputText, setInputText] = useState('');
   const [widgetImages, setWidgetImages] = useState<File[]>([]);
+  const [showPromptUpload, setShowPromptUpload] = useState(false);
+  const [uploadedPrompts, setUploadedPrompts] = useState('');
   
   const widgetRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -136,6 +138,29 @@ export const ChatWidget: React.FC = () => {
     }
 
     return [];
+  };
+
+  // 处理本地提示词上传
+  const handlePromptUpload = () => {
+    if (!uploadedPrompts.trim()) {
+      alert('请输入提示词内容！');
+      return;
+    }
+
+    // 识别提示词
+    const prompts = extractPrompts(uploadedPrompts);
+
+    if (prompts.length === 0) {
+      alert('未能识别到有效的提示词（每个提示词需要大于20个字符）');
+      return;
+    }
+
+    // 关闭上传弹窗
+    setShowPromptUpload(false);
+    setUploadedPrompts('');
+
+    // 直接进入图片选择流程
+    handleSendPromptsToMain(prompts);
   };
 
   // 打开图片选择器
@@ -352,6 +377,17 @@ export const ChatWidget: React.FC = () => {
             </div>
             <div className="flex items-center gap-2">
               <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowPromptUpload(true);
+                }}
+                className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded text-sm flex items-center gap-1 transition-colors"
+                title="本地提示词上传"
+              >
+                <FileText size={14} />
+                <span className="text-xs">提示词上传</span>
+              </button>
+              <button
                 onClick={() => setIsMinimized(!isMinimized)}
                 className="w-6 h-6 hover:bg-white/20 rounded flex items-center justify-center transition-colors"
               >
@@ -528,6 +564,68 @@ export const ChatWidget: React.FC = () => {
               </div>
             </>
           )}
+        </div>
+      )}
+
+      {/* 本地提示词上传弹窗 */}
+      {showPromptUpload && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]" onClick={() => setShowPromptUpload(false)}>
+          <div className="bg-white rounded-lg shadow-2xl w-[600px] max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            {/* 弹窗标题 */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <div className="flex items-center gap-2">
+                <FileText size={20} className="text-orange-500" />
+                <h3 className="text-lg font-semibold text-gray-800">本地提示词上传</h3>
+              </div>
+              <button
+                onClick={() => setShowPromptUpload(false)}
+                className="w-8 h-8 hover:bg-gray-100 rounded flex items-center justify-center transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* 弹窗内容 */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <p className="text-sm text-gray-600 mb-3">
+                请在下方粘贴您的提示词列表。支持的格式：
+              </p>
+              <ul className="text-sm text-gray-600 mb-4 space-y-1 pl-4">
+                <li>• 编号列表：1. 提示词内容</li>
+                <li>• 双引号列表：1. "提示词内容"</li>
+                <li>• 中文顿号：1、提示词内容</li>
+              </ul>
+              <textarea
+                value={uploadedPrompts}
+                onChange={(e) => setUploadedPrompts(e.target.value)}
+                placeholder={'请粘贴提示词，例如：\n\n1. 根据我这个产品结构进行设计效果图：一个洛可可风格的香水瓶...\n2. 根据我这个产品结构进行设计效果图：一个充满洛可可浪漫气息的香氛容器...\n3. 根据我这个产品结构进行设计效果图：一张产品渲染图...'}
+                className="w-full h-[300px] p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm resize-none"
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                提示：每个提示词需要大于20个字符才能被识别
+              </p>
+            </div>
+
+            {/* 弹窗底部按钮 */}
+            <div className="flex items-center justify-end gap-2 p-4 border-t border-gray-200">
+              <button
+                onClick={() => {
+                  setShowPromptUpload(false);
+                  setUploadedPrompts('');
+                }}
+                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={handlePromptUpload}
+                disabled={!uploadedPrompts.trim()}
+                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                识别并上传
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </>
