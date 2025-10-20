@@ -151,34 +151,43 @@ export const ChatWidget: React.FC = () => {
     });
   };
 
-  // 将提示词和统一参考图发送到主界面（每个提示词单独发送）
+  // 将提示词和统一参考图发送到主界面（批量模式）
   const sendPromptsWithUnifiedImages = (prompts: string[], images: File[]) => {
     const mainSendMessage = (window as any).mainChatSendMessage;
     if (mainSendMessage && typeof mainSendMessage === 'function') {
-      // 每个提示词单独发送，都使用相同的参考图
-      prompts.forEach(prompt => {
-        mainSendMessage(`"${prompt}"`, images);
-      });
+      // 将所有提示词用 ** ** 包裹，触发批量队列模式
+      const textWithPrompts = prompts.map(p => `**${p}**`).join('\n');
+      mainSendMessage(textWithPrompts, images);
     }
 
-    alert(`已将 ${prompts.length} 个提示词和 ${images.length} 张统一参考图发送到主界面进行绘图！`);
+    alert(`已将 ${prompts.length} 个提示词和 ${images.length} 张统一参考图发送到主界面，将自动排队绘图！`);
   };
 
   // 将提示词和各自的参考图分别发送到主界面
   const sendPromptsWithIndividualImages = (promptImages: { prompt: string; images: File[] }[]) => {
     const mainSendMessage = (window as any).mainChatSendMessage;
     if (mainSendMessage && typeof mainSendMessage === 'function') {
-      promptImages.forEach(({ prompt, images }) => {
-        if (images.length > 0) {
-          mainSendMessage(`"${prompt}"`, images);
-        } else {
-          mainSendMessage(`"${prompt}"`, []);
-        }
-      });
+      // 如果所有提示词都使用相同的参考图（或都没有参考图），使用批量模式
+      const firstImages = promptImages[0]?.images || [];
+      const allSameImages = promptImages.every(({ images }) =>
+        images.length === firstImages.length &&
+        images.every((img, idx) => img === firstImages[idx])
+      );
+
+      if (allSameImages) {
+        // 所有提示词使用相同参考图，使用批量模式
+        const textWithPrompts = promptImages.map(({ prompt }) => `**${prompt}**`).join('\n');
+        mainSendMessage(textWithPrompts, firstImages);
+      } else {
+        // 参考图不同，逐个发送（注意：这种情况下不会显示批量进度）
+        promptImages.forEach(({ prompt, images }) => {
+          mainSendMessage(`**${prompt}**`, images);
+        });
+      }
     }
 
     const totalImages = promptImages.reduce((sum, p) => sum + p.images.length, 0);
-    alert(`已将 ${promptImages.length} 个提示词（共 ${totalImages} 张参考图）发送到主界面进行绘图！`);
+    alert(`已将 ${promptImages.length} 个提示词（共 ${totalImages} 张参考图）发送到主界面，将自动排队绘图！`);
   };
 
   // 发送消息
