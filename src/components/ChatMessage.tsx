@@ -29,9 +29,9 @@ const extractImageUrls = (text: string): { text: string; images: string[] } => {
       // 移除末尾可能的括号
       let cleanUrl = url.replace(/\)+$/, '');
 
-      // 检查是否是图片URL
+      // 检查是否是图片URL - 必须有图片扩展名或在poecdn.net/base/image/路径下
       const isImageUrl = /\.(jpg|jpeg|png|gif|webp|svg|avif)(\?.*)?$/i.test(cleanUrl) ||
-                        cleanUrl.includes('poecdn.net');
+                        (cleanUrl.includes('poecdn.net') && cleanUrl.includes('/base/image/'));
 
       // 使用Set避免重复
       if (isImageUrl && !seenUrls.has(cleanUrl)) {
