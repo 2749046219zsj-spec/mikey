@@ -1,6 +1,7 @@
 import React, { useState, useRef, KeyboardEvent } from 'react';
 import { Send, Loader2, X } from 'lucide-react';
 import { ImageUpload } from './ImageUpload';
+import { useImageSelector } from '../hooks/useImageSelector';
 
 interface ChatInputProps {
   onSendMessage: (text: string, images: File[]) => void;
@@ -18,6 +19,20 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
   const [text, setText] = useState('');
   const [images, setImages] = useState<File[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { selectedImages: referenceImages, removeImageFromUnified } = useImageSelector();
+
+  React.useEffect(() => {
+    if (referenceImages.length > 0) {
+      setImages(prev => {
+        const existingUrls = prev.map(f => URL.createObjectURL(f));
+        const newImages = referenceImages.filter(refImg => {
+          const refUrl = URL.createObjectURL(refImg);
+          return !existingUrls.includes(refUrl);
+        });
+        return [...prev, ...newImages];
+      });
+    }
+  }, [referenceImages]);
 
   const handlePaste = async (e: React.ClipboardEvent) => {
     const items = e.clipboardData?.items;
@@ -54,12 +69,17 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
 
   const handleSubmit = () => {
     if ((!text.trim() && images.length === 0) || isLoading) return;
-    
+
     onSendMessage(text, images);
     setText('');
     setImages([]);
+
+    for (let i = referenceImages.length - 1; i >= 0; i--) {
+      removeImageFromUnified(i);
+    }
+
     onClearEditContent?.();
-    
+
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
