@@ -4,6 +4,22 @@ import type { ReferenceImage } from '../types/referenceImage';
 export class ReferenceImageService {
   private static readonly BUCKET_NAME = 'reference-images';
 
+  static async ensureBucketExists(): Promise<void> {
+    try {
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const bucketExists = buckets?.some(b => b.name === this.BUCKET_NAME);
+
+      if (!bucketExists) {
+        await supabase.storage.createBucket(this.BUCKET_NAME, {
+          public: true,
+          fileSizeLimit: 5242880,
+        });
+      }
+    } catch (error) {
+      console.error('Error ensuring bucket exists:', error);
+    }
+  }
+
   static async getUserReferenceImages(userId: string): Promise<ReferenceImage[]> {
     const { data, error } = await supabase
       .from('reference_images')
@@ -23,6 +39,8 @@ export class ReferenceImageService {
     userId: string,
     file: File
   ): Promise<ReferenceImage> {
+    await this.ensureBucketExists();
+
     const fileExt = file.name.split('.').pop();
     const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
@@ -35,7 +53,7 @@ export class ReferenceImageService {
 
     if (uploadError) {
       console.error('Error uploading file:', uploadError);
-      throw uploadError;
+      throw new Error(`上传失败: ${uploadError.message}`);
     }
 
     const { data: urlData } = supabase.storage
@@ -59,7 +77,53 @@ export class ReferenceImageService {
     if (insertError) {
       await supabase.storage.from(this.BUCKET_NAME).remove([fileName]);
       console.error('Error inserting reference image record:', insertError);
-      throw insertError;
+      throw new Error(`保存图片记录失败: ${insertError.message}`);
+    }
+
+    return insertData;
+  }
+
+  static async uploadFromUrl(
+    userId: string,
+    imageUrl: string,
+    fileName?: string
+  ): Promise<ReferenceImage> {
+    try {
+      const response = await fetch(imageUrl);
+      if (!response.ok) {
+        throw new Error('无法获取图片');
+      }
+
+      const blob = await response.blob();
+      const file = new File([blob], fileName || 'image.jpg', { type: blob.type });
+
+      return await this.uploadReferenceImage(userId, file);
+    } catch (error) {
+      console.error('Error uploading from URL:', error);
+      throw new Error('从 URL 上传失败，请检查链接是否有效');
+    }
+  }
+
+  static async saveExternalUrl(
+    userId: string,
+    imageUrl: string,
+    fileName?: string
+  ): Promise<ReferenceImage> {
+    const { data: insertData, error: insertError } = await supabase
+      .from('reference_images')
+      .insert({
+        user_id: userId,
+        image_url: imageUrl,
+        file_name: fileName || '外部链接图片',
+        file_size: 0,
+        mime_type: 'image/external',
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('Error saving external URL:', insertError);
+      throw new Error(`保存外部链接失败: ${insertError.message}`);
     }
 
     return insertData;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, X, Check, Trash2, Loader2 } from 'lucide-react';
+import { Upload, X, Check, Trash2, Loader2, Link, HardDrive } from 'lucide-react';
 import { ReferenceImageService } from '../services/referenceImageService';
 import type { ReferenceImage } from '../types/referenceImage';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,6 +12,8 @@ interface ReferenceImageManagerProps {
   multiSelect?: boolean;
 }
 
+type UploadMode = 'file' | 'url' | 'external';
+
 const ReferenceImageManager = React.memo<ReferenceImageManagerProps>(
   ({ isOpen, onClose, selectedImages, onImagesSelect, multiSelect = true }) => {
     const { user } = useAuth();
@@ -19,6 +21,9 @@ const ReferenceImageManager = React.memo<ReferenceImageManagerProps>(
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [selectedIds, setSelectedIds] = useState<string[]>(selectedImages);
+    const [uploadMode, setUploadMode] = useState<UploadMode>('file');
+    const [imageUrl, setImageUrl] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
 
     useEffect(() => {
       if (isOpen && user) {
@@ -39,6 +44,7 @@ const ReferenceImageManager = React.memo<ReferenceImageManagerProps>(
         setImages(data);
       } catch (error) {
         console.error('Failed to load images:', error);
+        setErrorMessage('加载图片失败');
       } finally {
         setLoading(false);
       }
@@ -49,28 +55,57 @@ const ReferenceImageManager = React.memo<ReferenceImageManagerProps>(
 
       const files = Array.from(e.target.files);
       setUploading(true);
+      setErrorMessage('');
 
       try {
         for (const file of files) {
           if (!file.type.startsWith('image/')) {
-            alert(`${file.name} 不是图片文件`);
+            setErrorMessage(`${file.name} 不是图片文件`);
             continue;
           }
 
           if (file.size > 5 * 1024 * 1024) {
-            alert(`${file.name} 超过 5MB 限制`);
+            setErrorMessage(`${file.name} 超过 5MB 限制`);
             continue;
           }
 
           const newImage = await ReferenceImageService.uploadReferenceImage(user.id, file);
           setImages(prev => [newImage, ...prev]);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Failed to upload images:', error);
-        alert('上传失败，请重试');
+        setErrorMessage(error.message || '上传失败，请重试');
       } finally {
         setUploading(false);
         e.target.value = '';
+      }
+    };
+
+    const handleUrlUpload = async () => {
+      if (!user || !imageUrl.trim()) {
+        setErrorMessage('请输入图片链接');
+        return;
+      }
+
+      setUploading(true);
+      setErrorMessage('');
+
+      try {
+        let newImage: ReferenceImage;
+
+        if (uploadMode === 'url') {
+          newImage = await ReferenceImageService.uploadFromUrl(user.id, imageUrl);
+        } else {
+          newImage = await ReferenceImageService.saveExternalUrl(user.id, imageUrl);
+        }
+
+        setImages(prev => [newImage, ...prev]);
+        setImageUrl('');
+      } catch (error: any) {
+        console.error('Failed to upload from URL:', error);
+        setErrorMessage(error.message || 'URL 上传失败');
+      } finally {
+        setUploading(false);
       }
     };
 
@@ -83,7 +118,7 @@ const ReferenceImageManager = React.memo<ReferenceImageManagerProps>(
         setSelectedIds(prev => prev.filter(id => id !== image.image_url));
       } catch (error) {
         console.error('Failed to delete image:', error);
-        alert('删除失败，请重试');
+        setErrorMessage('删除失败，请重试');
       }
     };
 
@@ -121,23 +156,104 @@ const ReferenceImageManager = React.memo<ReferenceImageManagerProps>(
 
           <div className="flex-1 overflow-y-auto p-6">
             <div className="mb-6">
-              <label className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg cursor-pointer hover:shadow-lg transition-all">
-                <Upload className="w-5 h-5" />
-                <span className="font-medium">
-                  {uploading ? '上传中...' : '上传参考图'}
-                </span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleFileUpload}
-                  disabled={uploading}
-                  className="hidden"
-                />
-              </label>
-              <p className="text-sm text-gray-500 mt-2 text-center">
-                支持 JPG、PNG、GIF，单个文件最大 5MB
-              </p>
+              <div className="flex gap-2 mb-4">
+                <button
+                  onClick={() => setUploadMode('file')}
+                  className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
+                    uploadMode === 'file'
+                      ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <HardDrive className="w-4 h-4" />
+                  本地上传
+                </button>
+                <button
+                  onClick={() => setUploadMode('url')}
+                  className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
+                    uploadMode === 'url'
+                      ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <Link className="w-4 h-4" />
+                  URL 上传
+                </button>
+                <button
+                  onClick={() => setUploadMode('external')}
+                  className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
+                    uploadMode === 'external'
+                      ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <Link className="w-4 h-4" />
+                  外部链接
+                </button>
+              </div>
+
+              {uploadMode === 'file' ? (
+                <>
+                  <label className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg cursor-pointer hover:shadow-lg transition-all">
+                    <Upload className="w-5 h-5" />
+                    <span className="font-medium">
+                      {uploading ? '上传中...' : '选择文件上传'}
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleFileUpload}
+                      disabled={uploading}
+                      className="hidden"
+                    />
+                  </label>
+                  <p className="text-sm text-gray-500 mt-2 text-center">
+                    支持 JPG、PNG、GIF，单个文件最大 5MB
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="flex gap-2">
+                    <input
+                      type="url"
+                      value={imageUrl}
+                      onChange={(e) => setImageUrl(e.target.value)}
+                      placeholder={uploadMode === 'url' ? '输入图片链接（将下载到服务器）' : '输入图片链接（仅保存链接）'}
+                      className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      disabled={uploading}
+                    />
+                    <button
+                      onClick={handleUrlUpload}
+                      disabled={!imageUrl.trim() || uploading}
+                      className="px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                      {uploading ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          上传中
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-5 h-5" />
+                          {uploadMode === 'url' ? '下载并上传' : '保存链接'}
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-2">
+                    {uploadMode === 'url'
+                      ? '图片将被下载并保存到服务器'
+                      : '仅保存图片链接，不下载到服务器（需确保链接长期有效）'}
+                  </p>
+                </>
+              )}
+
+              {errorMessage && (
+                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                  {errorMessage}
+                </div>
+              )}
             </div>
 
             {loading ? (
@@ -153,6 +269,8 @@ const ReferenceImageManager = React.memo<ReferenceImageManagerProps>(
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {images.map(image => {
                   const isSelected = selectedIds.includes(image.image_url);
+                  const isExternal = image.mime_type === 'image/external';
+
                   return (
                     <div
                       key={image.id}
@@ -163,13 +281,22 @@ const ReferenceImageManager = React.memo<ReferenceImageManagerProps>(
                       }`}
                       onClick={() => handleImageClick(image.image_url)}
                     >
-                      <div className="aspect-square">
+                      <div className="aspect-square bg-gray-100">
                         <img
                           src={image.image_url}
                           alt={image.file_name}
                           className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23999"%3E图片加载失败%3C/text%3E%3C/svg%3E';
+                          }}
                         />
                       </div>
+
+                      {isExternal && (
+                        <div className="absolute top-2 left-2 px-2 py-1 bg-blue-500 rounded text-white text-xs">
+                          外部链接
+                        </div>
+                      )}
 
                       {isSelected && (
                         <div className="absolute top-2 right-2 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
@@ -182,16 +309,18 @@ const ReferenceImageManager = React.memo<ReferenceImageManagerProps>(
                           e.stopPropagation();
                           handleDelete(image);
                         }}
-                        className="absolute top-2 left-2 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                        className={`absolute ${isExternal ? 'top-10' : 'top-2'} left-2 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600`}
                       >
                         <Trash2 className="w-4 h-4 text-white" />
                       </button>
 
                       <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <p className="truncate">{image.file_name}</p>
-                        <p className="text-gray-300">
-                          {(image.file_size / 1024).toFixed(0)} KB
-                        </p>
+                        {image.file_size > 0 && (
+                          <p className="text-gray-300">
+                            {(image.file_size / 1024).toFixed(0)} KB
+                          </p>
+                        )}
                       </div>
                     </div>
                   );
