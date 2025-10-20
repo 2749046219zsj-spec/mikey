@@ -51,7 +51,10 @@ export default function AppContent() {
   } = useChat(checkAndDecrementDraws);
 
   useEffect(() => {
-    (window as any).mainChatSendMessage = sendMessage;
+    // 暴露给客服助手的接口，支持批量模式
+    (window as any).mainChatSendMessage = (text: string, images: File[], enableBatchMode = false) => {
+      sendMessage(text, images, enableBatchMode);
+    };
     return () => {
       delete (window as any).mainChatSendMessage;
     };
@@ -62,7 +65,8 @@ export default function AppContent() {
 
     const canProceed = await checkAndDecrementDraws();
     if (canProceed) {
-      sendMessage(text, images);
+      // 主界面发送，不启用批量模式
+      sendMessage(text, images, false);
       setEditContent(null);
     }
   };

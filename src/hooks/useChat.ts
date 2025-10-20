@@ -113,23 +113,28 @@ export const useChat = (beforeSendCallback?: BeforeSendCallback) => {
     }
   }, [addMessage, geminiService, state.selectedModel, state.messages]);
 
-  const sendMessage = useCallback(async (text: string, images: File[] = []) => {
+  const sendMessage = useCallback(async (text: string, images: File[] = [], enableBatchMode = false) => {
     if (!text.trim() && images.length === 0) return;
 
     setRetryCallback(null);
 
-    // 解析提示词
-    const prompts = parsePrompts(text);
+    // 只有明确启用批量模式时才解析提示词
+    if (enableBatchMode) {
+      const prompts = parsePrompts(text);
 
-    // 如果找到多个提示词，使用队列模式
-    if (prompts.length > 0) {
-      addPrompts(prompts, images);
-      setProcessing(true);
-      // 发送第一个提示词，跳过回调因为外部已经检查过了
-      await sendSinglePrompt(prompts[0], images, true);
-      setProcessing(false);
+      // 如果找到多个提示词，使用队列模式
+      if (prompts.length > 0) {
+        addPrompts(prompts, images);
+        setProcessing(true);
+        // 发送第一个提示词，跳过回调因为外部已经检查过了
+        await sendSinglePrompt(prompts[0], images, true);
+        setProcessing(false);
+      } else {
+        // 没有找到提示词，直接发送整个消息
+        await sendSinglePrompt(text, images, true);
+      }
     } else {
-      // 没有提示词标记，直接发送整个消息，跳过回调因为外部已经检查过了
+      // 不启用批量模式，直接发送整个消息
       await sendSinglePrompt(text, images, true);
     }
   }, [parsePrompts, addPrompts, sendSinglePrompt, setProcessing]);

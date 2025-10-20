@@ -180,9 +180,9 @@ export const ChatWidget: React.FC = () => {
   const sendPromptsWithUnifiedImages = (prompts: string[], images: File[]) => {
     const mainSendMessage = (window as any).mainChatSendMessage;
     if (mainSendMessage && typeof mainSendMessage === 'function') {
-      // 将所有提示词用 ** ** 包裹，触发批量队列模式
+      // 将所有提示词用 ** ** 包裹，并明确启用批量队列模式
       const textWithPrompts = prompts.map(p => `**${p}**`).join('\n');
-      mainSendMessage(textWithPrompts, images);
+      mainSendMessage(textWithPrompts, images, true);
     }
 
     alert(`已将 ${prompts.length} 个提示词和 ${images.length} 张统一参考图发送到主界面，将自动排队绘图！`);
@@ -202,11 +202,11 @@ export const ChatWidget: React.FC = () => {
       if (allSameImages) {
         // 所有提示词使用相同参考图，使用批量模式
         const textWithPrompts = promptImages.map(({ prompt }) => `**${prompt}**`).join('\n');
-        mainSendMessage(textWithPrompts, firstImages);
+        mainSendMessage(textWithPrompts, firstImages, true);
       } else {
         // 参考图不同，逐个发送（注意：这种情况下不会显示批量进度）
         promptImages.forEach(({ prompt, images }) => {
-          mainSendMessage(`**${prompt}**`, images);
+          mainSendMessage(`**${prompt}**`, images, true);
         });
       }
     }
