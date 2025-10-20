@@ -87,32 +87,55 @@ export const ChatWidget: React.FC = () => {
   const extractPrompts = (content: string): string[] => {
     const prompts: string[] = [];
 
-    // 匹配编号列表格式 (1. 2. 3. 等)
-    const numberedMatches = content.match(/\d+\.\s*"[^"]+"/g);
-    if (numberedMatches) {
-      numberedMatches.forEach(match => {
-        // 提取 " " 之间的内容作为提示词
-        const promptMatch = match.match(/"([^"]+)"/);
+    // 方式1: 匹配双引号包裹的编号列表 (1. "xxx" 或 1. "xxx")
+    const quotedNumberedMatches = content.match(/\d+\.\s*[""]([^""]+)[""]/g);
+    if (quotedNumberedMatches && quotedNumberedMatches.length > 0) {
+      quotedNumberedMatches.forEach(match => {
+        const promptMatch = match.match(/[""]([^""]+)[""]/);
         if (promptMatch) {
           prompts.push(promptMatch[1].trim());
         }
       });
+      return prompts.filter(prompt => prompt.trim().length > 20);
     }
 
-    // 如果没有找到编号格式，尝试其他格式
-    if (prompts.length === 0) {
-      const lines = content.split('\n');
-      lines.forEach(line => {
-        if (line.includes('"') && line.includes('"')) {
-          const promptMatch = line.match(/"([^"]+)"/);
-          if (promptMatch) {
-            prompts.push(promptMatch[1].trim());
-          }
+    // 方式2: 匹配编号列表格式，直接提取编号后的内容 (1. xxx)
+    // 支持格式：1. 内容  或  1. 内容  或  1、内容
+    const lines = content.split('\n');
+    const numberedLines: string[] = [];
+
+    lines.forEach(line => {
+      const trimmedLine = line.trim();
+      // 匹配 "数字+点/顿号+空格+内容" 格式
+      const match = trimmedLine.match(/^(\d+)[.、。]\s*(.+)$/);
+      if (match && match[2]) {
+        numberedLines.push(match[2].trim());
+      }
+    });
+
+    if (numberedLines.length > 0) {
+      return numberedLines.filter(prompt => prompt.trim().length > 20);
+    }
+
+    // 方式3: 匹配独立的双引号内容
+    const standaloneQuotes = content.match(/[""]([^""]+)[""]/g);
+    if (standaloneQuotes && standaloneQuotes.length > 0) {
+      standaloneQuotes.forEach(match => {
+        const promptMatch = match.match(/[""]([^""]+)[""]/);
+        if (promptMatch) {
+          prompts.push(promptMatch[1].trim());
         }
       });
+      return prompts.filter(prompt => prompt.trim().length > 20);
     }
 
-    return prompts.filter(prompt => prompt.trim().length > 20); // 过滤长度小于等于20字符的内容
+    // 方式4: 如果以上都没匹配到，尝试按段落分割
+    const paragraphs = content.split(/\n\s*\n/).filter(p => p.trim().length > 20);
+    if (paragraphs.length > 0) {
+      return paragraphs.map(p => p.trim()).filter(p => p.length > 20);
+    }
+
+    return [];
   };
 
   // 打开图片选择器
