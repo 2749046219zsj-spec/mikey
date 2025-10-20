@@ -86,32 +86,32 @@ export const ChatWidget: React.FC = () => {
   // 解析AI回复中的提示词列表
   const extractPrompts = (content: string): string[] => {
     const prompts: string[] = [];
-    
+
     // 匹配编号列表格式 (1. 2. 3. 等)
-    const numberedMatches = content.match(/\d+\.\s*\*\*[^*]+\*\*[^0-9]*/g);
+    const numberedMatches = content.match(/\d+\.\s*"[^"]+"/g);
     if (numberedMatches) {
       numberedMatches.forEach(match => {
-        // 提取 ** ** 之间的内容作为提示词
-        const promptMatch = match.match(/\*\*([^*]+)\*\*/);
+        // 提取 " " 之间的内容作为提示词
+        const promptMatch = match.match(/"([^"]+)"/);
         if (promptMatch) {
           prompts.push(promptMatch[1].trim());
         }
       });
     }
-    
+
     // 如果没有找到编号格式，尝试其他格式
     if (prompts.length === 0) {
       const lines = content.split('\n');
       lines.forEach(line => {
-        if (line.includes('**') && line.includes('**')) {
-          const promptMatch = line.match(/\*\*([^*]+)\*\*/);
+        if (line.includes('"') && line.includes('"')) {
+          const promptMatch = line.match(/"([^"]+)"/);
           if (promptMatch) {
             prompts.push(promptMatch[1].trim());
           }
         }
       });
     }
-    
+
     return prompts.filter(prompt => prompt.trim().length > 5); // 过滤太短的内容
   };
 
@@ -132,7 +132,7 @@ export const ChatWidget: React.FC = () => {
   const sendPromptsWithUnifiedImages = (prompts: string[], images: File[]) => {
     const mainSendMessage = (window as any).mainChatSendMessage;
     if (mainSendMessage && typeof mainSendMessage === 'function') {
-      const textWithPrompts = prompts.map(p => `**${p}**`).join('\n');
+      const textWithPrompts = prompts.map(p => `"${p}"`).join('\n');
       mainSendMessage(textWithPrompts, images);
     }
 
@@ -145,9 +145,9 @@ export const ChatWidget: React.FC = () => {
     if (mainSendMessage && typeof mainSendMessage === 'function') {
       promptImages.forEach(({ prompt, images }) => {
         if (images.length > 0) {
-          mainSendMessage(`**${prompt}**`, images);
+          mainSendMessage(`"${prompt}"`, images);
         } else {
-          mainSendMessage(`**${prompt}**`, []);
+          mainSendMessage(`"${prompt}"`, []);
         }
       });
     }
