@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Minus, Bot, User, Send, Loader2, Settings, Image, Paperclip, FileText } from 'lucide-react';
+import { MessageCircle, X, Minus, Bot, User, Send, Loader2, Settings, Image, Paperclip, FileText, Images } from 'lucide-react';
 import { useWidgetChat } from '../hooks/useWidgetChat';
 import { useImageSelector } from '../hooks/useImageSelector';
 import { StylePresetDropdown } from './StylePresetDropdown';
 import { CraftSelector } from './CraftSelector';
 import { ProductSelector } from './ProductSelector';
 import { PromptStructureSelector } from './PromptStructureSelector';
+import ReferenceImageManager from './ReferenceImageManager';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Position {
   x: number;
@@ -22,7 +24,10 @@ export const ChatWidget: React.FC = () => {
   const [widgetImages, setWidgetImages] = useState<File[]>([]);
   const [showPromptUpload, setShowPromptUpload] = useState(false);
   const [uploadedPrompts, setUploadedPrompts] = useState('');
-  
+  const [showReferenceManager, setShowReferenceManager] = useState(false);
+  const [selectedReferenceImages, setSelectedReferenceImages] = useState<string[]>([]);
+
+  const { user } = useAuth();
   const widgetRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -562,6 +567,18 @@ export const ChatWidget: React.FC = () => {
                   <StylePresetDropdown onSelectStyle={handleStyleSelect} buttonText="风格" />
                   <CraftSelector onConfirm={handleCraftsConfirm} buttonText="工艺" />
                   <PromptStructureSelector onSelectStructure={handleStructureSelect} buttonText="提示词结构" />
+                  <button
+                    onClick={() => setShowReferenceManager(true)}
+                    className="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg text-xs font-medium hover:shadow-md transition-all flex items-center gap-1"
+                  >
+                    <Images size={14} />
+                    参考图预设
+                    {selectedReferenceImages.length > 0 && (
+                      <span className="ml-1 px-1.5 py-0.5 bg-white/20 rounded-full text-[10px]">
+                        {selectedReferenceImages.length}
+                      </span>
+                    )}
+                  </button>
                 </div>
 
                 {widgetMessages.length > 0 && (
@@ -576,6 +593,17 @@ export const ChatWidget: React.FC = () => {
             </>
           )}
         </div>
+      )}
+
+      {/* 参考图预设管理器 */}
+      {user && (
+        <ReferenceImageManager
+          isOpen={showReferenceManager}
+          onClose={() => setShowReferenceManager(false)}
+          selectedImages={selectedReferenceImages}
+          onImagesSelect={setSelectedReferenceImages}
+          multiSelect={true}
+        />
       )}
 
       {/* 本地提示词上传弹窗 */}
