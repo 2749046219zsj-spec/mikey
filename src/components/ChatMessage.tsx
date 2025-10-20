@@ -13,49 +13,47 @@ interface ChatMessageProps {
 
 // 检测文本中的图片链接
 const extractImageUrls = (text: string): { text: string; images: string[] } => {
-  const imageUrlRegex = /(https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif|webp|svg)(?:\?[^\s]*)?)/gi;
-  const poeImageRegex = /(https?:\/\/pfst\.cf2\.poecdn\.net\/[^\s\)]+)/gi;
-  
   const images: string[] = [];
   let cleanText = text;
-  
-  // 提取 Poe CDN 图片链接
-  const poeMatches = text.match(poeImageRegex);
-  if (poeMatches) {
-    poeMatches.forEach(url => {
-      if (!images.includes(url)) {
+
+  // 更强大的正则表达式，匹配所有http(s)开头的URL
+  // 匹配直到遇到空格、换行、括号或其他终止符
+  const urlRegex = /(https?:\/\/[^\s\)<>\[\]"']+)/gi;
+
+  const matches = text.match(urlRegex);
+
+  console.log('原始文本:', text);
+  console.log('匹配到的所有URL:', matches);
+
+  if (matches) {
+    matches.forEach(url => {
+      // 检查是否是图片URL
+      const isImageUrl = /\.(jpg|jpeg|png|gif|webp|svg|avif)(\?.*)?$/i.test(url) ||
+                        url.includes('poecdn.net') ||
+                        url.includes('image') ||
+                        url.includes('img');
+
+      if (isImageUrl && !images.includes(url)) {
         images.push(url);
+        console.log('添加图片URL:', url);
       }
     });
   }
-  
-  // 提取其他图片链接
-  const imageMatches = text.match(imageUrlRegex);
-  if (imageMatches) {
-    imageMatches.forEach(url => {
-      // 避免重复添加已经在 poeMatches 中的链接
-      if (!images.includes(url) && !poeMatches?.includes(url)) {
-        images.push(url);
-      }
-    });
-  }
-  
+
   // 从文本中移除所有图片链接
   images.forEach(url => {
-    // 使用全局替换，确保所有重复的URL都被移除
     const escapedUrl = url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     cleanText = cleanText.replace(new RegExp(escapedUrl, 'gi'), '');
   });
-  
-  // 清理文本中的 ![generated_image_1] 等标记
-  cleanText = cleanText.replace(/!\[generated_image_\d+\]/g, '').trim();
-  // 清理多余的括号
-  cleanText = cleanText.replace(/\(\s*\)/g, '').trim();
-  // 清理多余的空行
-  cleanText = cleanText.replace(/\n\s*\n/g, '\n').trim();
-  // 清理开头和结尾的空白字符
-  cleanText = cleanText.replace(/^\s+|\s+$/g, '');
-  
+
+  // 清理Markdown图片标记
+  cleanText = cleanText.replace(/!\[.*?\]\(.*?\)/g, '').trim();
+  // 清理多余的括号和空行
+  cleanText = cleanText.replace(/\(\s*\)/g, '').replace(/\n\s*\n/g, '\n').trim();
+
+  console.log('提取到的图片数量:', images.length);
+  console.log('清理后的文本:', cleanText);
+
   return { text: cleanText, images };
 };
 export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onRetryToInput, onSetEditContent }) => {
