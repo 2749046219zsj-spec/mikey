@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Upload, X, Check, Trash2, Loader2, Link, HardDrive } from 'lucide-react';
 import { ReferenceImageService } from '../services/referenceImageService';
 import type { ReferenceImage } from '../types/referenceImage';
@@ -24,6 +24,9 @@ const ReferenceImageManager = React.memo<ReferenceImageManagerProps>(
     const [uploadMode, setUploadMode] = useState<UploadMode>('file');
     const [imageUrl, setImageUrl] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
+    const [isDragging, setIsDragging] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const dropZoneRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
       if (isOpen && user) {
@@ -34,6 +37,34 @@ const ReferenceImageManager = React.memo<ReferenceImageManagerProps>(
     useEffect(() => {
       setSelectedIds(selectedImages);
     }, [selectedImages]);
+
+    useEffect(() => {
+      if (isOpen && uploadMode === 'file') {
+        const handlePaste = async (e: ClipboardEvent) => {
+          const items = e.clipboardData?.items;
+          if (!items) return;
+
+          const imageFiles: File[] = [];
+          for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            if (item.type.startsWith('image/')) {
+              const file = item.getAsFile();
+              if (file) {
+                imageFiles.push(file);
+              }
+            }
+          }
+
+          if (imageFiles.length > 0) {
+            e.preventDefault();
+            await handleFilesUpload(imageFiles);
+          }
+        };
+
+        document.addEventListener('paste', handlePaste);
+        return () => document.removeEventListener('paste', handlePaste);
+      }
+    }, [isOpen, uploadMode, user]);
 
     const loadImages = async () => {
       if (!user) return;
@@ -50,10 +81,9 @@ const ReferenceImageManager = React.memo<ReferenceImageManagerProps>(
       }
     };
 
-    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (!user || !e.target.files || e.target.files.length === 0) return;
+    const handleFilesUpload = async (files: File[]) => {
+      if (!user) return;
 
-      const files = Array.from(e.target.files);
       setUploading(true);
       setErrorMessage('');
 
@@ -72,12 +102,52 @@ const ReferenceImageManager = React.memo<ReferenceImageManagerProps>(
           const newImage = await ReferenceImageService.uploadReferenceImage(user.id, file);
           setImages(prev => [newImage, ...prev]);
         }
+        setErrorMessage('');
       } catch (error: any) {
         console.error('Failed to upload images:', error);
         setErrorMessage(error.message || '上传失败，请重试');
       } finally {
         setUploading(false);
-        e.target.value = '';
+      }
+    };
+
+    const handleFileInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (!e.target.files || e.target.files.length === 0) return;
+      const files = Array.from(e.target.files);
+      await handleFilesUpload(files);
+      e.target.value = '';
+    };
+
+    const handleDragEnter = (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(true);
+    };
+
+    const handleDragLeave = (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.currentTarget === dropZoneRef.current) {
+        setIsDragging(false);
+      }
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    const handleDrop = async (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+
+      const files = Array.from(e.dataTransfer.files).filter(file =>
+        file.type.startsWith('image/')
+      );
+
+      if (files.length > 0) {
+        await handleFilesUpload(files);
       }
     };
 
@@ -194,23 +264,36 @@ const ReferenceImageManager = React.memo<ReferenceImageManagerProps>(
 
               {uploadMode === 'file' ? (
                 <>
-                  <label className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg cursor-pointer hover:shadow-lg transition-all">
-                    <Upload className="w-5 h-5" />
-                    <span className="font-medium">
-                      {uploading ? '上传中...' : '选择文件上传'}
-                    </span>
+                  <div
+                    ref={dropZoneRef}
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragEnter={handleDragEnter}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className={`relative border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all ${
+                      isDragging
+                        ? 'border-orange-500 bg-orange-50'
+                        : 'border-gray-300 hover:border-orange-400 hover:bg-gray-50'
+                    }`}
+                  >
                     <input
+                      ref={fileInputRef}
                       type="file"
                       accept="image/*"
                       multiple
-                      onChange={handleFileUpload}
+                      onChange={handleFileInputChange}
                       disabled={uploading}
                       className="hidden"
                     />
-                  </label>
-                  <p className="text-sm text-gray-500 mt-2 text-center">
-                    支持 JPG、PNG、GIF，单个文件最大 5MB
-                  </p>
+                    <Upload className={`w-12 h-12 mx-auto mb-4 ${isDragging ? 'text-orange-500' : 'text-gray-400'}`} />
+                    <p className="text-lg font-medium text-gray-700 mb-2">
+                      {uploading ? '上传中...' : 'Click, drag images or Ctrl+V to paste'}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      支持 JPG、PNG、GIF，单个文件最大 5MB
+                    </p>
+                  </div>
                 </>
               ) : (
                 <>
@@ -222,6 +305,11 @@ const ReferenceImageManager = React.memo<ReferenceImageManagerProps>(
                       placeholder={uploadMode === 'url' ? '输入图片链接（将下载到服务器）' : '输入图片链接（仅保存链接）'}
                       className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                       disabled={uploading}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && imageUrl.trim()) {
+                          handleUrlUpload();
+                        }
+                      }}
                     />
                     <button
                       onClick={handleUrlUpload}
@@ -250,8 +338,9 @@ const ReferenceImageManager = React.memo<ReferenceImageManagerProps>(
               )}
 
               {errorMessage && (
-                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                  {errorMessage}
+                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-start gap-2">
+                  <X className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span>{errorMessage}</span>
                 </div>
               )}
             </div>
@@ -287,7 +376,7 @@ const ReferenceImageManager = React.memo<ReferenceImageManagerProps>(
                           alt={image.file_name}
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23999"%3E图片加载失败%3C/text%3E%3C/svg%3E';
+                            (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23999" font-size="12"%3E加载失败%3C/text%3E%3C/svg%3E';
                           }}
                         />
                       </div>
