@@ -424,16 +424,35 @@ export const ImageSelector: React.FC = () => {
 
           {!loadingDbImages && dbImages.length > 0 && (
             <div className="mb-6">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">从数据库选择参考图 ({dbImages.length})</h3>
+              <h3 className="text-sm font-medium text-gray-700 mb-3">
+                从数据库选择参考图
+                {(() => {
+                  let selectedCount = 0;
+                  dbImages.forEach((dbImage) => {
+                    let isSelected = false;
+                    if (isAdvancedMode) {
+                      if (mode === 'unified') {
+                        isSelected = selectedImages.some(file => file.name.includes(dbImage.image_url));
+                      } else {
+                        isSelected = currentPromptImages.some(file => file.name.includes(dbImage.image_url));
+                      }
+                    } else {
+                      isSelected = selectedImageUrl === dbImage.image_url && !selectedImageFile;
+                    }
+                    if (isSelected) selectedCount++;
+                  });
+                  return selectedCount > 0 ? ` (已选 ${selectedCount}/${dbImages.length})` : ` (共 ${dbImages.length} 张)`;
+                })()}
+              </h3>
               <div className="grid grid-cols-5 gap-3">
                 {dbImages.map((dbImage, index) => {
                   // Check if image is selected (works for both modes)
                   let isSelected = false;
                   if (isAdvancedMode) {
                     if (mode === 'unified') {
-                      isSelected = selectedImages.some(file => file.name.includes(dbImage.title || ''));
+                      isSelected = selectedImages.some(file => file.name.includes(dbImage.image_url));
                     } else {
-                      isSelected = currentPromptImages.some(file => file.name.includes(dbImage.title || ''));
+                      isSelected = currentPromptImages.some(file => file.name.includes(dbImage.image_url));
                     }
                   } else {
                     isSelected = selectedImageUrl === dbImage.image_url && !selectedImageFile;
