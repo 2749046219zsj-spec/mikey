@@ -9,11 +9,11 @@ interface ChatInputProps {
   onClearEditContent?: () => void;
 }
 
-export const ChatInput: React.FC<ChatInputProps> = ({ 
-  onSendMessage, 
-  isLoading, 
-  editContent, 
-  onClearEditContent 
+export const ChatInput: React.FC<ChatInputProps> = React.memo(({
+  onSendMessage,
+  isLoading,
+  editContent,
+  onClearEditContent
 }) => {
   const [text, setText] = useState('');
   const [images, setImages] = useState<File[]>([]);
@@ -136,4 +136,4 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       </div>
     </div>
   );
-};
+});

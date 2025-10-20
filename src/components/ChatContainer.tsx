@@ -11,9 +11,9 @@ interface ChatContainerProps {
   onSetEditContent?: (text: string, images: File[]) => void;
 }
 
-export const ChatContainer: React.FC<ChatContainerProps> = ({ 
-  messages, 
-  isLoading, 
+export const ChatContainer: React.FC<ChatContainerProps> = React.memo(({
+  messages,
+  isLoading,
   error,
   onRetryToInput,
   onSetEditContent
@@ -73,4 +73,4 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
       </div>
     </div>
   );
-};
+});

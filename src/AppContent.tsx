@@ -83,7 +83,7 @@ export default function AppContent() {
 
   return (
     <ErrorBoundary>
-      <div className="h-screen bg-gradient-to-br from-blue-50 via-green-50 to-blue-100 flex flex-col">
+      <div className="h-screen bg-slate-50 flex flex-col">
         <ChatHeader
           onClearChat={clearChat}
           messageCount={messages.length}

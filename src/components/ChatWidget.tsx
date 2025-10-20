@@ -52,36 +52,47 @@ export const ChatWidget: React.FC = () => {
     }
   };
 
-  // 处理拖拽
+  // 处理拖拽 - 使用 requestAnimationFrame 优化性能
   useEffect(() => {
+    let rafId: number | null = null;
+
     const handleMouseMove = (e: MouseEvent) => {
-      if (isDragging) {
-        const newX = e.clientX - dragOffset.x;
-        const newY = e.clientY - dragOffset.y;
-        
-        // 限制在窗口范围内
-        const maxX = window.innerWidth - 400;
-        const maxY = window.innerHeight - 500;
-        
-        setPosition({
-          x: Math.max(0, Math.min(newX, maxX)),
-          y: Math.max(0, Math.min(newY, maxY))
+      if (isDragging && !rafId) {
+        rafId = requestAnimationFrame(() => {
+          const newX = e.clientX - dragOffset.x;
+          const newY = e.clientY - dragOffset.y;
+
+          const maxX = window.innerWidth - 400;
+          const maxY = window.innerHeight - 500;
+
+          setPosition({
+            x: Math.max(0, Math.min(newX, maxX)),
+            y: Math.max(0, Math.min(newY, maxY))
+          });
+          rafId = null;
         });
       }
     };
 
     const handleMouseUp = () => {
       setIsDragging(false);
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
     };
 
     if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mousemove', handleMouseMove, { passive: true });
       document.addEventListener('mouseup', handleMouseUp);
     }
 
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+      }
     };
   }, [isDragging, dragOffset]);
 
