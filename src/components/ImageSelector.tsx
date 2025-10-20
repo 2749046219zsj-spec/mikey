@@ -2,6 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { X, CheckCircle2, ImageIcon, Upload, Clipboard, Trash2 } from 'lucide-react';
 import { useImageSelector } from '../hooks/useImageSelector';
 import { useImageGallery } from '../hooks/useImageGallery';
+import { ReferenceImageService } from '../services/referenceImageService';
+import type { ReferenceImage } from '../types/referenceImage';
+import { useAuth } from '../contexts/AuthContext';
 
 export const ImageSelector: React.FC = () => {
   const {
@@ -26,12 +29,33 @@ export const ImageSelector: React.FC = () => {
     setCurrentPromptIndex
   } = useImageSelector();
 
+  const { user } = useAuth();
   const { images } = useImageGallery();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadAreaRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [dbImages, setDbImages] = useState<ReferenceImage[]>([]);
+  const [loadingDbImages, setLoadingDbImages] = useState(false);
 
   const isAdvancedMode = onConfirmMultiple !== null;
+
+  useEffect(() => {
+    const loadDbImages = async () => {
+      if (isOpen && user) {
+        setLoadingDbImages(true);
+        try {
+          const images = await ReferenceImageService.getUserImages(user.id);
+          setDbImages(images);
+        } catch (error) {
+          console.error('Failed to load database images:', error);
+        } finally {
+          setLoadingDbImages(false);
+        }
+      }
+    };
+
+    loadDbImages();
+  }, [isOpen, user]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -371,9 +395,54 @@ export const ImageSelector: React.FC = () => {
             </div>
           )}
 
+          {dbImages.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">从数据库选择参考图</h3>
+              <div className="grid grid-cols-5 gap-3">
+                {dbImages.map((dbImage, index) => {
+                  const isSelected = !isAdvancedMode && selectedImageUrl === dbImage.image_url && !selectedImageFile;
+                  return (
+                    <div
+                      key={dbImage.id}
+                      onClick={() => handleGalleryImageClick(dbImage.image_url)}
+                      className={`relative group cursor-pointer rounded-lg overflow-hidden transition-all duration-200 ${
+                        isSelected
+                          ? 'ring-4 ring-green-500 shadow-lg scale-105'
+                          : 'hover:ring-2 hover:ring-gray-300 hover:shadow-md'
+                      }`}
+                    >
+                      <img
+                        src={dbImage.image_url}
+                        alt={dbImage.title || `Database Image ${index + 1}`}
+                        className="w-full aspect-square object-cover"
+                        loading="lazy"
+                      />
+
+                      <div className={`absolute inset-0 transition-all duration-200 ${
+                        isSelected
+                          ? 'bg-green-500/20'
+                          : 'bg-black/0 group-hover:bg-black/10'
+                      }`} />
+
+                      {isSelected && (
+                        <div className="absolute top-2 right-2">
+                          <CheckCircle2 size={24} className="text-green-600 bg-white rounded-full" />
+                        </div>
+                      )}
+
+                      <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 text-white text-xs rounded truncate max-w-[calc(100%-1rem)]">
+                        {dbImage.title || `图片 ${index + 1}`}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {images.length > 0 && (
             <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-3">或从图库选择</h3>
+              <h3 className="text-sm font-medium text-gray-700 mb-3">或从历史图库选择</h3>
               <div className="grid grid-cols-5 gap-3">
                 {images.map((imageUrl, index) => {
                   const isSelected = !isAdvancedMode && selectedImageUrl === imageUrl && !selectedImageFile;
