@@ -112,7 +112,7 @@ export const ChatWidget: React.FC = () => {
       });
     }
 
-    return prompts.filter(prompt => prompt.trim().length > 5); // 过滤太短的内容
+    return prompts.filter(prompt => prompt.trim().length > 20); // 过滤长度小于等于20字符的内容
   };
 
   // 打开图片选择器
