@@ -128,12 +128,14 @@ export const ChatWidget: React.FC = () => {
     });
   };
 
-  // 将提示词和统一参考图发送到主界面
+  // 将提示词和统一参考图发送到主界面（每个提示词单独发送）
   const sendPromptsWithUnifiedImages = (prompts: string[], images: File[]) => {
     const mainSendMessage = (window as any).mainChatSendMessage;
     if (mainSendMessage && typeof mainSendMessage === 'function') {
-      const textWithPrompts = prompts.map(p => `"${p}"`).join('\n');
-      mainSendMessage(textWithPrompts, images);
+      // 每个提示词单独发送，都使用相同的参考图
+      prompts.forEach(prompt => {
+        mainSendMessage(`"${prompt}"`, images);
+      });
     }
 
     alert(`已将 ${prompts.length} 个提示词和 ${images.length} 张统一参考图发送到主界面进行绘图！`);
