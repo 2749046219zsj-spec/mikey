@@ -26,6 +26,8 @@ export const ChatWidget: React.FC = () => {
   const [uploadedPrompts, setUploadedPrompts] = useState('');
   const [showReferenceManager, setShowReferenceManager] = useState(false);
   const [selectedReferenceImages, setSelectedReferenceImages] = useState<string[]>([]);
+  const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
+  const [selectedCrafts, setSelectedCrafts] = useState<string[]>([]);
 
   const { user } = useAuth();
   const widgetRef = useRef<HTMLDivElement>(null);
@@ -237,6 +239,8 @@ export const ChatWidget: React.FC = () => {
     widgetSendMessage(inputText, widgetImages);
     setInputText('');
     setWidgetImages([]);
+    setSelectedStyles([]);
+    setSelectedCrafts([]);
 
     // 重置textarea高度
     setTimeout(() => {
@@ -309,6 +313,7 @@ export const ChatWidget: React.FC = () => {
 
   // 处理风格选择
   const handleStyleSelect = (style: string) => {
+    setSelectedStyles(prev => [...prev, style]);
     const newText = inputText ? `${inputText}, ${style}` : style;
     setInputText(newText);
     setTimeout(() => adjustTextareaHeight(), 0);
@@ -316,16 +321,25 @@ export const ChatWidget: React.FC = () => {
 
   // 处理工艺选择确认
   const handleCraftsConfirm = (crafts: string[]) => {
+    setSelectedCrafts(crafts);
     const craftsText = crafts.join('、');
     const newText = inputText ? `${inputText}, ${craftsText}` : craftsText;
     setInputText(newText);
     setTimeout(() => adjustTextareaHeight(), 0);
   };
 
-  // 处理产品选择
-  const handleProductSelect = (product: string) => {
-    const newText = inputText ? `${inputText}, ${product}` : product;
-    setInputText(newText);
+  // 处理产品选择 - 使用模板并替换占位符
+  const handleProductSelect = (template: string) => {
+    const styleAndCraftElements = [...selectedStyles, ...selectedCrafts].join('、');
+
+    let finalText = template;
+    if (styleAndCraftElements) {
+      finalText = template.replace('{风格和元素}', styleAndCraftElements);
+    } else {
+      finalText = template.replace('并加入以下风格和元素：{风格和元素}，', '');
+    }
+
+    setInputText(finalText);
     setTimeout(() => adjustTextareaHeight(), 0);
   };
 
