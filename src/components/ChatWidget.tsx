@@ -641,8 +641,8 @@ export const ChatWidget: React.FC = () => {
                       max="50"
                       value={styleCount}
                       onChange={(e) => {
-                        const value = parseInt(e.target.value) || 10;
-                        setStyleCount(Math.max(1, Math.min(50, value)));
+                        const value = parseInt(e.target.value) || 5;
+                        setStyleCount(Math.max(1, Math.min(20, value)));
                         // 如果有模板，立即更新
                         if (fullPromptTemplate) {
                           updateTexts(selectedItems);
