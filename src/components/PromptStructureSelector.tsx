@@ -100,7 +100,7 @@ export const PromptStructureSelector: React.FC<PromptStructureSelectorProps> = (
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <FileText size={16} />
-                <span className="font-semibold">提示词结构</span>
+                <span className="font-semibold">用户自定义提示词</span>
               </div>
               <button
                 onClick={() => setIsAddingNew(!isAddingNew)}
@@ -110,7 +110,7 @@ export const PromptStructureSelector: React.FC<PromptStructureSelectorProps> = (
                 <Plus size={16} />
               </button>
             </div>
-            <p className="text-xs text-purple-100 mt-1">选择或添加提示词结构格式</p>
+            <p className="text-xs text-purple-100 mt-1">自定义添加提示词</p>
           </div>
 
           <div className="flex-1 overflow-y-auto">
