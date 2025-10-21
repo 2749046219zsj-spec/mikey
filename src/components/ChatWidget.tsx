@@ -653,7 +653,7 @@ export const ChatWidget: React.FC = () => {
                     <span className="text-xs text-gray-600">个</span>
                   </div>
 
-                  <PromptStructureSelector onSelectStructure={handleStructureSelect} buttonText="提示词结构" />
+                  <PromptStructureSelector onSelectStructure={handleStructureSelect} buttonText="用户提示词自定义" />
                   <button
                     onClick={() => setShowReferenceManager(true)}
                     className="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg text-xs font-medium hover:shadow-md transition-all flex items-center gap-1"
