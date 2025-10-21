@@ -26,8 +26,6 @@ export const ChatWidget: React.FC = () => {
   const [uploadedPrompts, setUploadedPrompts] = useState('');
   const [showReferenceManager, setShowReferenceManager] = useState(false);
   const [selectedReferenceImages, setSelectedReferenceImages] = useState<string[]>([]);
-  const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
-  const [selectedCrafts, setSelectedCrafts] = useState<string[]>([]);
 
   const { user } = useAuth();
   const widgetRef = useRef<HTMLDivElement>(null);
@@ -239,8 +237,6 @@ export const ChatWidget: React.FC = () => {
     widgetSendMessage(inputText, widgetImages);
     setInputText('');
     setWidgetImages([]);
-    setSelectedStyles([]);
-    setSelectedCrafts([]);
 
     // 重置textarea高度
     setTimeout(() => {
@@ -313,34 +309,56 @@ export const ChatWidget: React.FC = () => {
 
   // 处理风格选择
   const handleStyleSelect = (style: string) => {
-    const updatedStyles = [...selectedStyles, style];
-    setSelectedStyles(updatedStyles);
-
-    // 如果输入框中包含占位符，替换它；否则追加到末尾
+    // 如果输入框中包含占位符
     if (inputText.includes('{风格和元素}')) {
-      const styleAndCraftElements = [...updatedStyles, ...selectedCrafts].join('、');
-      const newText = inputText.replace('{风格和元素}', styleAndCraftElements);
+      // 直接替换为当前选择的风格
+      const newText = inputText.replace('{风格和元素}', style);
       setInputText(newText);
     } else {
-      const newText = inputText ? `${inputText}, ${style}` : style;
-      setInputText(newText);
+      // 如果占位符已经被替换（例如已经选择了风格），则查找并追加
+      const placeholderPattern = /并加入以下风格和元素：([^，]+)，/;
+      const match = inputText.match(placeholderPattern);
+
+      if (match) {
+        // 找到已有的风格和元素，追加新的风格
+        const existingElements = match[1];
+        const newElements = `${existingElements}、${style}`;
+        const newText = inputText.replace(placeholderPattern, `并加入以下风格和元素：${newElements}，`);
+        setInputText(newText);
+      } else {
+        // 没有找到模板结构，直接追加
+        const newText = inputText ? `${inputText}, ${style}` : style;
+        setInputText(newText);
+      }
     }
     setTimeout(() => adjustTextareaHeight(), 0);
   };
 
   // 处理工艺选择确认
   const handleCraftsConfirm = (crafts: string[]) => {
-    setSelectedCrafts(crafts);
+    const craftsText = crafts.join('、');
 
-    // 如果输入框中包含占位符，替换它；否则追加到末尾
+    // 如果输入框中包含占位符
     if (inputText.includes('{风格和元素}')) {
-      const styleAndCraftElements = [...selectedStyles, ...crafts].join('、');
-      const newText = inputText.replace('{风格和元素}', styleAndCraftElements);
+      // 直接替换为当前选择的工艺
+      const newText = inputText.replace('{风格和元素}', craftsText);
       setInputText(newText);
     } else {
-      const craftsText = crafts.join('、');
-      const newText = inputText ? `${inputText}, ${craftsText}` : craftsText;
-      setInputText(newText);
+      // 如果占位符已经被替换，则查找并追加
+      const placeholderPattern = /并加入以下风格和元素：([^，]+)，/;
+      const match = inputText.match(placeholderPattern);
+
+      if (match) {
+        // 找到已有的风格和元素，追加新的工艺
+        const existingElements = match[1];
+        const newElements = `${existingElements}、${craftsText}`;
+        const newText = inputText.replace(placeholderPattern, `并加入以下风格和元素：${newElements}，`);
+        setInputText(newText);
+      } else {
+        // 没有找到模板结构，直接追加
+        const newText = inputText ? `${inputText}, ${craftsText}` : craftsText;
+        setInputText(newText);
+      }
     }
     setTimeout(() => adjustTextareaHeight(), 0);
   };
