@@ -248,7 +248,7 @@ export const ChatWidget: React.FC = () => {
     setWidgetImages([]);
     setFullPromptTemplate('');
     setSelectedItems({ styles: [], crafts: [] });
-    setStyleCount(10);
+    setStyleCount(3);
 
     // 重置textarea高度
     setTimeout(() => {
@@ -644,7 +644,7 @@ export const ChatWidget: React.FC = () => {
                       max="50"
                       value={styleCount}
                       onChange={(e) => {
-                        const value = parseInt(e.target.value) || 5;
+                        const value = parseInt(e.target.value) || 1;
                         const newCount = Math.max(1, Math.min(20, value));
                         setStyleCount(newCount);
                         // 如果有模板，立即更新（使用新的count值）
