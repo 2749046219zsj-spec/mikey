@@ -52,7 +52,7 @@ export const ProductSelector: React.FC<ProductSelectorProps> = ({
     const template: ProductTemplate = {
       id: category.name,
       name: category.display_name,
-      prompt: category.description
+      template: category.description || ''
     };
     onSelectProduct(template);
     setIsOpen(false);
