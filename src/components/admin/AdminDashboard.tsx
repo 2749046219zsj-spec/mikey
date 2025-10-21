@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react';
-import { Shield, Users, Activity, ArrowLeft } from 'lucide-react';
+import { Shield, Users, Activity, ArrowLeft, Package, FileText } from 'lucide-react';
 import { adminService } from '../../services/userService';
 import { UserProfile } from '../../types/user';
 import UserManagementPanel from './UserManagementPanel';
 import UsageStatistics from './UsageStatistics';
+import { ProductManagement } from './ProductManagement';
+import { PromptTemplateManagement } from './PromptTemplateManagement';
 
 interface AdminDashboardProps {
   onBack: () => void;
 }
 
 export default function AdminDashboard({ onBack }: AdminDashboardProps) {
-  const [activeTab, setActiveTab] = useState<'users' | 'stats'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'stats' | 'products' | 'prompts'>('users');
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -52,7 +54,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
             </button>
           </div>
 
-          <div className="flex gap-4 mt-6">
+          <div className="flex gap-4 mt-6 flex-wrap">
             <button
               onClick={() => setActiveTab('users')}
               className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${
@@ -75,10 +77,32 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
               <Activity className="w-5 h-5" />
               使用统计
             </button>
+            <button
+              onClick={() => setActiveTab('products')}
+              className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${
+                activeTab === 'products'
+                  ? 'bg-purple-600 text-white shadow-lg'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <Package className="w-5 h-5" />
+              产品管理
+            </button>
+            <button
+              onClick={() => setActiveTab('prompts')}
+              className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${
+                activeTab === 'prompts'
+                  ? 'bg-purple-600 text-white shadow-lg'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <FileText className="w-5 h-5" />
+              提示词管理
+            </button>
           </div>
         </div>
 
-        {loading ? (
+        {loading && (activeTab === 'users' || activeTab === 'stats') ? (
           <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
             <div className="inline-block w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mb-4" />
             <p className="text-gray-600">加载中...</p>
@@ -89,6 +113,16 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
               <UserManagementPanel users={users} onUsersChange={loadUsers} />
             )}
             {activeTab === 'stats' && <UsageStatistics users={users} />}
+            {activeTab === 'products' && (
+              <div className="bg-white rounded-2xl shadow-xl p-6">
+                <ProductManagement />
+              </div>
+            )}
+            {activeTab === 'prompts' && (
+              <div className="bg-white rounded-2xl shadow-xl p-6">
+                <PromptTemplateManagement />
+              </div>
+            )}
           </>
         )}
       </div>
