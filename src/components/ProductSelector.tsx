@@ -3,7 +3,7 @@ import { Package, ChevronDown } from 'lucide-react';
 import { productTemplates, ProductTemplate } from '../data/productTemplates';
 
 interface ProductSelectorProps {
-  onSelectProduct: (template: string) => void;
+  onSelectProduct: (product: ProductTemplate) => void;
   buttonText?: string;
 }
 
@@ -31,7 +31,7 @@ export const ProductSelector: React.FC<ProductSelectorProps> = ({
   }, [isOpen]);
 
   const handleSelect = (template: ProductTemplate) => {
-    onSelectProduct(template.template);
+    onSelectProduct(template);
     setIsOpen(false);
   };
 

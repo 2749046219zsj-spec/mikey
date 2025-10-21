@@ -27,6 +27,13 @@ export const ChatWidget: React.FC = () => {
   const [showReferenceManager, setShowReferenceManager] = useState(false);
   const [selectedReferenceImages, setSelectedReferenceImages] = useState<string[]>([]);
 
+  const [displayText, setDisplayText] = useState('');
+  const [fullPromptTemplate, setFullPromptTemplate] = useState('');
+  const [selectedItems, setSelectedItems] = useState<{product?: string, styles: string[], crafts: string[]}>({
+    styles: [],
+    crafts: []
+  });
+
   const { user } = useAuth();
   const widgetRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -236,7 +243,10 @@ export const ChatWidget: React.FC = () => {
     if (!inputText.trim() || widgetLoading) return;
     widgetSendMessage(inputText, widgetImages);
     setInputText('');
+    setDisplayText('');
     setWidgetImages([]);
+    setFullPromptTemplate('');
+    setSelectedItems({ styles: [], crafts: [] });
 
     // 重置textarea高度
     setTimeout(() => {
@@ -307,67 +317,71 @@ export const ChatWidget: React.FC = () => {
     }
   };
 
+  // 更新显示文本和完整提示词
+  const updateTexts = (newSelectedItems: {product?: string, styles: string[], crafts: string[]}) => {
+    // 构建显示文本（用户看到的简洁版本）
+    const displayParts: string[] = [];
+    if (newSelectedItems.product) {
+      displayParts.push(newSelectedItems.product);
+    }
+    if (newSelectedItems.styles.length > 0) {
+      displayParts.push(...newSelectedItems.styles);
+    }
+    if (newSelectedItems.crafts.length > 0) {
+      displayParts.push(...newSelectedItems.crafts);
+    }
+    const newDisplayText = displayParts.join('、');
+    setDisplayText(newDisplayText);
+
+    // 如果有模板，构建完整提示词
+    if (fullPromptTemplate) {
+      const styleAndCraftElements = [...newSelectedItems.styles, ...newSelectedItems.crafts].join('、');
+      let finalText = fullPromptTemplate;
+      if (styleAndCraftElements) {
+        finalText = fullPromptTemplate.replace('{风格和元素}', styleAndCraftElements);
+      } else {
+        finalText = fullPromptTemplate.replace('并加入以下风格和元素：{风格和元素}，', '');
+      }
+      setInputText(finalText);
+    } else {
+      setInputText(newDisplayText);
+    }
+
+    setTimeout(() => adjustTextareaHeight(), 0);
+  };
+
   // 处理风格选择
   const handleStyleSelect = (style: string) => {
-    // 如果输入框中包含占位符
-    if (inputText.includes('{风格和元素}')) {
-      // 直接替换为当前选择的风格
-      const newText = inputText.replace('{风格和元素}', style);
-      setInputText(newText);
-    } else {
-      // 如果占位符已经被替换（例如已经选择了风格），则查找并追加
-      const placeholderPattern = /并加入以下风格和元素：([^，]+)，/;
-      const match = inputText.match(placeholderPattern);
-
-      if (match) {
-        // 找到已有的风格和元素，追加新的风格
-        const existingElements = match[1];
-        const newElements = `${existingElements}、${style}`;
-        const newText = inputText.replace(placeholderPattern, `并加入以下风格和元素：${newElements}，`);
-        setInputText(newText);
-      } else {
-        // 没有找到模板结构，直接追加
-        const newText = inputText ? `${inputText}, ${style}` : style;
-        setInputText(newText);
-      }
-    }
-    setTimeout(() => adjustTextareaHeight(), 0);
+    const newSelectedItems = {
+      ...selectedItems,
+      styles: [...selectedItems.styles, style]
+    };
+    setSelectedItems(newSelectedItems);
+    updateTexts(newSelectedItems);
   };
 
   // 处理工艺选择确认
   const handleCraftsConfirm = (crafts: string[]) => {
-    const craftsText = crafts.join('、');
-
-    // 如果输入框中包含占位符
-    if (inputText.includes('{风格和元素}')) {
-      // 直接替换为当前选择的工艺
-      const newText = inputText.replace('{风格和元素}', craftsText);
-      setInputText(newText);
-    } else {
-      // 如果占位符已经被替换，则查找并追加
-      const placeholderPattern = /并加入以下风格和元素：([^，]+)，/;
-      const match = inputText.match(placeholderPattern);
-
-      if (match) {
-        // 找到已有的风格和元素，追加新的工艺
-        const existingElements = match[1];
-        const newElements = `${existingElements}、${craftsText}`;
-        const newText = inputText.replace(placeholderPattern, `并加入以下风格和元素：${newElements}，`);
-        setInputText(newText);
-      } else {
-        // 没有找到模板结构，直接追加
-        const newText = inputText ? `${inputText}, ${craftsText}` : craftsText;
-        setInputText(newText);
-      }
-    }
-    setTimeout(() => adjustTextareaHeight(), 0);
+    const newSelectedItems = {
+      ...selectedItems,
+      crafts: crafts
+    };
+    setSelectedItems(newSelectedItems);
+    updateTexts(newSelectedItems);
   };
 
-  // 处理产品选择 - 直接插入模板，保留占位符
-  const handleProductSelect = (template: string) => {
-    // 直接插入模板，保留 {风格和元素} 占位符
-    // 后续用户选择风格/工艺时会自动替换
-    setInputText(template);
+  // 处理产品选择 - 保存模板并更新显示
+  const handleProductSelect = (product: { name: string; template: string }) => {
+    const newSelectedItems = {
+      product: product.name,
+      styles: [],
+      crafts: []
+    };
+
+    setFullPromptTemplate(product.template);
+    setSelectedItems(newSelectedItems);
+    setDisplayText(product.name);
+    setInputText(product.template);
     setTimeout(() => adjustTextareaHeight(), 0);
   };
 
@@ -389,7 +403,12 @@ export const ChatWidget: React.FC = () => {
 
   // 处理输入变化
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInputText(e.target.value);
+    const newValue = e.target.value;
+    setInputText(newValue);
+    setDisplayText(newValue);
+    // 用户手动输入时清空模板和选择状态
+    setFullPromptTemplate('');
+    setSelectedItems({ styles: [], crafts: [] });
     adjustTextareaHeight();
   };
 
@@ -581,7 +600,7 @@ export const ChatWidget: React.FC = () => {
                   
                   <textarea
                     ref={textareaRef}
-                    value={inputText}
+                    value={displayText || inputText}
                     onChange={handleInputChange}
                     onKeyPress={handleKeyPress}
                     onPaste={handlePaste}
