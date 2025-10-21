@@ -33,6 +33,7 @@ export const ChatWidget: React.FC = () => {
     styles: [],
     crafts: []
   });
+  const [styleCount, setStyleCount] = useState<number>(10);
 
   const { user } = useAuth();
   const widgetRef = useRef<HTMLDivElement>(null);
@@ -247,6 +248,7 @@ export const ChatWidget: React.FC = () => {
     setWidgetImages([]);
     setFullPromptTemplate('');
     setSelectedItems({ styles: [], crafts: [] });
+    setStyleCount(10);
 
     // 重置textarea高度
     setTimeout(() => {
@@ -342,6 +344,8 @@ export const ChatWidget: React.FC = () => {
       } else {
         finalText = fullPromptTemplate.replace('并加入以下风格和元素：{风格和元素}，', '');
       }
+      // 替换数量
+      finalText = finalText.replace(/设计\d+个款式/, `设计${styleCount}个款式`);
       setInputText(finalText);
     } else {
       setInputText(newDisplayText);
@@ -627,6 +631,28 @@ export const ChatWidget: React.FC = () => {
                   <ProductSelector onSelectProduct={handleProductSelect} buttonText="产品" />
                   <StylePresetDropdown onSelectStyle={handleStyleSelect} buttonText="风格" />
                   <CraftSelector onConfirm={handleCraftsConfirm} buttonText="工艺" />
+
+                  {/* 款式数量输入 */}
+                  <div className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg">
+                    <span className="text-xs text-gray-700 font-medium">款式数量:</span>
+                    <input
+                      type="number"
+                      min="1"
+                      max="50"
+                      value={styleCount}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value) || 10;
+                        setStyleCount(Math.max(1, Math.min(50, value)));
+                        // 如果有模板，立即更新
+                        if (fullPromptTemplate) {
+                          updateTexts(selectedItems);
+                        }
+                      }}
+                      className="w-12 px-1.5 py-0.5 text-sm text-center border border-green-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500 bg-white"
+                    />
+                    <span className="text-xs text-gray-600">个</span>
+                  </div>
+
                   <PromptStructureSelector onSelectStructure={handleStructureSelect} buttonText="提示词结构" />
                   <button
                     onClick={() => setShowReferenceManager(true)}
