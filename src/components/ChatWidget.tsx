@@ -33,7 +33,7 @@ export const ChatWidget: React.FC = () => {
     styles: [],
     crafts: []
   });
-  const [styleCount, setStyleCount] = useState<number>(3);
+  const [styleCount, setStyleCount] = useState<number>(10);
 
   const { user } = useAuth();
   const widgetRef = useRef<HTMLDivElement>(null);
