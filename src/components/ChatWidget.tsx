@@ -385,7 +385,10 @@ export const ChatWidget: React.FC = () => {
     setFullPromptTemplate(product.template);
     setSelectedItems(newSelectedItems);
     setDisplayText(product.name);
-    setInputText(product.template);
+
+    // 应用数量替换
+    const templateWithCount = product.template.replace(/设计\d+个款式/, `设计${styleCount}个款式`);
+    setInputText(templateWithCount);
     setTimeout(() => adjustTextareaHeight(), 0);
   };
 
@@ -642,10 +645,21 @@ export const ChatWidget: React.FC = () => {
                       value={styleCount}
                       onChange={(e) => {
                         const value = parseInt(e.target.value) || 5;
-                        setStyleCount(Math.max(1, Math.min(20, value)));
-                        // 如果有模板，立即更新
+                        const newCount = Math.max(1, Math.min(20, value));
+                        setStyleCount(newCount);
+                        // 如果有模板，立即更新（使用新的count值）
                         if (fullPromptTemplate) {
-                          updateTexts(selectedItems);
+                          const styleAndCraftElements = [...selectedItems.styles, ...selectedItems.crafts].join('、');
+                          let finalText = fullPromptTemplate;
+                          if (styleAndCraftElements) {
+                            finalText = fullPromptTemplate.replace('{风格和元素}', styleAndCraftElements);
+                          } else {
+                            finalText = fullPromptTemplate.replace('并加入以下风格和元素：{风格和元素}，', '');
+                          }
+                          // 使用新的数量值替换
+                          finalText = finalText.replace(/设计\d+个款式/, `设计${newCount}个款式`);
+                          setInputText(finalText);
+                          setTimeout(() => adjustTextareaHeight(), 0);
                         }
                       }}
                       className="w-12 px-1.5 py-0.5 text-sm text-center border border-green-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500 bg-white"
