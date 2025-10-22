@@ -13,6 +13,7 @@ import { useChat } from './hooks/useChat';
 import { useAuth } from './contexts/AuthContext';
 import { userService } from './services/userService';
 import { useImageSelector } from './hooks/useImageSelector';
+import { GeminiApiService } from './services/geminiApi';
 
 export default function AppContent() {
   const { user, refreshUserData } = useAuth();
@@ -26,6 +27,7 @@ export default function AppContent() {
   const [styleCount, setStyleCount] = useState(3);
   const [selectedReferenceImages, setSelectedReferenceImages] = useState<string[]>([]);
   const [assistantMessages, setAssistantMessages] = useState<any[]>([]);
+  const [assistantLoading, setAssistantLoading] = useState(false);
 
   const [assistantInputText, setAssistantInputText] = useState('');
   const [assistantImages, setAssistantImages] = useState<File[]>([]);
@@ -35,6 +37,8 @@ export default function AppContent() {
     styles: [],
     crafts: []
   });
+
+  const geminiService = React.useMemo(() => new GeminiApiService(), []);
 
   const checkAndDecrementDraws = React.useCallback(async () => {
     if (!user) return false;
@@ -89,11 +93,14 @@ export default function AppContent() {
     if (!user) return;
 
     if (assistantMode === 'assistant') {
+      const imageUrls = images.map(img => URL.createObjectURL(img));
       const userMessage = {
         id: Date.now().toString(),
         type: 'user',
         content: text,
-        images: images.map(img => URL.createObjectURL(img)),
+        images: imageUrls,
+        originalText: text,
+        originalImages: images,
         timestamp: new Date()
       };
       setAssistantMessages(prev => [...prev, userMessage]);
@@ -104,6 +111,86 @@ export default function AppContent() {
       setFullPromptTemplate('');
       setSelectedItems({ styles: [], crafts: [] });
       setStyleCount(3);
+
+      setAssistantLoading(true);
+
+      try {
+        const systemPrompt = {
+          role: "system",
+          content: `你是一个专业的提示词识别和优化专家。你的任务是从给定文本中快速识别并优化提示词。
+
+**任务要求：**
+1. 从输入文本中识别潜在的提示词段落
+2. 筛选条件：提示词长度必须大于20个字符
+3. 对识别出的提示词进行优化改进
+4. 上下文分析：考虑前后文的完整性，确保提示词完整
+
+**输出格式（支持以下任意一种）：**
+
+格式1：编号列表（推荐，最常用）
+1. 优化后的提示词内容1
+2. 优化后的提示词内容2
+3. 优化后的提示词内容3
+
+格式2：双引号编号列表
+1. "优化后的提示词内容1"
+2. "优化后的提示词内容2"
+3. "优化后的提示词内容3"
+
+**重要规则：**
+- 每个提示词必须长度大于20个字符
+- 保持提示词的完整性，不要截断
+- 如果用户输入已经是编号列表格式，直接优化输出即可
+- 每行一个提示词，确保格式清晰`
+        };
+
+        const conversationHistory = [
+          systemPrompt,
+          ...assistantMessages.map(msg => {
+            if (msg.type === 'user') {
+              const content = [];
+              if (msg.originalText && msg.originalText.trim()) {
+                content.push({
+                  type: "text",
+                  text: msg.originalText
+                });
+              }
+              return {
+                role: "user",
+                content: content.length > 0 ? content : [{ type: "text", text: msg.content }]
+              };
+            } else {
+              const cleanContent = msg.content.replace(/(https?:\/\/[^\s\)]+\.(?:jpg|jpeg|png|gif|webp|svg)(?:\?[^\s]*)?)/gi, '').replace(/!\[generated_image_\d+\]/g, '').replace(/\(\s*\)/g, '').replace(/\n\s*\n/g, '\n').trim();
+              return {
+                role: "assistant",
+                content: cleanContent || msg.content
+              };
+            }
+          })
+        ];
+
+        const response = await geminiService.sendMessage(text, images, 'Gemini-2.5-Flash-Image', conversationHistory);
+
+        const aiMessage = {
+          id: (Date.now() + 1).toString(),
+          type: 'ai',
+          content: response,
+          timestamp: new Date()
+        };
+        setAssistantMessages(prev => [...prev, aiMessage]);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+        const aiMessage = {
+          id: (Date.now() + 1).toString(),
+          type: 'ai',
+          content: `生成失败: ${errorMessage}`,
+          hasError: true,
+          timestamp: new Date()
+        };
+        setAssistantMessages(prev => [...prev, aiMessage]);
+      } finally {
+        setAssistantLoading(false);
+      }
     } else {
       const canProceed = await checkAndDecrementDraws();
       if (canProceed) {
@@ -255,7 +342,7 @@ export default function AppContent() {
           messageCount={assistantMode === 'assistant' ? assistantMessages.length : messages.length}
           selectedModel={selectedModel}
           onModelChange={setSelectedModel}
-          isLoading={isLoading}
+          isLoading={assistantMode === 'assistant' ? assistantLoading : isLoading}
           queueInfo={queueInfo}
           onStopQueue={stopQueue}
           onClearQueue={clearQueue}
@@ -265,7 +352,7 @@ export default function AppContent() {
 
         <ChatContainer
           messages={assistantMode === 'assistant' ? assistantMessages : messages}
-          isLoading={isLoading}
+          isLoading={assistantMode === 'assistant' ? assistantLoading : isLoading}
           error={error}
           onRetryToInput={retryToInput}
           onSetEditContent={handleSetEditContent}
@@ -273,7 +360,7 @@ export default function AppContent() {
 
         <ChatInput
           onSendMessage={handleSendMessage}
-          isLoading={isLoading}
+          isLoading={assistantMode === 'assistant' ? assistantLoading : isLoading}
           editContent={editContent}
           onClearEditContent={handleClearEditContent}
           assistantMode={assistantMode}
