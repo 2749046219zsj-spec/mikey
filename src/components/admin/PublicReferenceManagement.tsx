@@ -44,7 +44,10 @@ export default function PublicReferenceManagement() {
   const loadProducts = async () => {
     const { data, error } = await supabase
       .from('public_reference_products')
-      .select('*')
+      .select(`
+        *,
+        images:public_reference_images(id, image_url, thumbnail_url, display_order)
+      `)
       .order('sort_order', { ascending: true });
 
     if (error) {
@@ -52,8 +55,13 @@ export default function PublicReferenceManagement() {
       return [];
     }
 
-    setProducts(data || []);
-    return data || [];
+    const productsWithFirstImage = (data || []).map(product => ({
+      ...product,
+      firstImage: product.images?.sort((a: any, b: any) => a.display_order - b.display_order)[0]
+    }));
+
+    setProducts(productsWithFirstImage);
+    return productsWithFirstImage;
   };
 
   const loadProductImages = async (productId: string) => {
@@ -347,10 +355,28 @@ export default function PublicReferenceManagement() {
               className="p-4 cursor-pointer hover:bg-gray-50"
               onClick={() => handleProductClick(product)}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
+              <div className="flex items-center justify-between gap-4">
+                {(product as any).firstImage ? (
+                  <div className="flex-shrink-0 w-24 h-24 bg-gray-100 rounded-lg overflow-hidden">
+                    <img
+                      src={(product as any).firstImage.thumbnail_url || (product as any).firstImage.image_url}
+                      alt={product.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex-shrink-0 w-24 h-24 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <ImageIcon className="w-8 h-8 text-gray-400" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-gray-900">{product.title}</h3>
                   <p className="text-sm text-gray-500">货号: {product.product_code}</p>
+                  {(product as any).images && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      {(product as any).images.length} 张图片
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <button
