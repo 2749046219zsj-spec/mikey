@@ -28,6 +28,8 @@ export default function AppContent() {
   const [selectedReferenceImages, setSelectedReferenceImages] = useState<string[]>([]);
   const [assistantMessages, setAssistantMessages] = useState<any[]>([]);
   const [assistantLoading, setAssistantLoading] = useState(false);
+  const [showPromptUpload, setShowPromptUpload] = useState(false);
+  const [uploadedPrompts, setUploadedPrompts] = useState('');
 
   const [assistantInputText, setAssistantInputText] = useState('');
   const [assistantImages, setAssistantImages] = useState<File[]>([]);
@@ -39,6 +41,7 @@ export default function AppContent() {
   });
 
   const geminiService = React.useMemo(() => new GeminiApiService(), []);
+  const { openAdvancedSelector } = useImageSelector();
 
   const checkAndDecrementDraws = React.useCallback(async () => {
     if (!user) return false;
@@ -330,6 +333,123 @@ export default function AppContent() {
     setSelectedItems({ styles: [], crafts: [] });
   };
 
+  const extractPrompts = (content: string): string[] => {
+    const prompts: string[] = [];
+
+    const quotedNumberedMatches = content.match(/\d+\.\s*["""]([^"""]+)["""]/g);
+    if (quotedNumberedMatches && quotedNumberedMatches.length > 0) {
+      quotedNumberedMatches.forEach(match => {
+        const promptMatch = match.match(/["""]([^"""]+)["""]/);
+        if (promptMatch) {
+          prompts.push(promptMatch[1].trim());
+        }
+      });
+      return prompts.filter(prompt => prompt.trim().length > 20);
+    }
+
+    const lines = content.split('\n');
+    const numberedLines: string[] = [];
+
+    lines.forEach(line => {
+      const trimmedLine = line.trim();
+      const match = trimmedLine.match(/^(\d+)[.、。]\s*(.+)$/);
+      if (match && match[2]) {
+        numberedLines.push(match[2].trim());
+      }
+    });
+
+    if (numberedLines.length > 0) {
+      return numberedLines.filter(prompt => prompt.trim().length > 20);
+    }
+
+    const standaloneQuotes = content.match(/["""]([^"""]+)["""]/g);
+    if (standaloneQuotes && standaloneQuotes.length > 0) {
+      standaloneQuotes.forEach(match => {
+        const promptMatch = match.match(/["""]([^"""]+)["""]/);
+        if (promptMatch) {
+          prompts.push(promptMatch[1].trim());
+        }
+      });
+      return prompts.filter(prompt => prompt.trim().length > 20);
+    }
+
+    const paragraphs = content.split(/\n\s*\n/).filter(p => p.trim().length > 20);
+    if (paragraphs.length > 0) {
+      return paragraphs.map(p => p.trim()).filter(p => p.length > 20);
+    }
+
+    return [];
+  };
+
+  const handlePromptUpload = () => {
+    if (!uploadedPrompts.trim()) {
+      alert('请输入提示词内容！');
+      return;
+    }
+
+    const prompts = extractPrompts(uploadedPrompts);
+
+    if (prompts.length === 0) {
+      alert('未能识别到有效的提示词（每个提示词需要大于20个字符）');
+      return;
+    }
+
+    setShowPromptUpload(false);
+    setUploadedPrompts('');
+    handleSendPromptsToMain(prompts);
+  };
+
+  const handleSendPromptsToMain = (prompts: string[]) => {
+    if (prompts.length === 0) return;
+
+    openAdvancedSelector(prompts, (result) => {
+      if (result.mode === 'unified' && result.unifiedImages) {
+        sendPromptsWithUnifiedImages(prompts, result.unifiedImages);
+      } else if (result.mode === 'individual' && result.promptImages) {
+        sendPromptsWithIndividualImages(result.promptImages);
+      }
+    });
+  };
+
+  const sendPromptsWithUnifiedImages = (prompts: string[], images: File[]) => {
+    const textWithPrompts = prompts.map(p => `**${p}**`).join('\n');
+    sendMessage(textWithPrompts, images, true);
+    alert(`已将 ${prompts.length} 个提示词和 ${images.length} 张统一参考图添加到队列，将自动排队绘图！`);
+  };
+
+  const sendPromptsWithIndividualImages = (promptImages: { prompt: string; images: File[] }[]) => {
+    const firstImages = promptImages[0]?.images || [];
+    const allSameImages = promptImages.every(({ images }) =>
+      images.length === firstImages.length &&
+      images.every((img, idx) => img === firstImages[idx])
+    );
+
+    if (allSameImages) {
+      const textWithPrompts = promptImages.map(({ prompt }) => `**${prompt}**`).join('\n');
+      sendMessage(textWithPrompts, firstImages, true);
+    } else {
+      promptImages.forEach(({ prompt, images }) => {
+        sendMessage(`**${prompt}**`, images, true);
+      });
+    }
+
+    const totalImages = promptImages.reduce((sum, p) => sum + p.images.length, 0);
+    alert(`已将 ${promptImages.length} 个提示词（共 ${totalImages} 张参考图）添加到队列，将自动排队绘图！`);
+  };
+
+  const handleConfirmSendPrompts = (messageId: string) => {
+    const message = assistantMessages.find(m => m.id === messageId);
+    if (!message || message.type !== 'ai') return;
+
+    const prompts = extractPrompts(message.content);
+    if (prompts.length > 0) {
+      setAssistantMessages(prev => prev.map(m =>
+        m.id === messageId ? { ...m, promptsSent: true } : m
+      ));
+      handleSendPromptsToMain(prompts);
+    }
+  };
+
   const handleClearAssistantChat = () => {
     setAssistantMessages([]);
   };
@@ -356,6 +476,9 @@ export default function AppContent() {
           error={error}
           onRetryToInput={retryToInput}
           onSetEditContent={handleSetEditContent}
+          assistantMode={assistantMode === 'assistant'}
+          onConfirmSendPrompts={handleConfirmSendPrompts}
+          extractPrompts={extractPrompts}
         />
 
         <ChatInput
@@ -378,6 +501,7 @@ export default function AppContent() {
             onStyleCountChange: handleStyleCountChange,
             selectedReferenceImages,
             onOpenReferenceLibrary: () => setShowReferenceLibrary(true),
+            onOpenPromptUpload: () => setShowPromptUpload(true),
             onClearChat: handleClearAssistantChat,
             hasMessages: assistantMessages.length > 0
           } : undefined}
@@ -395,6 +519,61 @@ export default function AppContent() {
             onBack={() => setShowReferenceLibrary(false)}
             onSelectImages={handleReferenceLibrarySelect}
           />
+        )}
+
+        {showPromptUpload && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000]" onClick={() => setShowPromptUpload(false)}>
+            <div className="bg-white rounded-lg shadow-2xl w-[600px] max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-800">提示词上传</h3>
+                <button
+                  onClick={() => setShowPromptUpload(false)}
+                  className="w-8 h-8 hover:bg-gray-100 rounded flex items-center justify-center transition-colors"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-4">
+                <p className="text-sm text-gray-600 mb-3">
+                  请在下方粘贴您的提示词列表。支持的格式：
+                </p>
+                <ul className="text-sm text-gray-600 mb-4 space-y-1 pl-4">
+                  <li>• 编号列表：1. 提示词内容</li>
+                  <li>• 双引号列表：1. "提示词内容"</li>
+                  <li>• 中文顿号：1、提示词内容</li>
+                </ul>
+                <textarea
+                  value={uploadedPrompts}
+                  onChange={(e) => setUploadedPrompts(e.target.value)}
+                  placeholder={'请粘贴提示词，例如：\n\n1. 根据我这个产品结构进行设计效果图：一个洛可可风格的香水瓶...\n2. 根据我这个产品结构进行设计效果图：一个充满洛可可浪漫气息的香氛容器...\n3. 根据我这个产品结构进行设计效果图：一张产品渲染图...'}
+                  className="w-full h-[300px] p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm resize-none"
+                />
+                <p className="text-xs text-gray-500 mt-2">
+                  提示：每个提示词需要大于20个字符才能被识别
+                </p>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 p-4 border-t border-gray-200">
+                <button
+                  onClick={() => {
+                    setShowPromptUpload(false);
+                    setUploadedPrompts('');
+                  }}
+                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={handlePromptUpload}
+                  disabled={!uploadedPrompts.trim()}
+                  className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  识别并上传
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </ErrorBoundary>

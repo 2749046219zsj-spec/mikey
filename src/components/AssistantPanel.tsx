@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Images } from 'lucide-react';
+import { Images, FileText } from 'lucide-react';
 import { ProductSelector } from './ProductSelector';
 import { StylePresetDropdown } from './StylePresetDropdown';
 import { CraftSelector } from './CraftSelector';
@@ -14,6 +14,7 @@ interface AssistantPanelProps {
   onStyleCountChange: (count: number) => void;
   selectedReferenceImages: any[];
   onOpenReferenceLibrary: () => void;
+  onOpenPromptUpload: () => void;
   onClearChat?: () => void;
   hasMessages?: boolean;
 }
@@ -27,6 +28,7 @@ export const AssistantPanel: React.FC<AssistantPanelProps> = ({
   onStyleCountChange,
   selectedReferenceImages,
   onOpenReferenceLibrary,
+  onOpenPromptUpload,
   onClearChat,
   hasMessages = false
 }) => {
@@ -68,6 +70,14 @@ export const AssistantPanel: React.FC<AssistantPanelProps> = ({
                 {selectedReferenceImages.length}
               </span>
             )}
+          </button>
+
+          <button
+            onClick={onOpenPromptUpload}
+            className="px-3 py-1.5 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg text-xs font-medium hover:shadow-md transition-all flex items-center gap-1"
+          >
+            <FileText size={14} />
+            提示词上传
           </button>
 
           {hasMessages && onClearChat && (
