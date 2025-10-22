@@ -123,32 +123,6 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
 
         <div className="flex gap-3 items-end mt-3">
           <div className="flex-1 relative">
-            {/* 参考图显示在输入框上方 */}
-            {referenceImages.length > 0 && (
-              <div className="absolute bottom-full mb-2 left-0 right-0">
-                <div className="flex items-center gap-2 flex-wrap p-2 bg-white rounded-lg border border-gray-200 shadow-sm">
-                  {referenceImages.map((image, index) => (
-                    <div
-                      key={index}
-                      className="relative w-16 h-16 rounded-lg overflow-hidden border-2 border-gray-300 group"
-                    >
-                      <img
-                        src={URL.createObjectURL(image)}
-                        alt={`Reference ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                      <button
-                        onClick={() => removeImageFromUnified(index)}
-                        className="absolute top-0.5 right-0.5 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                      >
-                        <X size={12} className="text-white" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
             <textarea
               ref={textareaRef}
               value={displayText}

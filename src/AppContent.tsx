@@ -21,7 +21,7 @@ export default function AppContent() {
   const [showContactModal, setShowContactModal] = useState(false);
   const [showReferenceLibrary, setShowReferenceLibrary] = useState(false);
   const [currentMode, setCurrentMode] = useState<AppMode>('normal');
-  const { addImageToUnified, selectedImages: referenceImages, openAdvancedSelector } = useImageSelector();
+  const { addImageToUnified, selectedImages: referenceImages, openAdvancedSelector, removeImageFromUnified } = useImageSelector();
 
   const [styleCount, setStyleCount] = useState(3);
   const [inputText, setInputText] = useState('');
@@ -292,17 +292,47 @@ export default function AppContent() {
         />
 
         {currentMode === 'professional' && canUseChat && (
-          <ProfessionalToolbar
-            onStyleSelect={handleStyleSelect}
-            onCraftsConfirm={handleCraftsConfirm}
-            onProductSelect={handleProductSelect}
-            onStructureSelect={handleStructureSelect}
-            onOpenPromptUpload={() => setShowPromptUpload(true)}
-            onOpenReferenceLibrary={() => setShowReferenceLibrary(true)}
-            styleCount={styleCount}
-            onStyleCountChange={setStyleCount}
-            selectedReferenceCount={referenceImages.length}
-          />
+          <>
+            <ProfessionalToolbar
+              onStyleSelect={handleStyleSelect}
+              onCraftsConfirm={handleCraftsConfirm}
+              onProductSelect={handleProductSelect}
+              onStructureSelect={handleStructureSelect}
+              onOpenPromptUpload={() => setShowPromptUpload(true)}
+              onOpenReferenceLibrary={() => setShowReferenceLibrary(true)}
+              styleCount={styleCount}
+              onStyleCountChange={setStyleCount}
+              selectedReferenceCount={referenceImages.length}
+            />
+
+            {/* 参考图显示区域 - 在工具栏和输入框之间 */}
+            {referenceImages.length > 0 && (
+              <div className="bg-white border-t border-b border-gray-200">
+                <div className="max-w-4xl mx-auto px-4 py-3">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {referenceImages.map((image, index) => (
+                      <div
+                        key={index}
+                        className="relative w-20 h-20 rounded-lg overflow-hidden border-2 border-orange-300 group"
+                      >
+                        <img
+                          src={URL.createObjectURL(image)}
+                          alt={`Reference ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          onClick={() => removeImageFromUnified(index)}
+                          className="absolute top-0.5 right-0.5 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                        >
+                          <span className="text-white text-xs font-bold">×</span>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         <ChatInput
