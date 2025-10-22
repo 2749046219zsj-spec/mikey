@@ -19,6 +19,7 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
   const [text, setText] = useState('');
   const [images, setImages] = useState<File[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { selectedImages: referenceImages, removeImageFromUnified } = useImageSelector();
 
   const handlePaste = async (e: React.ClipboardEvent) => {
     const items = e.clipboardData?.items;
@@ -102,9 +103,34 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
             </div>
           </div>
         )}
-        
+
         <ImageUpload images={images} onImagesChange={setImages} />
-        
+
+        {referenceImages.length > 0 && (
+          <div className="mb-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              {referenceImages.map((image, index) => (
+                <div
+                  key={index}
+                  className="relative w-16 h-16 rounded-lg overflow-hidden border-2 border-gray-300 group"
+                >
+                  <img
+                    src={URL.createObjectURL(image)}
+                    alt={`Reference ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    onClick={() => removeImageFromUnified(index)}
+                    className="absolute top-0.5 right-0.5 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                  >
+                    <X size={12} className="text-white" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex gap-3 items-end mt-3">
           <div className="flex-1 relative">
             <textarea
