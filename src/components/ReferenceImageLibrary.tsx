@@ -326,30 +326,51 @@ export default function ReferenceImageLibrary({ onBack, onSelectImages }: Refere
           ) : (
             <>
               {databaseType === 'public' && viewMode === 'list' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {publicProducts.map((product) => (
-                    <div
-                      key={product.id}
-                      onClick={() => handleProductClick(product)}
-                      className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer group"
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-                            {product.title}
-                          </h3>
-                          <p className="text-sm text-gray-500 mt-1">货号: {product.product_code}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {publicProducts.map((product) => {
+                    const firstImage = product.images.length > 0 ? product.images[0] : null;
+                    return (
+                      <div
+                        key={product.id}
+                        onClick={() => handleProductClick(product)}
+                        className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-xl hover:border-blue-300 transition-all cursor-pointer group"
+                      >
+                        <div className="flex gap-4 items-start">
+                          {firstImage ? (
+                            <div className="flex-shrink-0 w-32 h-32 bg-gray-100 rounded-lg overflow-hidden">
+                              <img
+                                src={firstImage.thumbnail_url || firstImage.image_url}
+                                alt={product.title}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                loading="lazy"
+                              />
+                            </div>
+                          ) : (
+                            <div className="flex-shrink-0 w-32 h-32 bg-gray-100 rounded-lg flex items-center justify-center">
+                              <svg className="w-12 h-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2 mb-2">
+                              <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors text-lg">
+                                {product.title}
+                              </h3>
+                              <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors flex-shrink-0 mt-1" />
+                            </div>
+                            <p className="text-sm text-gray-500 mb-2">货号: {product.product_code}</p>
+                            {product.description && (
+                              <p className="text-sm text-gray-600 line-clamp-2 mb-3">{product.description}</p>
+                            )}
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-gray-500">{product.images.length} 张图片</span>
+                            </div>
+                          </div>
                         </div>
-                        <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors flex-shrink-0" />
                       </div>
-                      {product.description && (
-                        <p className="text-sm text-gray-600 line-clamp-2 mb-2">{product.description}</p>
-                      )}
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-500">{product.images.length} 张图片</span>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   {publicProducts.length === 0 && (
                     <div className="col-span-full text-center py-20 text-gray-500">
                       暂无公共参考图片
