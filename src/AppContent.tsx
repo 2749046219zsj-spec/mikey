@@ -24,8 +24,17 @@ export default function AppContent() {
 
   const [assistantMode, setAssistantMode] = useState<'normal' | 'assistant'>('normal');
   const [styleCount, setStyleCount] = useState(3);
-  const [selectedReferenceImages, setSelectedReferenceImages] = useState<any[]>([]);
+  const [selectedReferenceImages, setSelectedReferenceImages] = useState<string[]>([]);
   const [assistantMessages, setAssistantMessages] = useState<any[]>([]);
+
+  const [assistantInputText, setAssistantInputText] = useState('');
+  const [assistantImages, setAssistantImages] = useState<File[]>([]);
+  const [displayText, setDisplayText] = useState('');
+  const [fullPromptTemplate, setFullPromptTemplate] = useState('');
+  const [selectedItems, setSelectedItems] = useState<{product?: string, styles: string[], crafts: string[]}>({
+    styles: [],
+    crafts: []
+  });
 
   const checkAndDecrementDraws = React.useCallback(async () => {
     if (!user) return false;
@@ -80,7 +89,6 @@ export default function AppContent() {
     if (!user) return;
 
     if (assistantMode === 'assistant') {
-      // 客服助手模式：不消耗次数，直接添加消息
       const userMessage = {
         id: Date.now().toString(),
         type: 'user',
@@ -89,9 +97,14 @@ export default function AppContent() {
         timestamp: new Date()
       };
       setAssistantMessages(prev => [...prev, userMessage]);
-      // TODO: 这里可以添加AI响应逻辑
+
+      setAssistantInputText('');
+      setDisplayText('');
+      setAssistantImages([]);
+      setFullPromptTemplate('');
+      setSelectedItems({ styles: [], crafts: [] });
+      setStyleCount(3);
     } else {
-      // 普通模式：消耗次数
       const canProceed = await checkAndDecrementDraws();
       if (canProceed) {
         sendMessage(text, images, false);
@@ -115,6 +128,25 @@ export default function AppContent() {
 
     if (assistantMode === 'assistant') {
       setSelectedReferenceImages(prev => [...prev, ...imageUrls]);
+
+      const files: File[] = [];
+      for (const imageUrl of imageUrls) {
+        try {
+          const response = await fetch(imageUrl, {
+            mode: 'cors',
+            credentials: 'omit'
+          });
+          if (!response.ok) throw new Error(`Failed to fetch: ${response.status}`);
+
+          const blob = await response.blob();
+          const fileName = imageUrl.split('/').pop()?.split('?')[0] || 'reference_image.jpg';
+          const file = new File([blob], fileName, { type: blob.type || 'image/jpeg' });
+          files.push(file);
+        } catch (error) {
+          console.error('Failed to convert image URL to file:', imageUrl, error);
+        }
+      }
+      setAssistantImages(prev => [...prev, ...files]);
     } else if ((window as any).widgetHandleReferenceSelection) {
       (window as any).widgetHandleReferenceSelection(imageUrls);
     }
@@ -122,20 +154,93 @@ export default function AppContent() {
     setShowReferenceLibrary(false);
   };
 
-  const handleProductSelect = (product: string) => {
-    console.log('Selected product:', product);
+  const updateTexts = (newSelectedItems: typeof selectedItems) => {
+    const displayParts: string[] = [];
+    if (newSelectedItems.product) {
+      displayParts.push(newSelectedItems.product);
+    }
+    if (newSelectedItems.styles.length > 0) {
+      displayParts.push(...newSelectedItems.styles);
+    }
+    if (newSelectedItems.crafts.length > 0) {
+      displayParts.push(...newSelectedItems.crafts);
+    }
+    const newDisplayText = displayParts.join('、');
+    setDisplayText(newDisplayText);
+
+    if (fullPromptTemplate) {
+      const styleAndCraftElements = [...newSelectedItems.styles, ...newSelectedItems.crafts].join('、');
+      let finalText = fullPromptTemplate;
+      if (styleAndCraftElements) {
+        finalText = fullPromptTemplate.replace('{风格和元素}', styleAndCraftElements);
+      } else {
+        finalText = fullPromptTemplate.replace('并加入以下风格和元素：{风格和元素}，', '');
+      }
+      finalText = finalText.replace(/设计\d+个款式/, `设计${styleCount}个款式`);
+      setAssistantInputText(finalText);
+    } else {
+      setAssistantInputText(newDisplayText);
+    }
+  };
+
+  const handleProductSelect = (product: { name: string; template: string }) => {
+    const newSelectedItems = {
+      product: product.name,
+      styles: [],
+      crafts: []
+    };
+
+    setFullPromptTemplate(product.template);
+    setSelectedItems(newSelectedItems);
+    setDisplayText(product.name);
+
+    const templateWithCount = product.template.replace(/设计\d+个款式/, `设计${styleCount}个款式`);
+    setAssistantInputText(templateWithCount);
   };
 
   const handleStyleSelect = (style: string) => {
-    console.log('Selected style:', style);
+    const newSelectedItems = {
+      ...selectedItems,
+      styles: [...selectedItems.styles, style]
+    };
+    setSelectedItems(newSelectedItems);
+    updateTexts(newSelectedItems);
   };
 
   const handleCraftsConfirm = (crafts: string[]) => {
-    console.log('Selected crafts:', crafts);
+    const newSelectedItems = {
+      ...selectedItems,
+      crafts: crafts
+    };
+    setSelectedItems(newSelectedItems);
+    updateTexts(newSelectedItems);
   };
 
   const handleStructureSelect = (structure: string) => {
-    console.log('Selected structure:', structure);
+    const newText = assistantInputText ? `${assistantInputText}, ${structure}` : structure;
+    setAssistantInputText(newText);
+  };
+
+  const handleStyleCountChange = (count: number) => {
+    setStyleCount(count);
+    if (fullPromptTemplate) {
+      const styleAndCraftElements = [...selectedItems.styles, ...selectedItems.crafts].join('、');
+      let finalText = fullPromptTemplate;
+      if (styleAndCraftElements) {
+        finalText = fullPromptTemplate.replace('{风格和元素}', styleAndCraftElements);
+      } else {
+        finalText = fullPromptTemplate.replace('并加入以下风格和元素：{风格和元素}，', '');
+      }
+      finalText = finalText.replace(/设计\d+个款式/, `设计${count}个款式`);
+      setAssistantInputText(finalText);
+    }
+  };
+
+  const handleAssistantInputChange = (newValue: string) => {
+    setAssistantInputText(newValue);
+    setDisplayText(newValue);
+    setFullPromptTemplate('');
+    setSelectedItems({ styles: [], crafts: [] });
   };
 
   const handleClearAssistantChat = () => {
@@ -172,13 +277,18 @@ export default function AppContent() {
           editContent={editContent}
           onClearEditContent={handleClearEditContent}
           assistantMode={assistantMode}
+          assistantInputText={assistantInputText}
+          onAssistantInputChange={handleAssistantInputChange}
+          assistantImages={assistantImages}
+          onAssistantImagesChange={setAssistantImages}
+          displayText={displayText}
           assistantPanelProps={assistantMode === 'assistant' ? {
             onProductSelect: handleProductSelect,
             onStyleSelect: handleStyleSelect,
             onCraftsConfirm: handleCraftsConfirm,
             onStructureSelect: handleStructureSelect,
             styleCount,
-            onStyleCountChange: setStyleCount,
+            onStyleCountChange: handleStyleCountChange,
             selectedReferenceImages,
             onOpenReferenceLibrary: () => setShowReferenceLibrary(true),
             onClearChat: handleClearAssistantChat,
