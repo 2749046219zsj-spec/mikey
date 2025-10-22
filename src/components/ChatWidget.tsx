@@ -477,24 +477,37 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ keepOpen = false }) => {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center z-50 hover:scale-110"
+          className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center z-[999] hover:scale-110"
         >
           <Settings size={24} />
         </button>
+      )}
+
+      {/* 拖动遮罩层 - 拦截所有鼠标事件 */}
+      {isDragging && (
+        <div
+          className="fixed inset-0 z-[998] cursor-grabbing"
+          style={{
+            pointerEvents: 'all',
+            userSelect: 'none',
+            WebkitUserSelect: 'none'
+          }}
+        />
       )}
 
       {/* 聊天窗口 */}
       {isOpen && (
         <div
           ref={widgetRef}
-          className={`fixed bg-white rounded-lg shadow-2xl border border-gray-200 z-50 transition-all duration-300 ${
-            isDragging ? 'cursor-grabbing' : 'cursor-default'
+          className={`fixed bg-white rounded-lg shadow-2xl border border-gray-200 z-[999] transition-all ${
+            isDragging ? 'cursor-grabbing shadow-3xl scale-[1.02]' : 'cursor-default duration-300'
           }`}
           style={{
             left: position.x,
             top: position.y,
             width: '400px',
-            height: isMinimized ? '60px' : '550px'
+            height: isMinimized ? '60px' : '550px',
+            userSelect: 'none'
           }}
         >
           {/* 标题栏 */}
@@ -749,7 +762,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ keepOpen = false }) => {
 
       {/* 本地提示词上传弹窗 */}
       {showPromptUpload && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]" onClick={() => setShowPromptUpload(false)}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000]" onClick={() => setShowPromptUpload(false)}>
           <div className="bg-white rounded-lg shadow-2xl w-[600px] max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
             {/* 弹窗标题 */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
