@@ -30,26 +30,6 @@ export const userService = {
     if (error) throw error;
     return data || [];
   },
-
-  async updateWidgetState(userId: string, isOpen: boolean): Promise<void> {
-    const { error } = await supabase
-      .from('user_profiles')
-      .update({ widget_is_open: isOpen })
-      .eq('id', userId);
-
-    if (error) throw error;
-  },
-
-  async getWidgetState(userId: string): Promise<boolean> {
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .select('widget_is_open')
-      .eq('id', userId)
-      .maybeSingle();
-
-    if (error) throw error;
-    return data?.widget_is_open || false;
-  },
 };
 
 export const adminService = {
