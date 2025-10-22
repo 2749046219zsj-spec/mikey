@@ -68,6 +68,7 @@ export const useWidgetChat = () => {
         });
 
       // Send to Gemini API with 'professional' mode for system prompt
+      // Professional mode analyzes user needs and reference images to design prompts
       const response = await geminiService.sendMessage(text, images, state.selectedModel, conversationHistory, 'professional');
 
       addMessage({
