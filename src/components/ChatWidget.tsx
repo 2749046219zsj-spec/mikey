@@ -55,20 +55,36 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ keepOpen = false }) => {
 
   useEffect(() => {
     (window as any).widgetHandleReferenceSelection = async (imageUrls: string[]) => {
+      console.log('Widget: Received image URLs:', imageUrls);
       setSelectedReferenceImages(imageUrls);
       const files: File[] = [];
       for (const imageUrl of imageUrls) {
         try {
-          const response = await fetch(imageUrl);
+          console.log('Widget: Fetching image:', imageUrl);
+          const response = await fetch(imageUrl, {
+            mode: 'cors',
+            credentials: 'omit'
+          });
+
+          if (!response.ok) {
+            throw new Error(`Failed to fetch: ${response.status}`);
+          }
+
           const blob = await response.blob();
-          const fileName = imageUrl.split('/').pop() || 'reference_image.jpg';
-          const file = new File([blob], fileName, { type: blob.type });
+          const fileName = imageUrl.split('/').pop()?.split('?')[0] || 'reference_image.jpg';
+          const file = new File([blob], fileName, { type: blob.type || 'image/jpeg' });
           files.push(file);
+          console.log('Widget: Successfully added file:', fileName);
         } catch (error) {
-          console.error('Failed to convert image URL to file:', error);
+          console.error('Widget: Failed to convert image URL to file:', imageUrl, error);
         }
       }
-      setWidgetImages(prev => [...prev, ...files]);
+      console.log('Widget: Total files to add:', files.length);
+      setWidgetImages(prev => {
+        const newImages = [...prev, ...files];
+        console.log('Widget: Updated images count:', newImages.length);
+        return newImages;
+      });
     };
     return () => {
       delete (window as any).widgetHandleReferenceSelection;

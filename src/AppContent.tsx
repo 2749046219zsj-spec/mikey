@@ -99,20 +99,10 @@ export default function AppContent() {
     if ((window as any).widgetHandleReferenceSelection) {
       (window as any).widgetHandleReferenceSelection(imageUrls);
     }
-  };
 
-  if (showReferenceLibrary) {
-    return (
-      <ErrorBoundary>
-        <ReferenceImageLibrary
-          onBack={() => {
-            setShowReferenceLibrary(false);
-          }}
-          onSelectImages={handleReferenceLibrarySelect}
-        />
-      </ErrorBoundary>
-    );
-  }
+    // 关闭参考图库
+    setShowReferenceLibrary(false);
+  };
 
   return (
     <ErrorBoundary>
@@ -149,6 +139,13 @@ export default function AppContent() {
         <ContactModal isOpen={showContactModal} onClose={() => setShowContactModal(false)} />
 
         {canUseChat && <ChatWidget key="widget" keepOpen={keepWidgetOpen} />}
+
+        {showReferenceLibrary && (
+          <ReferenceImageLibrary
+            onBack={() => setShowReferenceLibrary(false)}
+            onSelectImages={handleReferenceLibrarySelect}
+          />
+        )}
       </div>
     </ErrorBoundary>
   );
