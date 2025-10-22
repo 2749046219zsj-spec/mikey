@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Minus, Bot, User, Send, Loader2, Settings, Image, Paperclip, FileText, Images } from 'lucide-react';
+import { MessageCircle, X, Minus, Bot, User, Send, Loader2, Settings, Image, Paperclip, FileText, Images, CheckCircle2 } from 'lucide-react';
 import { useWidgetChat } from '../hooks/useWidgetChat';
 import { useImageSelector } from '../hooks/useImageSelector';
 import { StylePresetDropdown } from './StylePresetDropdown';
@@ -305,19 +305,24 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ keepOpen = false }) => {
     }, 0);
   };
 
-  // 监听AI回复，自动检测提示词并直接发送到主界面
-  useEffect(() => {
-    if (widgetMessages.length > 0) {
-      const lastMessage = widgetMessages[widgetMessages.length - 1];
-      if (lastMessage.type === 'ai' && !widgetLoading && !lastMessage.promptsSent) {
-        const prompts = extractPrompts(lastMessage.content);
-        if (prompts.length > 0) {
-          lastMessage.promptsSent = true;
-          handleSendPromptsToMain(prompts);
-        }
+  // 检测AI回复中的提示词（不自动触发）
+  const getMessagePrompts = (messageId: string) => {
+    const message = widgetMessages.find(m => m.id === messageId);
+    if (!message || message.type !== 'ai') return [];
+    return extractPrompts(message.content);
+  };
+
+  // 手动确认发送提示词到主界面
+  const handleConfirmSendPrompts = (messageId: string) => {
+    const prompts = getMessagePrompts(messageId);
+    if (prompts.length > 0) {
+      const message = widgetMessages.find(m => m.id === messageId);
+      if (message) {
+        message.promptsSent = true;
       }
+      handleSendPromptsToMain(prompts);
     }
-  }, [widgetMessages, widgetLoading]);
+  };
 
   // 处理图片选择
   const handleImageSelect = (files: FileList | null) => {
@@ -507,7 +512,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ keepOpen = false }) => {
             top: position.y,
             width: '400px',
             height: isMinimized ? '60px' : '550px',
-            userSelect: 'none'
+            userSelect: isDragging ? 'none' : 'auto'
           }}
         >
           {/* 标题栏 */}
@@ -591,8 +596,21 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ keepOpen = false }) => {
                                 ))}
                               </div>
                             )}
-                            <p className="whitespace-pre-wrap">{message.content}</p>
+                            <p className="whitespace-pre-wrap select-text">{message.content}</p>
                           </div>
+
+                          {message.type === 'ai' && !message.promptsSent && !widgetLoading && (() => {
+                            const prompts = extractPrompts(message.content);
+                            return prompts.length > 0 ? (
+                              <button
+                                onClick={() => handleConfirmSendPrompts(message.id)}
+                                className="mt-2 px-3 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg text-xs font-medium hover:from-blue-600 hover:to-blue-700 transition-all shadow-md hover:shadow-lg flex items-center gap-1.5"
+                              >
+                                <CheckCircle2 size={14} />
+                                发现 {prompts.length} 个提示词，点击选择参考图
+                              </button>
+                            ) : null;
+                          })()}
 
                           <div className={`text-xs text-gray-500 mt-1 ${
                             message.type === 'user' ? 'text-right' : 'text-left'
