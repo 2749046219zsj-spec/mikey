@@ -1,18 +1,43 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Message, ChatState } from '../types/chat';
 import { GeminiApiService } from '../services/geminiApi';
+import { widgetChatService } from '../services/widgetChatService';
+import { useAuth } from '../contexts/AuthContext';
 
 export const useWidgetChat = () => {
+  const { user } = useAuth();
   const [state, setState] = useState<ChatState>({
     messages: [],
     isLoading: false,
     error: null,
     selectedModel: 'Gemini-2.5-Flash-Image'
   });
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
 
   const geminiService = new GeminiApiService();
 
-  const addMessage = useCallback((message: Omit<Message, 'id' | 'timestamp'>) => {
+  // Load chat history on mount
+  useEffect(() => {
+    const loadHistory = async () => {
+      if (!user) {
+        setIsLoadingHistory(false);
+        return;
+      }
+
+      try {
+        const messages = await widgetChatService.loadMessages(user.id);
+        setState(prev => ({ ...prev, messages }));
+      } catch (error) {
+        console.error('Failed to load widget chat history:', error);
+      } finally {
+        setIsLoadingHistory(false);
+      }
+    };
+
+    loadHistory();
+  }, [user]);
+
+  const addMessage = useCallback(async (message: Omit<Message, 'id' | 'timestamp'>) => {
     const newMessage: Message = {
       ...message,
       id: Date.now().toString(),
@@ -24,8 +49,17 @@ export const useWidgetChat = () => {
       messages: [...prev.messages, newMessage]
     }));
 
+    // Save to database
+    if (user) {
+      try {
+        await widgetChatService.saveMessage(user.id, message);
+      } catch (error) {
+        console.error('Failed to persist widget message:', error);
+      }
+    }
+
     return newMessage.id;
-  }, []);
+  }, [user]);
 
   const sendMessage = useCallback(async (text: string, images: File[] = []) => {
     if (!text.trim() && images.length === 0) return;
@@ -126,18 +160,26 @@ export const useWidgetChat = () => {
     }
   }, [addMessage, geminiService, state.selectedModel, state.messages]);
 
-  const clearChat = useCallback(() => {
+  const clearChat = useCallback(async () => {
+    if (user) {
+      try {
+        await widgetChatService.clearMessages(user.id);
+      } catch (error) {
+        console.error('Failed to clear widget messages:', error);
+      }
+    }
+
     setState({
       messages: [],
       isLoading: false,
       error: null,
       selectedModel: state.selectedModel
     });
-  }, [state.selectedModel]);
+  }, [user, state.selectedModel]);
 
   return {
     messages: state.messages,
-    isLoading: state.isLoading,
+    isLoading: state.isLoading || isLoadingHistory,
     error: state.error,
     sendMessage,
     clearChat

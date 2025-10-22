@@ -16,7 +16,12 @@ interface Position {
 export const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [position, setPosition] = useState<Position>({ x: 20, y: 20 });
+  // Position at bottom-right by default
+  const [position, setPosition] = useState<Position>(() => {
+    const defaultX = window.innerWidth - 420; // 400px width + 20px margin
+    const defaultY = window.innerHeight - 570; // 550px height + 20px margin
+    return { x: Math.max(20, defaultX), y: Math.max(20, defaultY) };
+  });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState<Position>({ x: 0, y: 0 });
   const [inputText, setInputText] = useState('');
