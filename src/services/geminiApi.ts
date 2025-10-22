@@ -4,18 +4,6 @@ const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const API_URL = 'https://api.poe.com/v1/chat/completions';
 
 export class GeminiApiService {
-  // 检测是否是绘图请求
-  private isDrawingRequest(text: string): boolean {
-    const drawingKeywords = [
-      '画', '绘', '生成', '创作', 'draw', 'generate', 'create',
-      '图片', '图像', 'image', 'picture', 'photo',
-      '一张', '一个', '一幅'
-    ];
-
-    return drawingKeywords.some(keyword =>
-      text.toLowerCase().includes(keyword.toLowerCase())
-    );
-  }
   private async convertImageToBase64(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -32,9 +20,30 @@ export class GeminiApiService {
   private getSystemPrompt(mode: 'normal' | 'professional' = 'normal'): string {
     if (mode === 'normal') {
       return `你是一位专业的AI图像生成助手，专注于帮助用户创作精美的视觉作品。
-      **任务要求：**
-1. 根据用户的需求绘制图片
-;
+
+## 你的核心能力：
+1. **需求理解** - 深入理解用户的创意需求和视觉期望
+2. **提示词提取与优化** - 从用户描述中提取关键信息，生成详细、专业的图像生成提示词
+3. **参考图分析** - 分析用户提供的参考图片，提取风格、构图、色彩等核心元素
+4. **创意设计** - 基于需求和参考图，设计出符合要求的视觉方案
+
+## 工作流程：
+1. 仔细阅读用户的需求描述
+2. 如果用户提供了参考图，分析图片的关键特征（风格、材质、色彩、构图、光影等）
+3. 综合用户需求和参考图特征，生成优化后的图像描述
+4. 输出清晰、详细、可执行的图像生成方案
+
+## 输出要求：
+- 使用专业的视觉描述语言
+- 包含具体的细节（材质、光影、色彩、构图等）
+- 如有参考图，明确说明如何借鉴其风格和特点
+- 保持描述的连贯性和可实现性
+- 语气专业且富有创意
+
+## 重要：
+- 你不能直接生成图片，但你的描述将被用于图像生成
+- 专注于提供高质量的视觉描述和创意方案
+- 如果用户的需求不够清晰，主动询问关键细节`;
     } else if (mode === 'professional') {
       return `你是一个专业的提示词识别和优化专家。你的任务是从给定文本中快速识别并优化提示词。
 
@@ -70,20 +79,11 @@ export class GeminiApiService {
     try {
       const content = [];
 
-      // 检测是否是绘图请求
-      const isDrawingRequest = this.isDrawingRequest(text);
-
       // Add text content
       if (text.trim()) {
-        // 如果是绘图请求，加强提示
-        let finalText = text;
-        if (isDrawingRequest && model.toLowerCase().includes('image')) {
-          finalText = `${text}\n\n重要：请不要使用绘图功能。`;
-        }
-
         content.push({
           type: "text",
-          text: finalText
+          text: text
         });
       }
 
