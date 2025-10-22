@@ -9,6 +9,8 @@ interface ChatInputProps {
   editContent?: { text: string; images: File[] };
   onClearEditContent?: () => void;
   isProfessionalMode?: boolean;
+  professionalModeText?: string;
+  onProfessionalTextChange?: (text: string) => void;
 }
 
 export const ChatInput: React.FC<ChatInputProps> = React.memo(({
@@ -16,12 +18,17 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
   isLoading,
   editContent,
   onClearEditContent,
-  isProfessionalMode = false
+  isProfessionalMode = false,
+  professionalModeText = '',
+  onProfessionalTextChange
 }) => {
   const [text, setText] = useState('');
   const [images, setImages] = useState<File[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { selectedImages: referenceImages, removeImageFromUnified } = useImageSelector();
+
+  // 在专业模式下，使用外部传入的文本
+  const displayText = isProfessionalMode ? professionalModeText : text;
 
   const handlePaste = async (e: React.ClipboardEvent) => {
     const items = e.clipboardData?.items;
@@ -57,11 +64,17 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
   }, [editContent]);
 
   const handleSubmit = () => {
-    if ((!text.trim() && images.length === 0) || isLoading) return;
+    const textToSend = isProfessionalMode ? professionalModeText : text;
+    if ((!textToSend.trim() && images.length === 0) || isLoading) return;
 
-    onSendMessage(text, images);
+    onSendMessage(textToSend, images);
     setText('');
     setImages([]);
+
+    // 专业模式下也清空文本
+    if (isProfessionalMode && onProfessionalTextChange) {
+      onProfessionalTextChange('');
+    }
 
     for (let i = referenceImages.length - 1; i >= 0; i--) {
       removeImageFromUnified(i);
@@ -108,38 +121,44 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
 
         <ImageUpload images={images} onImagesChange={setImages} />
 
-        {referenceImages.length > 0 && (
-          <div className="mb-3">
-            <div className="flex items-center gap-2 flex-wrap">
-              {referenceImages.map((image, index) => (
-                <div
-                  key={index}
-                  className="relative w-16 h-16 rounded-lg overflow-hidden border-2 border-gray-300 group"
-                >
-                  <img
-                    src={URL.createObjectURL(image)}
-                    alt={`Reference ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                  <button
-                    onClick={() => removeImageFromUnified(index)}
-                    className="absolute top-0.5 right-0.5 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                  >
-                    <X size={12} className="text-white" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         <div className="flex gap-3 items-end mt-3">
           <div className="flex-1 relative">
+            {/* 参考图显示在输入框上方 */}
+            {referenceImages.length > 0 && (
+              <div className="absolute bottom-full mb-2 left-0 right-0">
+                <div className="flex items-center gap-2 flex-wrap p-2 bg-white rounded-lg border border-gray-200 shadow-sm">
+                  {referenceImages.map((image, index) => (
+                    <div
+                      key={index}
+                      className="relative w-16 h-16 rounded-lg overflow-hidden border-2 border-gray-300 group"
+                    >
+                      <img
+                        src={URL.createObjectURL(image)}
+                        alt={`Reference ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        onClick={() => removeImageFromUnified(index)}
+                        className="absolute top-0.5 right-0.5 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                      >
+                        <X size={12} className="text-white" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <textarea
               ref={textareaRef}
-              value={text}
+              value={displayText}
               onChange={(e) => {
-                setText(e.target.value);
+                const newValue = e.target.value;
+                if (isProfessionalMode && onProfessionalTextChange) {
+                  onProfessionalTextChange(newValue);
+                } else {
+                  setText(newValue);
+                }
                 adjustTextareaHeight();
               }}
               onPaste={handlePaste}
@@ -157,7 +176,7 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
           
           <button
             onClick={handleSubmit}
-            disabled={(!text.trim() && images.length === 0) || isLoading}
+            disabled={(!displayText.trim() && images.length === 0) || isLoading}
             className={`w-12 h-12 text-white rounded-full flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl ${
               isProfessionalMode
                 ? 'bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700'

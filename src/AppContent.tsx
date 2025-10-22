@@ -124,7 +124,7 @@ export default function AppContent() {
     setShowReferenceLibrary(false);
   };
 
-  const updateTexts = (newSelectedItems: {product?: string, styles: string[], crafts: string[]}) => {
+  const updateTexts = React.useCallback((newSelectedItems: {product?: string, styles: string[], crafts: string[]}) => {
     const displayParts: string[] = [];
     if (newSelectedItems.product) displayParts.push(newSelectedItems.product);
     if (newSelectedItems.styles.length > 0) displayParts.push(...newSelectedItems.styles);
@@ -144,7 +144,7 @@ export default function AppContent() {
     } else {
       setInputText(newDisplayText);
     }
-  };
+  }, [fullPromptTemplate, styleCount]);
 
   const handleStyleSelect = (style: string) => {
     const newSelectedItems = {...selectedItems, styles: [...selectedItems.styles, style]};
@@ -307,10 +307,12 @@ export default function AppContent() {
 
         <ChatInput
           onSendMessage={handleSendMessage}
-          isLoading={isLoading}
+          isLoading={currentMode === 'professional' ? assistantLoading : isLoading}
           editContent={editContent}
           onClearEditContent={handleClearEditContent}
           isProfessionalMode={currentMode === 'professional' && canUseChat}
+          professionalModeText={inputText}
+          onProfessionalTextChange={setInputText}
         />
 
         <ImageModal />
