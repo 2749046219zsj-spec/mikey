@@ -1,6 +1,8 @@
 import React from 'react';
-import { Bot, Trash2, StopCircle, XCircle } from 'lucide-react';
+import { Bot, Trash2, StopCircle, XCircle, Sparkles, Wrench } from 'lucide-react';
 import { ModelSelector } from './ModelSelector';
+
+export type AppMode = 'normal' | 'professional';
 
 interface ChatHeaderProps {
   onClearChat: () => void;
@@ -15,6 +17,9 @@ interface ChatHeaderProps {
   };
   onStopQueue?: () => void;
   onClearQueue?: () => void;
+  currentMode: AppMode;
+  onModeChange: (mode: AppMode) => void;
+  canUseProfessionalMode: boolean;
 }
 
 export const ChatHeader: React.FC<ChatHeaderProps> = ({
@@ -25,7 +30,10 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   isLoading = false,
   queueInfo,
   onStopQueue,
-  onClearQueue
+  onClearQueue,
+  currentMode,
+  onModeChange,
+  canUseProfessionalMode
 }) => {
   const getModelDisplayName = (modelId: string) => {
     switch (modelId) {
@@ -39,6 +47,34 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   return (
     <div className="border-b border-gray-200 bg-white/90 backdrop-blur-sm sticky top-0 z-10">
       <div className="max-w-4xl mx-auto px-4 py-4">
+        {/* 模式切换标签 */}
+        {canUseProfessionalMode && (
+          <div className="flex items-center gap-2 mb-4">
+            <button
+              onClick={() => onModeChange('normal')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                currentMode === 'normal'
+                  ? 'bg-gradient-to-r from-purple-500 to-blue-600 text-white shadow-md'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <Sparkles size={18} />
+              普通模式
+            </button>
+            <button
+              onClick={() => onModeChange('professional')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                currentMode === 'professional'
+                  ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-md'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <Wrench size={18} />
+              专业模式
+            </button>
+          </div>
+        )}
+
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-600 rounded-full flex items-center justify-center">

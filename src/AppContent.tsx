@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { ChatContainer } from './components/ChatContainer';
 import { ChatInput } from './components/ChatInput';
-import { ChatHeader } from './components/ChatHeader';
+import { ChatHeader, AppMode } from './components/ChatHeader';
+import { ProfessionalToolbar } from './components/ProfessionalToolbar';
 import { ImageModal } from './components/ImageModal';
 import { ImageGallery } from './components/ImageGallery';
-import { ChatWidget } from './components/ChatWidget';
 import { ImageSelector } from './components/ImageSelector';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ContactModal } from './components/ContactModal';
@@ -19,8 +19,15 @@ export default function AppContent() {
   const [editContent, setEditContent] = useState<{ text: string; images: File[] } | null>(null);
   const [showContactModal, setShowContactModal] = useState(false);
   const [showReferenceLibrary, setShowReferenceLibrary] = useState(false);
-  const [keepWidgetOpen, setKeepWidgetOpen] = useState(false);
-  const { addImageToUnified } = useImageSelector();
+  const [currentMode, setCurrentMode] = useState<AppMode>('normal');
+  const { addImageToUnified, selectedImages: referenceImages } = useImageSelector();
+
+  const [styleCount, setStyleCount] = useState(3);
+  const [inputText, setInputText] = useState('');
+  const [fullPromptTemplate, setFullPromptTemplate] = useState('');
+  const [selectedItems, setSelectedItems] = useState<{product?: string, styles: string[], crafts: string[]}>({styles: [], crafts: []});
+  const [showPromptUpload, setShowPromptUpload] = useState(false);
+  const [uploadedPrompts, setUploadedPrompts] = useState('');
 
   const checkAndDecrementDraws = React.useCallback(async () => {
     if (!user) return false;
@@ -55,21 +62,6 @@ export default function AppContent() {
     clearQueue,
   } = useChat(checkAndDecrementDraws);
 
-  useEffect(() => {
-    // 暴露给客服助手的接口，支持批量模式
-    (window as any).mainChatSendMessage = (text: string, images: File[], enableBatchMode = false) => {
-      sendMessage(text, images, enableBatchMode);
-    };
-    // 暴露打开参考图库的接口
-    (window as any).openReferenceLibrary = () => {
-      setShowReferenceLibrary(true);
-      setKeepWidgetOpen(true);
-    };
-    return () => {
-      delete (window as any).mainChatSendMessage;
-      delete (window as any).openReferenceLibrary;
-    };
-  }, [sendMessage]);
 
   const handleSendMessage = async (text: string, images: File[]) => {
     if (!user) return;
@@ -95,13 +87,106 @@ export default function AppContent() {
   const handleReferenceLibrarySelect = async (imageUrls: string[]) => {
     console.log('Selected images from library:', imageUrls);
 
-    // 只传递给客服助手，不添加到主界面
-    if ((window as any).widgetHandleReferenceSelection) {
-      (window as any).widgetHandleReferenceSelection(imageUrls);
+    for (const imageUrl of imageUrls) {
+      try {
+        const response = await fetch(imageUrl, {
+          mode: 'cors',
+          credentials: 'omit'
+        });
+        const blob = await response.blob();
+        const fileName = imageUrl.split('/').pop()?.split('?')[0] || 'reference_image.jpg';
+        const file = new File([blob], fileName, { type: blob.type || 'image/jpeg' });
+        addImageToUnified(file);
+      } catch (error) {
+        console.error('Failed to convert image URL to file:', imageUrl, error);
+      }
     }
 
-    // 关闭参考图库
     setShowReferenceLibrary(false);
+  };
+
+  const updateTexts = (newSelectedItems: {product?: string, styles: string[], crafts: string[]}) => {
+    const displayParts: string[] = [];
+    if (newSelectedItems.product) displayParts.push(newSelectedItems.product);
+    if (newSelectedItems.styles.length > 0) displayParts.push(...newSelectedItems.styles);
+    if (newSelectedItems.crafts.length > 0) displayParts.push(...newSelectedItems.crafts);
+    const newDisplayText = displayParts.join('、');
+
+    if (fullPromptTemplate) {
+      const styleAndCraftElements = [...newSelectedItems.styles, ...newSelectedItems.crafts].join('、');
+      let finalText = fullPromptTemplate;
+      if (styleAndCraftElements) {
+        finalText = fullPromptTemplate.replace('{风格和元素}', styleAndCraftElements);
+      } else {
+        finalText = fullPromptTemplate.replace('并加入以下风格和元素：{风格和元素}，', '');
+      }
+      finalText = finalText.replace(/设计\d+个款式/, `设计${styleCount}个款式`);
+      setInputText(finalText);
+    } else {
+      setInputText(newDisplayText);
+    }
+  };
+
+  const handleStyleSelect = (style: string) => {
+    const newSelectedItems = {...selectedItems, styles: [...selectedItems.styles, style]};
+    setSelectedItems(newSelectedItems);
+    updateTexts(newSelectedItems);
+  };
+
+  const handleCraftsConfirm = (crafts: string[]) => {
+    const newSelectedItems = {...selectedItems, crafts};
+    setSelectedItems(newSelectedItems);
+    updateTexts(newSelectedItems);
+  };
+
+  const handleProductSelect = (product: { name: string; template: string }) => {
+    const newSelectedItems = {product: product.name, styles: [], crafts: []};
+    setFullPromptTemplate(product.template);
+    setSelectedItems(newSelectedItems);
+    const templateWithCount = product.template.replace(/设计\d+个款式/, `设计${styleCount}个款式`);
+    setInputText(templateWithCount);
+  };
+
+  const handleStructureSelect = (structure: string) => {
+    const newText = inputText ? `${inputText}, ${structure}` : structure;
+    setInputText(newText);
+  };
+
+  const extractPrompts = (content: string): string[] => {
+    const prompts: string[] = [];
+    const quotedNumberedMatches = content.match(/\d+\.\s*[""]([^""]+)[""]/g);
+    if (quotedNumberedMatches && quotedNumberedMatches.length > 0) {
+      quotedNumberedMatches.forEach(match => {
+        const promptMatch = match.match(/[""]([^""]+)[""]/);
+        if (promptMatch) prompts.push(promptMatch[1].trim());
+      });
+      return prompts.filter(prompt => prompt.trim().length > 20);
+    }
+    const lines = content.split('\n');
+    const numberedLines: string[] = [];
+    lines.forEach(line => {
+      const trimmedLine = line.trim();
+      const match = trimmedLine.match(/^(\d+)[.、。]\s*(.+)$/);
+      if (match && match[2]) numberedLines.push(match[2].trim());
+    });
+    if (numberedLines.length > 0) return numberedLines.filter(prompt => prompt.trim().length > 20);
+    return [];
+  };
+
+  const handlePromptUpload = () => {
+    if (!uploadedPrompts.trim()) {
+      alert('请输入提示词内容！');
+      return;
+    }
+    const prompts = extractPrompts(uploadedPrompts);
+    if (prompts.length === 0) {
+      alert('未能识别到有效的提示词（每个提示词需要大于20个字符）');
+      return;
+    }
+    setShowPromptUpload(false);
+    setUploadedPrompts('');
+    const textWithPrompts = prompts.map(p => `**${p}**`).join('\n');
+    sendMessage(textWithPrompts, referenceImages, true);
   };
 
   return (
@@ -116,6 +201,9 @@ export default function AppContent() {
           queueInfo={queueInfo}
           onStopQueue={stopQueue}
           onClearQueue={clearQueue}
+          currentMode={currentMode}
+          onModeChange={setCurrentMode}
+          canUseProfessionalMode={canUseChat}
         />
 
         <ChatContainer
@@ -126,11 +214,26 @@ export default function AppContent() {
           onSetEditContent={handleSetEditContent}
         />
 
+        {currentMode === 'professional' && canUseChat && (
+          <ProfessionalToolbar
+            onStyleSelect={handleStyleSelect}
+            onCraftsConfirm={handleCraftsConfirm}
+            onProductSelect={handleProductSelect}
+            onStructureSelect={handleStructureSelect}
+            onOpenPromptUpload={() => setShowPromptUpload(true)}
+            onOpenReferenceLibrary={() => setShowReferenceLibrary(true)}
+            styleCount={styleCount}
+            onStyleCountChange={setStyleCount}
+            selectedReferenceCount={referenceImages.length}
+          />
+        )}
+
         <ChatInput
           onSendMessage={handleSendMessage}
           isLoading={isLoading}
           editContent={editContent}
           onClearEditContent={handleClearEditContent}
+          isProfessionalMode={currentMode === 'professional' && canUseChat}
         />
 
         <ImageModal />
@@ -138,13 +241,43 @@ export default function AppContent() {
         <ImageSelector />
         <ContactModal isOpen={showContactModal} onClose={() => setShowContactModal(false)} />
 
-        {canUseChat && <ChatWidget key="widget" keepOpen={keepWidgetOpen} />}
-
         {showReferenceLibrary && (
           <ReferenceImageLibrary
             onBack={() => setShowReferenceLibrary(false)}
             onSelectImages={handleReferenceLibrarySelect}
           />
+        )}
+
+        {showPromptUpload && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000]" onClick={() => setShowPromptUpload(false)}>
+            <div className="bg-white rounded-lg shadow-2xl w-[600px] max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-800">本地提示词上传</h3>
+                <button onClick={() => setShowPromptUpload(false)} className="w-8 h-8 hover:bg-gray-100 rounded flex items-center justify-center transition-colors">
+                  <span className="text-xl">&times;</span>
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4">
+                <p className="text-sm text-gray-600 mb-3">请在下方粘贴您的提示词列表。支持的格式：</p>
+                <ul className="text-sm text-gray-600 mb-4 space-y-1 pl-4">
+                  <li>• 编号列表：1. 提示词内容</li>
+                  <li>• 双引号列表：1. "提示词内容"</li>
+                  <li>• 中文顿号：1、提示词内容</li>
+                </ul>
+                <textarea
+                  value={uploadedPrompts}
+                  onChange={(e) => setUploadedPrompts(e.target.value)}
+                  placeholder="请粘贴提示词，例如：\n\n1. 根据我这个产品结构进行设计效果图：一个洛可可风格的香水瓶...\n2. 根据我这个产品结构进行设计效果图：一个充满洛可可浪漫气息的香氛容器..."
+                  className="w-full h-[300px] p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm resize-none"
+                />
+                <p className="text-xs text-gray-500 mt-2">提示：每个提示词需要大于20个字符才能被识别</p>
+              </div>
+              <div className="flex items-center justify-end gap-2 p-4 border-t border-gray-200">
+                <button onClick={() => { setShowPromptUpload(false); setUploadedPrompts(''); }} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">取消</button>
+                <button onClick={handlePromptUpload} disabled={!uploadedPrompts.trim()} className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">识别并上传</button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </ErrorBoundary>

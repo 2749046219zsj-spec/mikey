@@ -8,13 +8,15 @@ interface ChatInputProps {
   isLoading: boolean;
   editContent?: { text: string; images: File[] };
   onClearEditContent?: () => void;
+  isProfessionalMode?: boolean;
 }
 
 export const ChatInput: React.FC<ChatInputProps> = React.memo(({
   onSendMessage,
   isLoading,
   editContent,
-  onClearEditContent
+  onClearEditContent,
+  isProfessionalMode = false
 }) => {
   const [text, setText] = useState('');
   const [images, setImages] = useState<File[]>([]);
@@ -142,8 +144,12 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
               }}
               onPaste={handlePaste}
               onKeyDown={handleKeyDown}
-              placeholder="Message Gemini AI..."
-              className="w-full px-4 py-3 pr-12 rounded-2xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none min-h-[48px] max-h-[120px] bg-white/90"
+              placeholder={isProfessionalMode ? "输入消息或选择上方工具..." : "Message Gemini AI..."}
+              className={`w-full px-4 py-3 pr-12 rounded-2xl border focus:outline-none focus:ring-2 focus:border-transparent resize-none min-h-[48px] max-h-[120px] ${
+                isProfessionalMode
+                  ? 'border-orange-300 focus:ring-orange-500 bg-orange-50/50'
+                  : 'border-gray-300 focus:ring-purple-500 bg-white/90'
+              }`}
               disabled={isLoading}
               rows={1}
             />
@@ -152,7 +158,11 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
           <button
             onClick={handleSubmit}
             disabled={(!text.trim() && images.length === 0) || isLoading}
-            className="w-12 h-12 bg-gradient-to-r from-purple-500 to-blue-600 text-white rounded-full flex items-center justify-center hover:from-purple-600 hover:to-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+            className={`w-12 h-12 text-white rounded-full flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl ${
+              isProfessionalMode
+                ? 'bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700'
+                : 'bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700'
+            }`}
           >
             {isLoading ? (
               <Loader2 size={20} className="animate-spin" />
