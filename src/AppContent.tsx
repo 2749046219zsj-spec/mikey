@@ -19,7 +19,7 @@ export default function AppContent() {
   const [editContent, setEditContent] = useState<{ text: string; images: File[] } | null>(null);
   const [showContactModal, setShowContactModal] = useState(false);
   const [showReferenceLibrary, setShowReferenceLibrary] = useState(false);
-  const [keepWidgetOpen, setKeepWidgetOpen] = useState(true);
+  const [keepWidgetOpen, setKeepWidgetOpen] = useState(false);
   const { addImageToUnified } = useImageSelector();
 
   const checkAndDecrementDraws = React.useCallback(async () => {
