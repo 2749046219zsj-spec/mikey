@@ -31,10 +31,15 @@ export const useImageGallery = create<ImageGalleryState>((set, get) => ({
     images: state.images.includes(url) ? state.images : [...state.images, url]
   })),
 
-  addImages: (urls: string[]) => set((state) => ({
-    images: [...state.images, ...urls.filter(url => !state.images.includes(url))],
-    isVisible: state.images.length === 0 ? true : state.isVisible
-  })),
+  addImages: (urls: string[]) => set((state) => {
+    const newUrls = urls.filter(url => !state.images.includes(url));
+    if (newUrls.length === 0) return state;
+
+    return {
+      images: [...state.images, ...newUrls],
+      isVisible: true
+    };
+  }),
 
   selectImage: (index: number) => set(() => ({
     selectedIndex: Math.max(0, Math.min(index, get().images.length - 1))
