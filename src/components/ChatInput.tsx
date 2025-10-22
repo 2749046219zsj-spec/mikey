@@ -24,7 +24,6 @@ interface ChatInputProps {
     onStyleCountChange: (count: number) => void;
     selectedReferenceImages: string[];
     onOpenReferenceLibrary: () => void;
-    onOpenPromptUpload: () => void;
     onClearChat: () => void;
     hasMessages: boolean;
   };
