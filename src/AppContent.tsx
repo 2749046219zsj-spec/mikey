@@ -8,6 +8,7 @@ import { ChatWidget } from './components/ChatWidget';
 import { ImageSelector } from './components/ImageSelector';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ContactModal } from './components/ContactModal';
+import ReferenceImageLibrary from './components/ReferenceImageLibrary';
 import { useChat } from './hooks/useChat';
 import { useAuth } from './contexts/AuthContext';
 import { userService } from './services/userService';
@@ -16,6 +17,7 @@ export default function AppContent() {
   const { user, refreshUserData } = useAuth();
   const [editContent, setEditContent] = useState<{ text: string; images: File[] } | null>(null);
   const [showContactModal, setShowContactModal] = useState(false);
+  const [showReferenceLibrary, setShowReferenceLibrary] = useState(false);
 
   const checkAndDecrementDraws = React.useCallback(async () => {
     if (!user) return false;
@@ -55,8 +57,13 @@ export default function AppContent() {
     (window as any).mainChatSendMessage = (text: string, images: File[], enableBatchMode = false) => {
       sendMessage(text, images, enableBatchMode);
     };
+    // 暴露打开参考图库的接口
+    (window as any).openReferenceLibrary = () => {
+      setShowReferenceLibrary(true);
+    };
     return () => {
       delete (window as any).mainChatSendMessage;
+      delete (window as any).openReferenceLibrary;
     };
   }, [sendMessage]);
 
@@ -80,6 +87,24 @@ export default function AppContent() {
   };
 
   const canUseChat = user?.permissions.chat_assistant_enabled || false;
+
+  const handleReferenceLibrarySelect = (imageUrls: string[]) => {
+    console.log('Selected images from library:', imageUrls);
+    if ((window as any).widgetHandleReferenceSelection) {
+      (window as any).widgetHandleReferenceSelection(imageUrls);
+    }
+  };
+
+  if (showReferenceLibrary) {
+    return (
+      <ErrorBoundary>
+        <ReferenceImageLibrary
+          onBack={() => setShowReferenceLibrary(false)}
+          onSelectImages={handleReferenceLibrarySelect}
+        />
+      </ErrorBoundary>
+    );
+  }
 
   return (
     <ErrorBoundary>

@@ -154,18 +154,35 @@ export default function PublicReferenceManagement() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
 
+      const bucketName = 'reference-images';
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const bucketExists = buckets?.some(b => b.name === bucketName);
+
+      if (!bucketExists) {
+        await supabase.storage.createBucket(bucketName, {
+          public: true,
+          fileSizeLimit: 5242880,
+        });
+      }
+
       for (const file of Array.from(files)) {
         const fileExt = file.name.split('.').pop();
         const fileName = `public/${productId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
         const { error: uploadError } = await supabase.storage
-          .from('reference-images')
-          .upload(fileName, file);
+          .from(bucketName)
+          .upload(fileName, file, {
+            contentType: file.type,
+            upsert: false
+          });
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error('Upload error:', uploadError);
+          throw uploadError;
+        }
 
         const { data: urlData } = supabase.storage
-          .from('reference-images')
+          .from(bucketName)
           .getPublicUrl(fileName);
 
         const { error: insertError } = await supabase
@@ -178,13 +195,17 @@ export default function PublicReferenceManagement() {
             created_by: user?.id
           });
 
-        if (insertError) throw insertError;
+        if (insertError) {
+          console.error('Insert error:', insertError);
+          throw insertError;
+        }
       }
 
       await loadProductImages(productId);
-    } catch (error) {
+      alert(`成功上传 ${files.length} 张图片`);
+    } catch (error: any) {
       console.error('Failed to upload image:', error);
-      alert('上传失败，请重试');
+      alert(`上传失败: ${error.message || '请重试'}`);
     }
   };
 

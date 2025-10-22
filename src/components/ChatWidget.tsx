@@ -6,7 +6,6 @@ import { StylePresetDropdown } from './StylePresetDropdown';
 import { CraftSelector } from './CraftSelector';
 import { ProductSelector } from './ProductSelector';
 import { PromptStructureSelector } from './PromptStructureSelector';
-import ReferenceImageManager from './ReferenceImageManager';
 import { useAuth } from '../contexts/AuthContext';
 
 interface Position {
@@ -24,7 +23,6 @@ export const ChatWidget: React.FC = () => {
   const [widgetImages, setWidgetImages] = useState<File[]>([]);
   const [showPromptUpload, setShowPromptUpload] = useState(false);
   const [uploadedPrompts, setUploadedPrompts] = useState('');
-  const [showReferenceManager, setShowReferenceManager] = useState(false);
   const [selectedReferenceImages, setSelectedReferenceImages] = useState<string[]>([]);
 
   const [displayText, setDisplayText] = useState('');
@@ -40,9 +38,31 @@ export const ChatWidget: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  
+
   const { messages: widgetMessages, isLoading: widgetLoading, sendMessage: widgetSendMessage, clearChat: widgetClearChat } = useWidgetChat();
   const { openAdvancedSelector } = useImageSelector();
+
+  useEffect(() => {
+    (window as any).widgetHandleReferenceSelection = async (imageUrls: string[]) => {
+      setSelectedReferenceImages(imageUrls);
+      const files: File[] = [];
+      for (const imageUrl of imageUrls) {
+        try {
+          const response = await fetch(imageUrl);
+          const blob = await response.blob();
+          const fileName = imageUrl.split('/').pop() || 'reference_image.jpg';
+          const file = new File([blob], fileName, { type: blob.type });
+          files.push(file);
+        } catch (error) {
+          console.error('Failed to convert image URL to file:', error);
+        }
+      }
+      setWidgetImages(prev => [...prev, ...files]);
+    };
+    return () => {
+      delete (window as any).widgetHandleReferenceSelection;
+    };
+  }, []);
 
   // 自动滚动到底部
   useEffect(() => {
@@ -669,11 +689,15 @@ export const ChatWidget: React.FC = () => {
 
                   <PromptStructureSelector onSelectStructure={handleStructureSelect} buttonText="用户提示词自定义" />
                   <button
-                    onClick={() => setShowReferenceManager(true)}
+                    onClick={() => {
+                      if ((window as any).openReferenceLibrary) {
+                        (window as any).openReferenceLibrary();
+                      }
+                    }}
                     className="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg text-xs font-medium hover:shadow-md transition-all flex items-center gap-1"
                   >
                     <Images size={14} />
-                    参考图预设
+                    参考图库
                     {selectedReferenceImages.length > 0 && (
                       <span className="ml-1 px-1.5 py-0.5 bg-white/20 rounded-full text-[10px]">
                         {selectedReferenceImages.length}
@@ -694,20 +718,6 @@ export const ChatWidget: React.FC = () => {
             </>
           )}
         </div>
-      )}
-
-      {/* 参考图预设管理器 */}
-      {user && (
-        <ReferenceImageManager
-          isOpen={showReferenceManager}
-          onClose={() => setShowReferenceManager(false)}
-          selectedImages={selectedReferenceImages}
-          onImagesSelect={setSelectedReferenceImages}
-          onFilesConverted={(files) => {
-            setWidgetImages(prev => [...prev, ...files]);
-          }}
-          multiSelect={true}
-        />
       )}
 
       {/* 本地提示词上传弹窗 */}
