@@ -19,6 +19,7 @@ export default function AppContent() {
   const [editContent, setEditContent] = useState<{ text: string; images: File[] } | null>(null);
   const [showContactModal, setShowContactModal] = useState(false);
   const [showReferenceLibrary, setShowReferenceLibrary] = useState(false);
+  const [keepWidgetOpen, setKeepWidgetOpen] = useState(true);
   const { addImageToUnified } = useImageSelector();
 
   const checkAndDecrementDraws = React.useCallback(async () => {
@@ -62,6 +63,7 @@ export default function AppContent() {
     // 暴露打开参考图库的接口
     (window as any).openReferenceLibrary = () => {
       setShowReferenceLibrary(true);
+      setKeepWidgetOpen(true);
     };
     return () => {
       delete (window as any).mainChatSendMessage;
@@ -93,27 +95,7 @@ export default function AppContent() {
   const handleReferenceLibrarySelect = async (imageUrls: string[]) => {
     console.log('Selected images from library:', imageUrls);
 
-    for (const url of imageUrls) {
-      try {
-        const response = await fetch(url, {
-          mode: 'cors',
-          credentials: 'omit'
-        });
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch: ${response.status}`);
-        }
-
-        const blob = await response.blob();
-        const fileName = url.split('/').pop()?.split('?')[0] || 'reference-image.jpg';
-        const file = new File([blob], fileName, { type: blob.type || 'image/jpeg' });
-        addImageToUnified(file);
-      } catch (error) {
-        console.error('Failed to convert URL to File:', url, error);
-        alert(`无法加载图片: ${url}`);
-      }
-    }
-
+    // 只传递给客服助手，不添加到主界面
     if ((window as any).widgetHandleReferenceSelection) {
       (window as any).widgetHandleReferenceSelection(imageUrls);
     }
@@ -123,7 +105,9 @@ export default function AppContent() {
     return (
       <ErrorBoundary>
         <ReferenceImageLibrary
-          onBack={() => setShowReferenceLibrary(false)}
+          onBack={() => {
+            setShowReferenceLibrary(false);
+          }}
           onSelectImages={handleReferenceLibrarySelect}
         />
       </ErrorBoundary>
@@ -164,7 +148,7 @@ export default function AppContent() {
         <ImageSelector />
         <ContactModal isOpen={showContactModal} onClose={() => setShowContactModal(false)} />
 
-        {canUseChat && <ChatWidget />}
+        {canUseChat && <ChatWidget key="widget" keepOpen={keepWidgetOpen} />}
       </div>
     </ErrorBoundary>
   );

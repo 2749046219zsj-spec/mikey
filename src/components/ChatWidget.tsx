@@ -13,8 +13,12 @@ interface Position {
   y: number;
 }
 
-export const ChatWidget: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
+interface ChatWidgetProps {
+  keepOpen?: boolean;
+}
+
+export const ChatWidget: React.FC<ChatWidgetProps> = ({ keepOpen = false }) => {
+  const [isOpen, setIsOpen] = useState(keepOpen);
   const [isMinimized, setIsMinimized] = useState(false);
   const [position, setPosition] = useState<Position>({ x: 20, y: 20 });
   const [isDragging, setIsDragging] = useState(false);
@@ -41,6 +45,13 @@ export const ChatWidget: React.FC = () => {
 
   const { messages: widgetMessages, isLoading: widgetLoading, sendMessage: widgetSendMessage, clearChat: widgetClearChat } = useWidgetChat();
   const { openAdvancedSelector } = useImageSelector();
+
+  // 保持打开状态
+  useEffect(() => {
+    if (keepOpen) {
+      setIsOpen(true);
+    }
+  }, [keepOpen]);
 
   useEffect(() => {
     (window as any).widgetHandleReferenceSelection = async (imageUrls: string[]) => {
