@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bot, Trash2, StopCircle, XCircle, MessageCircle } from 'lucide-react';
+import { Bot, Trash2, StopCircle, XCircle } from 'lucide-react';
 import { ModelSelector } from './ModelSelector';
 
 interface ChatHeaderProps {
@@ -15,8 +15,6 @@ interface ChatHeaderProps {
   };
   onStopQueue?: () => void;
   onClearQueue?: () => void;
-  assistantMode?: 'normal' | 'assistant';
-  onModeChange?: (mode: 'normal' | 'assistant') => void;
 }
 
 export const ChatHeader: React.FC<ChatHeaderProps> = ({
@@ -27,9 +25,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   isLoading = false,
   queueInfo,
   onStopQueue,
-  onClearQueue,
-  assistantMode = 'normal',
-  onModeChange
+  onClearQueue
 }) => {
   const getModelDisplayName = (modelId: string) => {
     switch (modelId) {
@@ -95,32 +91,11 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
         </div>
         
         <div className="mt-4">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-1">
-              <button
-                onClick={() => onModeChange?.('normal')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-1.5 ${
-                  assistantMode === 'normal'
-                    ? 'bg-gradient-to-r from-purple-500 to-blue-600 text-white shadow-md'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <Bot size={16} />
-                Gemini 2.5 Flash
-              </button>
-              <button
-                onClick={() => onModeChange?.('assistant')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-1.5 ${
-                  assistantMode === 'assistant'
-                    ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <MessageCircle size={16} />
-                客服助手
-              </button>
-            </div>
-          </div>
+          <ModelSelector 
+            selectedModel={selectedModel}
+            onModelChange={onModelChange}
+            disabled={isLoading}
+          />
         </div>
       </div>
     </div>
