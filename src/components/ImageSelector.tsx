@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { X, CheckCircle2, ImageIcon, Upload, Clipboard, Trash2 } from 'lucide-react';
+import { X, CheckCircle2, ImageIcon, Upload, Clipboard, Trash2, ChevronRight, Database, User } from 'lucide-react';
 import { useImageSelector } from '../hooks/useImageSelector';
 import { useImageGallery } from '../hooks/useImageGallery';
 import { ReferenceImageService } from '../services/referenceImageService';
+import { PublicReferenceImageService, type ProductWithImages } from '../services/publicReferenceImageService';
 import type { ReferenceImage } from '../types/referenceImage';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -36,13 +37,17 @@ export const ImageSelector: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [dbImages, setDbImages] = useState<ReferenceImage[]>([]);
   const [loadingDbImages, setLoadingDbImages] = useState(false);
+  const [databaseTab, setDatabaseTab] = useState<'private' | 'public'>('public');
+  const [publicProducts, setPublicProducts] = useState<ProductWithImages[]>([]);
+  const [loadingPublicProducts, setLoadingPublicProducts] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
 
   const isAdvancedMode = onConfirmMultiple !== null;
 
   useEffect(() => {
     const loadDbImages = async () => {
-      if (isOpen) {
-        console.log('ImageSelector opened, loading database images...');
+      if (isOpen && databaseTab === 'private') {
+        console.log('ImageSelector opened, loading private database images...');
         console.log('User:', user);
         setLoadingDbImages(true);
         try {
@@ -69,7 +74,31 @@ export const ImageSelector: React.FC = () => {
     };
 
     loadDbImages();
-  }, [isOpen, user]);
+  }, [isOpen, user, databaseTab]);
+
+  useEffect(() => {
+    const loadPublicProducts = async () => {
+      if (isOpen && databaseTab === 'public') {
+        console.log('Loading public products...');
+        setLoadingPublicProducts(true);
+        try {
+          const products = await PublicReferenceImageService.getProductsWithImages();
+          console.log('Loaded public products:', products.length);
+          setPublicProducts(products);
+        } catch (error) {
+          console.error('Failed to load public products:', error);
+          setPublicProducts([]);
+        } finally {
+          setLoadingPublicProducts(false);
+        }
+      } else {
+        setPublicProducts([]);
+        setSelectedProductId(null);
+      }
+    };
+
+    loadPublicProducts();
+  }, [isOpen, databaseTab]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -412,9 +441,9 @@ export const ImageSelector: React.FC = () => {
             </div>
           )}
 
-          {loadingDbImages && (
+          {databaseTab === 'private' && loadingDbImages && (
             <div className="mb-6">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">从数据库选择参考图</h3>
+              <h3 className="text-sm font-medium text-gray-700 mb-3">从私有数据库选择参考图</h3>
               <div className="text-center text-gray-500 py-8">
                 <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-2"></div>
                 <p className="text-sm">加载中...</p>
@@ -422,10 +451,175 @@ export const ImageSelector: React.FC = () => {
             </div>
           )}
 
-          {!loadingDbImages && dbImages.length > 0 && (
+          <div className="mb-6">
+            <div className="flex gap-2 mb-4">
+              <button
+                onClick={() => setDatabaseTab('public')}
+                className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
+                  databaseTab === 'public'
+                    ? 'bg-blue-500 text-white shadow-md'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                }`}
+              >
+                <Database size={18} />
+                公共数据库
+              </button>
+              <button
+                onClick={() => setDatabaseTab('private')}
+                className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
+                  databaseTab === 'private'
+                    ? 'bg-blue-500 text-white shadow-md'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                }`}
+              >
+                <User size={18} />
+                私有数据库
+              </button>
+            </div>
+
+            {databaseTab === 'public' && loadingPublicProducts && (
+              <div className="text-center text-gray-500 py-8">
+                <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                <p className="text-sm">加载中...</p>
+              </div>
+            )}
+
+            {databaseTab === 'public' && !loadingPublicProducts && publicProducts.length === 0 && (
+              <div className="text-center text-gray-400 py-6 border-2 border-dashed border-gray-200 rounded-lg">
+                <ImageIcon size={32} className="mx-auto mb-2" />
+                <p className="text-sm">暂无公共参考图</p>
+              </div>
+            )}
+
+            {databaseTab === 'public' && !loadingPublicProducts && publicProducts.length > 0 && !selectedProductId && (
+              <div>
+                <h3 className="text-sm font-medium text-gray-700 mb-3">
+                  选择产品 (共 {publicProducts.length} 个)
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  {publicProducts.map((product) => (
+                    <button
+                      key={product.id}
+                      onClick={() => setSelectedProductId(product.id)}
+                      className="flex items-start gap-3 p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all text-left"
+                    >
+                      {product.images.length > 0 && (
+                        <img
+                          src={product.images[0].thumbnail_url || product.images[0].image_url}
+                          alt={product.title}
+                          className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
+                        />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-medium text-gray-800 truncate">{product.title}</h4>
+                          <ChevronRight size={16} className="text-gray-400 flex-shrink-0" />
+                        </div>
+                        <p className="text-xs text-gray-500 mb-1">货号: {product.product_code}</p>
+                        {product.description && (
+                          <p className="text-xs text-gray-600 line-clamp-2">{product.description}</p>
+                        )}
+                        <p className="text-xs text-blue-600 mt-2">{product.images.length} 张图片</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {databaseTab === 'public' && !loadingPublicProducts && selectedProductId && (
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <button
+                    onClick={() => setSelectedProductId(null)}
+                    className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                  >
+                    ← 返回
+                  </button>
+                  <span className="text-sm text-gray-500">
+                    {publicProducts.find(p => p.id === selectedProductId)?.title}
+                  </span>
+                </div>
+                {(() => {
+                  const selectedProduct = publicProducts.find(p => p.id === selectedProductId);
+                  if (!selectedProduct || selectedProduct.images.length === 0) {
+                    return (
+                      <div className="text-center text-gray-400 py-6">
+                        <p className="text-sm">该产品暂无图片</p>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-700 mb-3">
+                        已选择 {selectedProduct.images.filter(img => {
+                          if (isAdvancedMode) {
+                            if (mode === 'unified') {
+                              return selectedImages.some(file => file.name.includes(img.image_url));
+                            } else {
+                              return currentPromptImages.some(file => file.name.includes(img.image_url));
+                            }
+                          }
+                          return selectedImageUrl === img.image_url && !selectedImageFile;
+                        }).length} / {selectedProduct.images.length} 张
+                      </h3>
+                      <div className="grid grid-cols-5 gap-3">
+                        {selectedProduct.images.map((img, index) => {
+                          let isSelected = false;
+                          if (isAdvancedMode) {
+                            if (mode === 'unified') {
+                              isSelected = selectedImages.some(file => file.name.includes(img.image_url));
+                            } else {
+                              isSelected = currentPromptImages.some(file => file.name.includes(img.image_url));
+                            }
+                          } else {
+                            isSelected = selectedImageUrl === img.image_url && !selectedImageFile;
+                          }
+
+                          return (
+                            <div
+                              key={img.id}
+                              onClick={() => handleGalleryImageClick(img.image_url)}
+                              className={`relative group cursor-pointer rounded-lg overflow-hidden transition-all duration-200 ${
+                                isSelected
+                                  ? 'ring-4 ring-green-500 shadow-lg scale-105'
+                                  : 'hover:ring-2 hover:ring-gray-300 hover:shadow-md'
+                              }`}
+                            >
+                              <img
+                                src={img.thumbnail_url || img.image_url}
+                                alt={`图片 ${index + 1}`}
+                                className="w-full aspect-square object-cover"
+                                loading="lazy"
+                              />
+                              <div className={`absolute inset-0 transition-all duration-200 ${
+                                isSelected
+                                  ? 'bg-green-500/20'
+                                  : 'bg-black/0 group-hover:bg-black/10'
+                              }`} />
+                              {isSelected && (
+                                <div className="absolute top-2 right-2">
+                                  <CheckCircle2 size={24} className="text-green-600 bg-white rounded-full" />
+                                </div>
+                              )}
+                              <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 text-white text-xs rounded">
+                                图片 {index + 1}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
+
+          {databaseTab === 'private' && !loadingDbImages && dbImages.length > 0 && (
             <div className="mb-6">
               <h3 className="text-sm font-medium text-gray-700 mb-3">
-                从数据库选择参考图
+                从私有数据库选择参考图
                 {(() => {
                   let selectedCount = 0;
                   dbImages.forEach((dbImage) => {
@@ -497,12 +691,12 @@ export const ImageSelector: React.FC = () => {
             </div>
           )}
 
-          {!loadingDbImages && dbImages.length === 0 && (
+          {databaseTab === 'private' && !loadingDbImages && dbImages.length === 0 && (
             <div className="mb-6">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">从数据库选择参考图</h3>
+              <h3 className="text-sm font-medium text-gray-700 mb-3">从私有数据库选择参考图</h3>
               <div className="text-center text-gray-400 py-6 border-2 border-dashed border-gray-200 rounded-lg">
                 <ImageIcon size={32} className="mx-auto mb-2" />
-                <p className="text-sm">暂无参考图</p>
+                <p className="text-sm">暂无私有参考图</p>
                 <p className="text-xs mt-1">请前往"参考图预设"上传图片</p>
               </div>
             </div>
