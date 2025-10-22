@@ -7,18 +7,15 @@ import { CraftSelector } from './CraftSelector';
 import { ProductSelector } from './ProductSelector';
 import { PromptStructureSelector } from './PromptStructureSelector';
 import { useAuth } from '../contexts/AuthContext';
+import { userService } from '../services/userService';
 
 interface Position {
   x: number;
   y: number;
 }
 
-interface ChatWidgetProps {
-  keepOpen?: boolean;
-}
-
-export const ChatWidget: React.FC<ChatWidgetProps> = ({ keepOpen = false }) => {
-  const [isOpen, setIsOpen] = useState(keepOpen);
+export const ChatWidget: React.FC = () => {
+  const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [position, setPosition] = useState<Position>({ x: 20, y: 20 });
   const [isDragging, setIsDragging] = useState(false);
@@ -46,12 +43,34 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ keepOpen = false }) => {
   const { messages: widgetMessages, isLoading: widgetLoading, sendMessage: widgetSendMessage, clearChat: widgetClearChat } = useWidgetChat();
   const { openAdvancedSelector } = useImageSelector();
 
-  // 保持打开状态
+  // 从数据库加载客服助手状态
   useEffect(() => {
-    if (keepOpen) {
-      setIsOpen(true);
-    }
-  }, [keepOpen]);
+    const loadWidgetState = async () => {
+      if (user?.id) {
+        try {
+          const savedState = await userService.getWidgetState(user.id);
+          setIsOpen(savedState);
+        } catch (error) {
+          console.error('Failed to load widget state:', error);
+        }
+      }
+    };
+    loadWidgetState();
+  }, [user?.id]);
+
+  // 当用户改变客服助手状态时保存到数据库
+  useEffect(() => {
+    const saveWidgetState = async () => {
+      if (user?.id) {
+        try {
+          await userService.updateWidgetState(user.id, isOpen);
+        } catch (error) {
+          console.error('Failed to save widget state:', error);
+        }
+      }
+    };
+    saveWidgetState();
+  }, [isOpen, user?.id]);
 
   useEffect(() => {
     (window as any).widgetHandleReferenceSelection = async (imageUrls: string[]) => {
