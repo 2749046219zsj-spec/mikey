@@ -1,6 +1,7 @@
 import React, { useState, useRef, KeyboardEvent } from 'react';
 import { Send, Loader2, X } from 'lucide-react';
 import { ImageUpload } from './ImageUpload';
+import { AssistantPanel } from './AssistantPanel';
 import { useImageSelector } from '../hooks/useImageSelector';
 
 interface ChatInputProps {
@@ -8,13 +9,28 @@ interface ChatInputProps {
   isLoading: boolean;
   editContent?: { text: string; images: File[] };
   onClearEditContent?: () => void;
+  assistantMode?: 'normal' | 'assistant';
+  assistantPanelProps?: {
+    onProductSelect: (product: string) => void;
+    onStyleSelect: (style: string) => void;
+    onCraftsConfirm: (crafts: string[]) => void;
+    onStructureSelect: (structure: string) => void;
+    styleCount: number;
+    onStyleCountChange: (count: number) => void;
+    selectedReferenceImages: any[];
+    onOpenReferenceLibrary: () => void;
+    onClearChat: () => void;
+    hasMessages: boolean;
+  };
 }
 
 export const ChatInput: React.FC<ChatInputProps> = React.memo(({
   onSendMessage,
   isLoading,
   editContent,
-  onClearEditContent
+  onClearEditContent,
+  assistantMode = 'normal',
+  assistantPanelProps
 }) => {
   const [text, setText] = useState('');
   const [images, setImages] = useState<File[]>([]);
@@ -166,6 +182,10 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
           Press Enter to send, Shift+Enter for new line
         </p>
       </div>
+
+      {assistantMode === 'assistant' && assistantPanelProps && (
+        <AssistantPanel {...assistantPanelProps} />
+      )}
     </div>
   );
 });

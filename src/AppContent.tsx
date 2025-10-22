@@ -22,6 +22,11 @@ export default function AppContent() {
   const [keepWidgetOpen, setKeepWidgetOpen] = useState(false);
   const { addImageToUnified } = useImageSelector();
 
+  const [assistantMode, setAssistantMode] = useState<'normal' | 'assistant'>('normal');
+  const [styleCount, setStyleCount] = useState(3);
+  const [selectedReferenceImages, setSelectedReferenceImages] = useState<any[]>([]);
+  const [assistantMessages, setAssistantMessages] = useState<any[]>([]);
+
   const checkAndDecrementDraws = React.useCallback(async () => {
     if (!user) return false;
 
@@ -74,11 +79,24 @@ export default function AppContent() {
   const handleSendMessage = async (text: string, images: File[]) => {
     if (!user) return;
 
-    const canProceed = await checkAndDecrementDraws();
-    if (canProceed) {
-      // 主界面发送，不启用批量模式
-      sendMessage(text, images, false);
-      setEditContent(null);
+    if (assistantMode === 'assistant') {
+      // 客服助手模式：不消耗次数，直接添加消息
+      const userMessage = {
+        id: Date.now().toString(),
+        type: 'user',
+        content: text,
+        images: images.map(img => URL.createObjectURL(img)),
+        timestamp: new Date()
+      };
+      setAssistantMessages(prev => [...prev, userMessage]);
+      // TODO: 这里可以添加AI响应逻辑
+    } else {
+      // 普通模式：消耗次数
+      const canProceed = await checkAndDecrementDraws();
+      if (canProceed) {
+        sendMessage(text, images, false);
+        setEditContent(null);
+      }
     }
   };
 
@@ -95,31 +113,53 @@ export default function AppContent() {
   const handleReferenceLibrarySelect = async (imageUrls: string[]) => {
     console.log('Selected images from library:', imageUrls);
 
-    // 只传递给客服助手，不添加到主界面
-    if ((window as any).widgetHandleReferenceSelection) {
+    if (assistantMode === 'assistant') {
+      setSelectedReferenceImages(prev => [...prev, ...imageUrls]);
+    } else if ((window as any).widgetHandleReferenceSelection) {
       (window as any).widgetHandleReferenceSelection(imageUrls);
     }
 
-    // 关闭参考图库
     setShowReferenceLibrary(false);
+  };
+
+  const handleProductSelect = (product: string) => {
+    console.log('Selected product:', product);
+  };
+
+  const handleStyleSelect = (style: string) => {
+    console.log('Selected style:', style);
+  };
+
+  const handleCraftsConfirm = (crafts: string[]) => {
+    console.log('Selected crafts:', crafts);
+  };
+
+  const handleStructureSelect = (structure: string) => {
+    console.log('Selected structure:', structure);
+  };
+
+  const handleClearAssistantChat = () => {
+    setAssistantMessages([]);
   };
 
   return (
     <ErrorBoundary>
       <div className="h-screen bg-slate-50 flex flex-col">
         <ChatHeader
-          onClearChat={clearChat}
-          messageCount={messages.length}
+          onClearChat={assistantMode === 'assistant' ? handleClearAssistantChat : clearChat}
+          messageCount={assistantMode === 'assistant' ? assistantMessages.length : messages.length}
           selectedModel={selectedModel}
           onModelChange={setSelectedModel}
           isLoading={isLoading}
           queueInfo={queueInfo}
           onStopQueue={stopQueue}
           onClearQueue={clearQueue}
+          assistantMode={assistantMode}
+          onModeChange={setAssistantMode}
         />
 
         <ChatContainer
-          messages={messages}
+          messages={assistantMode === 'assistant' ? assistantMessages : messages}
           isLoading={isLoading}
           error={error}
           onRetryToInput={retryToInput}
@@ -131,6 +171,19 @@ export default function AppContent() {
           isLoading={isLoading}
           editContent={editContent}
           onClearEditContent={handleClearEditContent}
+          assistantMode={assistantMode}
+          assistantPanelProps={assistantMode === 'assistant' ? {
+            onProductSelect: handleProductSelect,
+            onStyleSelect: handleStyleSelect,
+            onCraftsConfirm: handleCraftsConfirm,
+            onStructureSelect: handleStructureSelect,
+            styleCount,
+            onStyleCountChange: setStyleCount,
+            selectedReferenceImages,
+            onOpenReferenceLibrary: () => setShowReferenceLibrary(true),
+            onClearChat: handleClearAssistantChat,
+            hasMessages: assistantMessages.length > 0
+          } : undefined}
         />
 
         <ImageModal />
