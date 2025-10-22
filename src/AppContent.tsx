@@ -169,7 +169,11 @@ export default function AppContent() {
                 content: cleanContent || msg.content
               };
             }
-          })
+          }),
+          {
+            role: "user",
+            content: [{ type: "text", text: text }]
+          }
         ];
 
         const response = await geminiService.sendMessage(text, images, 'Gemini-2.5-Flash-Image', conversationHistory);
