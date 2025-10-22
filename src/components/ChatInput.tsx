@@ -65,9 +65,13 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
 
   const handleSubmit = () => {
     const textToSend = isProfessionalMode ? professionalModeText : text;
-    if ((!textToSend.trim() && images.length === 0) || isLoading) return;
 
-    onSendMessage(textToSend, images);
+    // 合并上传的图片和参考图
+    const allImages = [...referenceImages, ...images];
+
+    if ((!textToSend.trim() && allImages.length === 0) || isLoading) return;
+
+    onSendMessage(textToSend, allImages);
     setText('');
     setImages([]);
 
@@ -76,6 +80,7 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
       onProfessionalTextChange('');
     }
 
+    // 清空参考图
     for (let i = referenceImages.length - 1; i >= 0; i--) {
       removeImageFromUnified(i);
     }
@@ -150,7 +155,7 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
           
           <button
             onClick={handleSubmit}
-            disabled={(!displayText.trim() && images.length === 0) || isLoading}
+            disabled={(!displayText.trim() && images.length === 0 && referenceImages.length === 0) || isLoading}
             className={`w-12 h-12 text-white rounded-full flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl ${
               isProfessionalMode
                 ? 'bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700'
