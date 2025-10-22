@@ -1,6 +1,43 @@
-# 快速开始指南
+# 🚨 紧急修复：管理员上传图片失败
 
-## 重要：必须先完成 Supabase 配置
+## 问题
+错误：`new row violates row-level security policy`
+
+## ⚡ 2分钟修复步骤
+
+### 1️⃣ 打开 Supabase
+访问：https://tvghcqbgktwummwjiexp.supabase.co
+点击左侧 "SQL Editor"
+
+### 2️⃣ 复制这段 SQL
+
+```sql
+CREATE OR REPLACE FUNCTION is_admin() RETURNS boolean LANGUAGE sql SECURITY DEFINER STABLE AS $$ SELECT EXISTS (SELECT 1 FROM user_profiles WHERE id = auth.uid() AND is_admin = true); $$;
+
+DO $$ DECLARE r RECORD; BEGIN FOR r IN SELECT policyname, tablename FROM pg_policies WHERE tablename IN ('public_reference_products', 'public_reference_images') LOOP EXECUTE format('DROP POLICY IF EXISTS %I ON %I', r.policyname, r.tablename); END LOOP; END $$;
+
+CREATE POLICY "Anyone can view active products" ON public_reference_products FOR SELECT USING (is_active = true);
+CREATE POLICY "Admins can view all products" ON public_reference_products FOR SELECT TO authenticated USING (is_admin());
+CREATE POLICY "Admins can insert products" ON public_reference_products FOR INSERT TO authenticated WITH CHECK (is_admin());
+CREATE POLICY "Admins can update products" ON public_reference_products FOR UPDATE TO authenticated USING (is_admin()) WITH CHECK (is_admin());
+CREATE POLICY "Admins can delete products" ON public_reference_products FOR DELETE TO authenticated USING (is_admin());
+CREATE POLICY "Anyone can view active images" ON public_reference_images FOR SELECT USING (is_active = true AND EXISTS (SELECT 1 FROM public_reference_products WHERE public_reference_products.id = public_reference_images.product_id AND public_reference_products.is_active = true));
+CREATE POLICY "Admins can view all images" ON public_reference_images FOR SELECT TO authenticated USING (is_admin());
+CREATE POLICY "Admins can insert images" ON public_reference_images FOR INSERT TO authenticated WITH CHECK (is_admin());
+CREATE POLICY "Admins can update images" ON public_reference_images FOR UPDATE TO authenticated USING (is_admin()) WITH CHECK (is_admin());
+CREATE POLICY "Admins can delete images" ON public_reference_images FOR DELETE TO authenticated USING (is_admin());
+```
+
+### 3️⃣ 粘贴并点击 Run
+
+### 4️⃣ 刷新页面测试
+按 F5 刷新，再次上传图片
+
+## ✅ 完成！
+
+---
+
+## 📖 原始快速开始指南
 
 ### 第一步：启用用户注册
 
