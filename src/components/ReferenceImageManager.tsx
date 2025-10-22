@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Upload, X, Check, Trash2, Loader2, Link, HardDrive } from 'lucide-react';
+import { Upload, X, Check, Trash2, Loader2, Link, HardDrive, Database } from 'lucide-react';
 import { ReferenceImageService } from '../services/referenceImageService';
 import type { ReferenceImage } from '../types/referenceImage';
 import { useAuth } from '../contexts/AuthContext';
+import ReferenceImageSelector from './ReferenceImageSelector';
 
 interface ReferenceImageManagerProps {
   isOpen: boolean;
@@ -26,6 +27,7 @@ const ReferenceImageManager = React.memo<ReferenceImageManagerProps>(
     const [imageUrl, setImageUrl] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [isDragging, setIsDragging] = useState(false);
+    const [showPublicSelector, setShowPublicSelector] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const dropZoneRef = useRef<HTMLDivElement>(null);
 
@@ -227,6 +229,11 @@ const ReferenceImageManager = React.memo<ReferenceImageManagerProps>(
       onClose();
     };
 
+    const handlePublicImageSelect = (imageUrl: string) => {
+      setSelectedIds(prev => [...prev, imageUrl]);
+      setShowPublicSelector(false);
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -244,6 +251,16 @@ const ReferenceImageManager = React.memo<ReferenceImageManagerProps>(
 
           <div className="flex-1 overflow-y-auto p-6">
             <div className="mb-6">
+              <div className="flex gap-2 mb-4">
+                <button
+                  onClick={() => setShowPublicSelector(true)}
+                  className="flex-1 px-4 py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
+                >
+                  <Database className="w-4 h-4" />
+                  从数据库选择
+                </button>
+              </div>
+
               <div className="flex gap-2 mb-4">
                 <button
                   onClick={() => setUploadMode('file')}
@@ -464,6 +481,14 @@ const ReferenceImageManager = React.memo<ReferenceImageManagerProps>(
             </div>
           </div>
         </div>
+
+        {showPublicSelector && (
+          <ReferenceImageSelector
+            onClose={() => setShowPublicSelector(false)}
+            onSelect={handlePublicImageSelect}
+            userId={user?.id}
+          />
+        )}
       </div>
     );
   }
