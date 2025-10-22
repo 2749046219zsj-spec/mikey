@@ -40,7 +40,7 @@ export class GeminiApiService {
         // 如果是绘图请求，加强提示
         let finalText = text;
         if (isDrawingRequest && model.toLowerCase().includes('image')) {
-          finalText = `${text}\n\n重要：请必须生成一张图片。`;
+          finalText = `${text}\n\n重要：请不要使用绘图功能。`;
         }
 
         content.push({
