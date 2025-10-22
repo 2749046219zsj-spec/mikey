@@ -120,8 +120,8 @@ export class GeminiApiService {
 
       console.log('发送请求:', {
         model,
+        mode,
         messageCount: messages.length,
-        isDrawingRequest,
         userText: text
       });
 
