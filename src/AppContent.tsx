@@ -10,6 +10,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { ContactModal } from './components/ContactModal';
 import ReferenceImageLibrary from './components/ReferenceImageLibrary';
 import { useChat } from './hooks/useChat';
+import { useWidgetChat } from './hooks/useWidgetChat';
 import { useAuth } from './contexts/AuthContext';
 import { userService } from './services/userService';
 import { useImageSelector } from './hooks/useImageSelector';
@@ -20,7 +21,7 @@ export default function AppContent() {
   const [showContactModal, setShowContactModal] = useState(false);
   const [showReferenceLibrary, setShowReferenceLibrary] = useState(false);
   const [currentMode, setCurrentMode] = useState<AppMode>('normal');
-  const { addImageToUnified, selectedImages: referenceImages } = useImageSelector();
+  const { addImageToUnified, selectedImages: referenceImages, openAdvancedSelector } = useImageSelector();
 
   const [styleCount, setStyleCount] = useState(3);
   const [inputText, setInputText] = useState('');
@@ -28,6 +29,7 @@ export default function AppContent() {
   const [selectedItems, setSelectedItems] = useState<{product?: string, styles: string[], crafts: string[]}>({styles: [], crafts: []});
   const [showPromptUpload, setShowPromptUpload] = useState(false);
   const [uploadedPrompts, setUploadedPrompts] = useState('');
+  const [sentMessageIds, setSentMessageIds] = useState<Set<string>>(new Set());
 
   const checkAndDecrementDraws = React.useCallback(async () => {
     if (!user) return false;
@@ -62,15 +64,32 @@ export default function AppContent() {
     clearQueue,
   } = useChat(checkAndDecrementDraws);
 
+  const {
+    messages: assistantMessages,
+    isLoading: assistantLoading,
+    error: assistantError,
+    sendMessage: assistantSendMessage,
+    clearChat: assistantClearChat
+  } = useWidgetChat();
+
 
   const handleSendMessage = async (text: string, images: File[]) => {
     if (!user) return;
 
-    const canProceed = await checkAndDecrementDraws();
-    if (canProceed) {
-      // 主界面发送，不启用批量模式
-      sendMessage(text, images, false);
+    if (currentMode === 'professional') {
+      // 专业模式：使用客服助手的语言模型进行提示词优化
+      assistantSendMessage(text, images);
       setEditContent(null);
+      setInputText('');
+      setSelectedItems({ styles: [], crafts: [] });
+      setFullPromptTemplate('');
+    } else {
+      // 普通模式：直接使用主界面的生成功能
+      const canProceed = await checkAndDecrementDraws();
+      if (canProceed) {
+        sendMessage(text, images, false);
+        setEditContent(null);
+      }
     }
   };
 
@@ -185,16 +204,71 @@ export default function AppContent() {
     }
     setShowPromptUpload(false);
     setUploadedPrompts('');
-    const textWithPrompts = prompts.map(p => `**${p}**`).join('\n');
-    sendMessage(textWithPrompts, referenceImages, true);
+    handleSendPromptsToGenerate(prompts);
+  };
+
+  const handleSendPromptsToGenerate = (prompts: string[]) => {
+    if (prompts.length === 0) return;
+
+    openAdvancedSelector(prompts, async (result) => {
+      if (result.mode === 'unified' && result.unifiedImages) {
+        const textWithPrompts = prompts.map(p => `**${p}**`).join('\n');
+
+        let successCount = 0;
+        for (let i = 0; i < prompts.length; i++) {
+          const canProceed = await checkAndDecrementDraws();
+          if (!canProceed) {
+            if (successCount > 0) {
+              alert(`已成功发送 ${successCount} 个提示词，剩余提示词因次数不足未能发送`);
+            }
+            return;
+          }
+          successCount++;
+        }
+
+        sendMessage(textWithPrompts, result.unifiedImages, true);
+      } else if (result.mode === 'individual' && result.promptImages) {
+        const firstImages = result.promptImages[0]?.images || [];
+        const allSameImages = result.promptImages.every(({ images }) =>
+          images.length === firstImages.length &&
+          images.every((img, idx) => img === firstImages[idx])
+        );
+
+        let successCount = 0;
+        for (let i = 0; i < result.promptImages.length; i++) {
+          const canProceed = await checkAndDecrementDraws();
+          if (!canProceed) {
+            if (successCount > 0) {
+              alert(`已成功发送 ${successCount} 个提示词，剩余提示词因次数不足未能发送`);
+            }
+            return;
+          }
+          successCount++;
+        }
+
+        if (allSameImages) {
+          const textWithPrompts = result.promptImages.map(({ prompt }) => `**${prompt}**`).join('\n');
+          sendMessage(textWithPrompts, firstImages, true);
+        } else {
+          result.promptImages.forEach(({ prompt, images }) => {
+            sendMessage(`**${prompt}**`, images, true);
+          });
+        }
+      }
+    });
+  };
+
+  const handleAssistantMessageAction = (messageId: string, prompts: string[]) => {
+    setSentMessageIds(prev => new Set(prev).add(messageId));
+    handleSendPromptsToGenerate(prompts);
   };
 
   return (
     <ErrorBoundary>
       <div className="h-screen bg-slate-50 flex flex-col">
         <ChatHeader
-          onClearChat={clearChat}
-          messageCount={messages.length}
+          onClearChat={currentMode === 'professional' ? assistantClearChat : clearChat}
+          messageCount={currentMode === 'professional' ? assistantMessages.length : messages.length}
           selectedModel={selectedModel}
           onModelChange={setSelectedModel}
           isLoading={isLoading}
@@ -207,11 +281,14 @@ export default function AppContent() {
         />
 
         <ChatContainer
-          messages={messages}
-          isLoading={isLoading}
-          error={error}
+          messages={currentMode === 'professional' ? assistantMessages : messages}
+          isLoading={currentMode === 'professional' ? assistantLoading : isLoading}
+          error={currentMode === 'professional' ? assistantError : error}
           onRetryToInput={retryToInput}
           onSetEditContent={handleSetEditContent}
+          isProfessionalMode={currentMode === 'professional'}
+          onSendPromptsToGenerate={handleAssistantMessageAction}
+          sentMessageIds={sentMessageIds}
         />
 
         {currentMode === 'professional' && canUseChat && (

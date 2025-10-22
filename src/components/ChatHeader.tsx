@@ -120,7 +120,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
                 className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
               >
                 <Trash2 size={16} />
-                Clear Chat
+                {currentMode === 'professional' ? '清空对话' : 'Clear Chat'}
               </button>
             )}
           </div>

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { ChatMessage } from './ChatMessage';
+import { AssistantMessageActions } from './AssistantMessageActions';
 import { Message } from '../types/chat';
 import { Loader2, Bot } from 'lucide-react';
 
@@ -9,6 +10,9 @@ interface ChatContainerProps {
   error: string | null;
   onRetryToInput?: (messageId: string, onEdit: (text: string, images: File[]) => void) => void;
   onSetEditContent?: (text: string, images: File[]) => void;
+  isProfessionalMode?: boolean;
+  onSendPromptsToGenerate?: (messageId: string, prompts: string[]) => void;
+  sentMessageIds?: Set<string>;
 }
 
 export const ChatContainer: React.FC<ChatContainerProps> = React.memo(({
@@ -16,7 +20,10 @@ export const ChatContainer: React.FC<ChatContainerProps> = React.memo(({
   isLoading,
   error,
   onRetryToInput,
-  onSetEditContent
+  onSetEditContent,
+  isProfessionalMode = false,
+  onSendPromptsToGenerate,
+  sentMessageIds = new Set()
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -47,12 +54,23 @@ export const ChatContainer: React.FC<ChatContainerProps> = React.memo(({
     <div className="flex-1 overflow-y-auto chat-scrollbar">
       <div className="max-w-4xl mx-auto px-4 py-6">
         {messages.map((message) => (
-          <ChatMessage 
-            key={message.id} 
-            message={message}
-            onRetryToInput={onRetryToInput}
-            onSetEditContent={onSetEditContent}
-          />
+          <div key={message.id}>
+            <ChatMessage
+              message={message}
+              onRetryToInput={onRetryToInput}
+              onSetEditContent={onSetEditContent}
+            />
+            {isProfessionalMode && message.type === 'ai' && !message.hasError && onSendPromptsToGenerate && (
+              <div className="max-w-[80%] ml-11">
+                <AssistantMessageActions
+                  messageContent={message.content}
+                  messageId={message.id}
+                  onSendToGenerate={(prompts) => onSendPromptsToGenerate(message.id, prompts)}
+                  alreadySent={sentMessageIds.has(message.id)}
+                />
+              </div>
+            )}
+          </div>
         ))}
         
         {isLoading && (
