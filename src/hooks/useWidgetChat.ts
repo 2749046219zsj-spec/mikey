@@ -44,38 +44,8 @@ export const useWidgetChat = () => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      const systemPrompt = {
-        role: "system",
-        content: `你是一个专业的提示词识别和优化专家。你的任务是从给定文本中快速识别并优化提示词。
-
-**任务要求：**
-1. 从输入文本中识别潜在的提示词段落
-2. 筛选条件：提示词长度必须大于20个字符
-3. 对识别出的提示词进行优化改进
-4. 上下文分析：考虑前后文的完整性，确保提示词完整
-
-**输出格式（支持以下任意一种）：**
-
-格式1：编号列表（推荐，最常用）
-1. 优化后的提示词内容1
-2. 优化后的提示词内容2
-3. 优化后的提示词内容3
-
-格式2：双引号编号列表
-1. "优化后的提示词内容1"
-2. "优化后的提示词内容2"
-3. "优化后的提示词内容3"
-
-**重要规则：**
-- 每个提示词必须长度大于20个字符
-- 保持提示词的完整性，不要截断
-- 如果用户输入已经是编号列表格式，直接优化输出即可
-- 每行一个提示词，确保格式清晰`
-      };
-
-      const conversationHistory = [
-        systemPrompt,
-        ...state.messages.map(msg => {
+      // Build conversation history for professional mode
+      const conversationHistory = state.messages.map(msg => {
           if (msg.type === 'user') {
             const content = [];
             if (msg.originalText && msg.originalText.trim()) {
@@ -95,10 +65,10 @@ export const useWidgetChat = () => {
               content: cleanContent || msg.content
             };
           }
-        })
-      ];
+        });
 
-      const response = await geminiService.sendMessage(text, images, state.selectedModel, conversationHistory);
+      // Send to Gemini API with 'professional' mode for system prompt
+      const response = await geminiService.sendMessage(text, images, state.selectedModel, conversationHistory, 'professional');
 
       addMessage({
         type: 'ai',

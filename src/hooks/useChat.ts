@@ -79,8 +79,8 @@ export const useChat = (beforeSendCallback?: BeforeSendCallback) => {
       // 不传递对话历史，每次请求都是独立的
       const conversationHistory: any[] = [];
 
-      // Send to Gemini API
-      const response = await geminiService.sendMessage(text, images, state.selectedModel, conversationHistory);
+      // Send to Gemini API with 'normal' mode for system prompt
+      const response = await geminiService.sendMessage(text, images, state.selectedModel, conversationHistory, 'normal');
 
       // Add AI response
       addMessage({
