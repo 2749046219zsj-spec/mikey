@@ -1,6 +1,7 @@
 import React, { useState, useRef, KeyboardEvent } from 'react';
 import { Send, Loader2, X } from 'lucide-react';
 import { ImageUpload } from './ImageUpload';
+import { AssistantPanel } from './AssistantPanel';
 import { useImageSelector } from '../hooks/useImageSelector';
 
 interface ChatInputProps {
@@ -8,13 +9,38 @@ interface ChatInputProps {
   isLoading: boolean;
   editContent?: { text: string; images: File[] };
   onClearEditContent?: () => void;
+  assistantMode?: 'normal' | 'assistant';
+  assistantInputText?: string;
+  onAssistantInputChange?: (text: string) => void;
+  assistantImages?: File[];
+  onAssistantImagesChange?: (images: File[]) => void;
+  displayText?: string;
+  assistantPanelProps?: {
+    onProductSelect: (product: { name: string; template: string }) => void;
+    onStyleSelect: (style: string) => void;
+    onCraftsConfirm: (crafts: string[]) => void;
+    onStructureSelect: (structure: string) => void;
+    styleCount: number;
+    onStyleCountChange: (count: number) => void;
+    selectedReferenceImages: string[];
+    onOpenReferenceLibrary: () => void;
+    onClearChat: () => void;
+    hasMessages: boolean;
+  };
 }
 
 export const ChatInput: React.FC<ChatInputProps> = React.memo(({
   onSendMessage,
   isLoading,
   editContent,
-  onClearEditContent
+  onClearEditContent,
+  assistantMode = 'normal',
+  assistantInputText = '',
+  onAssistantInputChange,
+  assistantImages = [],
+  onAssistantImagesChange,
+  displayText = '',
+  assistantPanelProps
 }) => {
   const [text, setText] = useState('');
   const [images, setImages] = useState<File[]>([]);
@@ -55,17 +81,21 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
   }, [editContent]);
 
   const handleSubmit = () => {
-    if ((!text.trim() && images.length === 0) || isLoading) return;
+    if (assistantMode === 'assistant') {
+      if ((!assistantInputText.trim() && assistantImages.length === 0) || isLoading) return;
+      onSendMessage(assistantInputText, assistantImages);
+    } else {
+      if ((!text.trim() && images.length === 0) || isLoading) return;
+      onSendMessage(text, images);
+      setText('');
+      setImages([]);
 
-    onSendMessage(text, images);
-    setText('');
-    setImages([]);
+      for (let i = referenceImages.length - 1; i >= 0; i--) {
+        removeImageFromUnified(i);
+      }
 
-    for (let i = referenceImages.length - 1; i >= 0; i--) {
-      removeImageFromUnified(i);
+      onClearEditContent?.();
     }
-
-    onClearEditContent?.();
 
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -104,7 +134,34 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
           </div>
         )}
 
-        <ImageUpload images={images} onImagesChange={setImages} />
+        {assistantMode === 'assistant' ? (
+          assistantImages.length > 0 && (
+            <div className="mb-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                {assistantImages.map((file, index) => (
+                  <div
+                    key={index}
+                    className="relative w-16 h-16 rounded-lg overflow-hidden border-2 border-gray-300 group"
+                  >
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt={`Upload ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      onClick={() => onAssistantImagesChange?.(assistantImages.filter((_, i) => i !== index))}
+                      className="absolute top-0.5 right-0.5 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                    >
+                      <X size={12} className="text-white" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        ) : (
+          <ImageUpload images={images} onImagesChange={setImages} />
+        )}
 
         {referenceImages.length > 0 && (
           <div className="mb-3">
@@ -135,9 +192,14 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
           <div className="flex-1 relative">
             <textarea
               ref={textareaRef}
-              value={text}
+              value={assistantMode === 'assistant' ? (displayText || assistantInputText) : text}
               onChange={(e) => {
-                setText(e.target.value);
+                if (assistantMode === 'assistant') {
+                  const newValue = e.target.value;
+                  onAssistantInputChange?.(newValue);
+                } else {
+                  setText(e.target.value);
+                }
                 adjustTextareaHeight();
               }}
               onPaste={handlePaste}
@@ -151,7 +213,11 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
           
           <button
             onClick={handleSubmit}
-            disabled={(!text.trim() && images.length === 0) || isLoading}
+            disabled={
+              assistantMode === 'assistant'
+                ? (!assistantInputText.trim() && assistantImages.length === 0) || isLoading
+                : (!text.trim() && images.length === 0) || isLoading
+            }
             className="w-12 h-12 bg-gradient-to-r from-purple-500 to-blue-600 text-white rounded-full flex items-center justify-center hover:from-purple-600 hover:to-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
           >
             {isLoading ? (
@@ -166,6 +232,10 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
           Press Enter to send, Shift+Enter for new line
         </p>
       </div>
+
+      {assistantMode === 'assistant' && assistantPanelProps && (
+        <AssistantPanel {...assistantPanelProps} />
+      )}
     </div>
   );
 });
