@@ -343,7 +343,7 @@ export const ImageGallery: React.FC = () => {
             {images.map((imageUrl, index) => (
               <div
                 key={index}
-                className={`relative group cursor-pointer rounded-lg overflow-hidden transition-all duration-200 ${
+                className={`relative group cursor-pointer transition-all duration-200 ${
                   selectedIndex === index
                     ? 'ring-2 ring-purple-500 shadow-lg'
                     : checkedImages.has(index)
@@ -370,15 +370,17 @@ export const ImageGallery: React.FC = () => {
                   }
                 }}
               >
-                <ImageWithFallback
-                  src={imageUrl}
-                  alt={`Generated image ${index + 1}`}
-                  className="w-full aspect-square object-cover"
-                  maxRetries={3}
-                />
+                <div className="rounded-lg overflow-hidden">
+                  <ImageWithFallback
+                    src={imageUrl}
+                    alt={`Generated image ${index + 1}`}
+                    className="w-full aspect-square object-cover"
+                    maxRetries={3}
+                  />
 
-                {/* Overlay */}
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200" />
+                  {/* Overlay */}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200" />
+                </div>
 
                 {/* Checkbox */}
                 <button
@@ -386,7 +388,7 @@ export const ImageGallery: React.FC = () => {
                     e.stopPropagation();
                     toggleImageCheck(index);
                   }}
-                  className="absolute top-1 left-1 w-6 h-6 bg-black/50 hover:bg-black/70 text-white rounded flex items-center justify-center transition-opacity duration-200"
+                  className="absolute top-1 left-1 w-6 h-6 bg-black/50 hover:bg-black/70 text-white rounded flex items-center justify-center transition-opacity duration-200 z-10"
                   title={checkedImages.has(index) ? "Unselect" : "Select"}
                 >
                   {checkedImages.has(index) ? (
@@ -398,7 +400,7 @@ export const ImageGallery: React.FC = () => {
 
                 {/* Download menu */}
                 <div
-                  className="absolute top-1 right-1"
+                  className="absolute top-1 right-1 z-[100]"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <ImageDownloadMenu
@@ -408,7 +410,7 @@ export const ImageGallery: React.FC = () => {
                 </div>
 
                 {/* Image number */}
-                <div className="absolute bottom-1 left-1 px-1 py-0.5 bg-black/50 text-white text-xs rounded">
+                <div className="absolute bottom-1 left-1 px-1 py-0.5 bg-black/50 text-white text-xs rounded z-10">
                   #{index + 1}
                 </div>
               </div>

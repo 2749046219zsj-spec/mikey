@@ -412,25 +412,27 @@ export default function ReferenceImageLibrary({ onBack, onSelectImages }: Refere
                             >
                               <div
                                 onClick={() => setSelectedImageIndex(index)}
-                                className={`cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
+                                className={`cursor-pointer border-2 transition-all ${
                                   selectedImageIndex === index
                                     ? 'border-blue-600 shadow-md'
                                     : 'border-gray-200 hover:border-gray-300'
                                 }`}
                               >
-                                <img
-                                  src={image.thumbnail_url || image.image_url}
-                                  alt={image.file_name}
-                                  className="w-full h-24 object-cover"
-                                  loading="lazy"
-                                />
+                                <div className="rounded-lg overflow-hidden">
+                                  <img
+                                    src={image.thumbnail_url || image.image_url}
+                                    alt={image.file_name}
+                                    className="w-full h-24 object-cover"
+                                    loading="lazy"
+                                  />
+                                </div>
                               </div>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   toggleImageSelection(image.image_url);
                                 }}
-                                className={`absolute top-1 left-1 w-5 h-5 rounded flex items-center justify-center transition-all ${
+                                className={`absolute top-1 left-1 w-5 h-5 rounded flex items-center justify-center transition-all z-10 ${
                                   isSelected
                                     ? 'bg-blue-600 text-white'
                                     : 'bg-black/50 hover:bg-black/70 text-white'
@@ -444,7 +446,7 @@ export default function ReferenceImageLibrary({ onBack, onSelectImages }: Refere
                               </button>
 
                               <div
-                                className="absolute top-1 right-1"
+                                className="absolute top-1 right-1 z-[100]"
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 <div className="scale-75">
@@ -499,23 +501,25 @@ export default function ReferenceImageLibrary({ onBack, onSelectImages }: Refere
                     return (
                       <div
                         key={image.id}
-                        className={`relative group rounded-lg overflow-hidden border-2 transition-all ${
+                        className={`relative group rounded-lg border-2 transition-all ${
                           isSelected
                             ? 'border-blue-600 shadow-lg ring-2 ring-blue-200'
                             : 'border-gray-200 hover:border-blue-300 hover:shadow-md'
                         }`}
                       >
-                        <img
-                          src={image.thumbnail_url || image.image_url}
-                          alt={image.file_name}
-                          className="w-full h-48 object-cover cursor-pointer"
-                          loading="lazy"
-                          onClick={() => toggleImageSelection(image.image_url)}
-                        />
+                        <div className="overflow-hidden rounded-t-lg">
+                          <img
+                            src={image.thumbnail_url || image.image_url}
+                            alt={image.file_name}
+                            className="w-full h-48 object-cover cursor-pointer"
+                            loading="lazy"
+                            onClick={() => toggleImageSelection(image.image_url)}
+                          />
+                        </div>
 
                         <button
                           onClick={() => toggleImageSelection(image.image_url)}
-                          className={`absolute top-2 left-2 w-6 h-6 rounded flex items-center justify-center transition-all ${
+                          className={`absolute top-2 left-2 w-6 h-6 rounded flex items-center justify-center transition-all z-10 ${
                             isSelected
                               ? 'bg-blue-600 text-white'
                               : 'bg-black/50 hover:bg-black/70 text-white'
@@ -529,7 +533,7 @@ export default function ReferenceImageLibrary({ onBack, onSelectImages }: Refere
                         </button>
 
                         <div
-                          className="absolute top-2 right-2"
+                          className="absolute top-2 right-2 z-[100]"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <ImageDownloadMenu

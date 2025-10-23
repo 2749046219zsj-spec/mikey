@@ -78,7 +78,7 @@ export const ImageDownloadMenu: React.FC<ImageDownloadMenuProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden z-50">
+        <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden z-[9999]">
           <div className="p-2 bg-gray-50 border-b border-gray-200">
             <div className="text-xs text-gray-600">
               {quota ? (
