@@ -21,6 +21,7 @@ export default function AppContent() {
   const [showContactModal, setShowContactModal] = useState(false);
   const [showReferenceLibrary, setShowReferenceLibrary] = useState(false);
   const [currentMode, setCurrentMode] = useState<AppMode>('normal');
+  const [hasOpenedReferenceLibrary, setHasOpenedReferenceLibrary] = useState(false);
   const { addImageToUnified, selectedImages: referenceImages, openAdvancedSelector, removeImageFromUnified } = useImageSelector();
 
   const [styleCount, setStyleCount] = useState(3);
@@ -103,6 +104,15 @@ export default function AppContent() {
 
   const canUseChat = user?.permissions.chat_assistant_enabled || false;
 
+  useEffect(() => {
+    if (currentMode === 'professional' && canUseChat && !hasOpenedReferenceLibrary) {
+      setShowReferenceLibrary(true);
+      setHasOpenedReferenceLibrary(true);
+    } else if (currentMode === 'normal') {
+      setHasOpenedReferenceLibrary(false);
+    }
+  }, [currentMode, canUseChat, hasOpenedReferenceLibrary]);
+
   const handleReferenceLibrarySelect = async (imageUrls: string[]) => {
     console.log('Selected images from library:', imageUrls);
 
@@ -121,6 +131,10 @@ export default function AppContent() {
       }
     }
 
+    setShowReferenceLibrary(false);
+  };
+
+  const handleReferenceLibraryBack = () => {
     setShowReferenceLibrary(false);
   };
 
@@ -352,7 +366,7 @@ export default function AppContent() {
 
         {showReferenceLibrary && (
           <ReferenceImageLibrary
-            onBack={() => setShowReferenceLibrary(false)}
+            onBack={handleReferenceLibraryBack}
             onSelectImages={handleReferenceLibrarySelect}
           />
         )}
