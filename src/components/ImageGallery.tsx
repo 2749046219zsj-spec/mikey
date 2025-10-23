@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight, X, Eye, EyeOff, Download, DownloadCloud, CheckSquare, Square } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Eye, EyeOff, Download, DownloadCloud, CheckSquare, Square, Upload } from 'lucide-react';
 import { useImageGallery } from '../hooks/useImageGallery';
 import { useImageModal } from '../hooks/useImageModal';
 import { ImageWithFallback } from './ImageWithFallback';
+import { ReferenceImageService } from '../services/referenceImageService';
+import { useAuth } from '../contexts/AuthContext';
 
 export const ImageGallery: React.FC = () => {
   const {
@@ -22,8 +24,11 @@ export const ImageGallery: React.FC = () => {
     clearSelection
   } = useImageGallery();
   const { openModal } = useImageModal();
+  const { user } = useAuth();
   const [isDownloadingAll, setIsDownloadingAll] = useState(false);
   const [isDownloadingSelected, setIsDownloadingSelected] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState<Set<number>>(new Set());
+  const [uploadSuccess, setUploadSuccess] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -234,6 +239,46 @@ export const ImageGallery: React.FC = () => {
     }
   };
 
+  const uploadToPrivateLibrary = async (imageUrl: string, index: number) => {
+    if (!user) {
+      alert('请先登录');
+      return;
+    }
+
+    if (uploadingImages.has(index) || uploadSuccess.has(index)) {
+      return;
+    }
+
+    setUploadingImages(prev => new Set(prev).add(index));
+
+    try {
+      await ReferenceImageService.saveExternalUrl(
+        user.id,
+        imageUrl,
+        `生成图片_${Date.now()}.jpg`
+      );
+
+      setUploadSuccess(prev => new Set(prev).add(index));
+
+      setTimeout(() => {
+        setUploadSuccess(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(index);
+          return newSet;
+        });
+      }, 3000);
+    } catch (error) {
+      console.error('Upload to private library failed:', error);
+      alert(error instanceof Error ? error.message : '上传失败，请重试');
+    } finally {
+      setUploadingImages(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(index);
+        return newSet;
+      });
+    }
+  };
+
   if (images.length === 0) return null;
 
   return (
@@ -395,17 +440,42 @@ export const ImageGallery: React.FC = () => {
                   )}
                 </button>
 
-                {/* Download button */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    downloadImage(imageUrl, index);
-                  }}
-                  className="absolute top-1 right-1 w-6 h-6 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                  title="Download as JPG"
-                >
-                  <Download size={10} />
-                </button>
+                {/* Action buttons */}
+                <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      uploadToPrivateLibrary(imageUrl, index);
+                    }}
+                    disabled={uploadingImages.has(index) || uploadSuccess.has(index)}
+                    className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
+                      uploadSuccess.has(index)
+                        ? 'bg-green-500 text-white'
+                        : uploadingImages.has(index)
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-black/50 hover:bg-black/70 text-white'
+                    } disabled:cursor-not-allowed`}
+                    title={uploadSuccess.has(index) ? '已保存到私有库' : '保存到私有库'}
+                  >
+                    {uploadSuccess.has(index) ? (
+                      <CheckSquare size={10} />
+                    ) : uploadingImages.has(index) ? (
+                      <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Upload size={10} />
+                    )}
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      downloadImage(imageUrl, index);
+                    }}
+                    className="w-6 h-6 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center"
+                    title="Download as JPG"
+                  >
+                    <Download size={10} />
+                  </button>
+                </div>
 
                 {/* Image number */}
                 <div className="absolute bottom-1 left-1 px-1 py-0.5 bg-black/50 text-white text-xs rounded">
