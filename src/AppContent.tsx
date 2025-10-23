@@ -35,7 +35,7 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
   const [currentMode, setCurrentMode] = useState<AppMode>('normal');
   const [hasOpenedReferenceLibrary, setHasOpenedReferenceLibrary] = useState(false);
   const { addImageToUnified, selectedImages: referenceImages, openAdvancedSelector, removeImageFromUnified } = useImageSelector();
-  const { selectedImages: selectedReferenceImages, removeImage: removeReferenceImage } = useReferenceImageStore();
+  const { selectedImages: selectedReferenceImages } = useReferenceImageStore();
 
   useEffect(() => {
     if (shouldEnterCreation && user) {
@@ -374,56 +374,6 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
 
         {currentMode === 'professional' && canUseChat && (
           <>
-            {selectedReferenceImages.length > 0 && (
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-t border-b border-green-200">
-                <div className="max-w-4xl mx-auto px-4 py-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-green-600 rounded-full animate-pulse"></div>
-                      <h3 className="text-sm font-semibold text-green-900">
-                        已选择的参考图片 ({selectedReferenceImages.length})
-                      </h3>
-                    </div>
-                    <button
-                      onClick={() => useReferenceImageStore.getState().clearImages()}
-                      className="text-xs text-red-600 hover:text-red-700 transition-colors flex items-center gap-1"
-                    >
-                      <X className="w-3 h-3" />
-                      清空所有
-                    </button>
-                  </div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {selectedReferenceImages.map((image) => (
-                      <div
-                        key={image.id}
-                        className="relative group w-20 h-20 rounded-lg overflow-hidden border-2 border-green-400 shadow-md hover:shadow-xl transition-all"
-                      >
-                        <img
-                          src={image.thumbnailUrl || image.url}
-                          alt={image.fileName}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center">
-                          <button
-                            onClick={() => removeReferenceImage(image.id)}
-                            className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                          >
-                            <X className="w-4 h-4 text-white" />
-                          </button>
-                        </div>
-                        <div className="absolute top-1 left-1 bg-green-600 text-white text-xs px-1.5 py-0.5 rounded-full">
-                          ✓
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-green-700 mt-2">
-                    这些图片将作为参考，在接下来的操作中自动保持选中状态
-                  </p>
-                </div>
-              </div>
-            )}
-
             <ProfessionalToolbar
               onStyleSelect={handleStyleSelect}
               onCraftsConfirm={handleCraftsConfirm}

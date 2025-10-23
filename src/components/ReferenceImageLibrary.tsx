@@ -17,7 +17,7 @@ type ViewMode = 'list' | 'detail' | 'upload';
 
 export default function ReferenceImageLibrary({ onBack, onSelectImages }: ReferenceImageLibraryProps) {
   const { user } = useAuth();
-  const { selectedImages, toggleImage, isImageSelected, clearImages, loadFromStorage } = useReferenceImageStore();
+  const { selectedImages, toggleImage, isImageSelected, clearImages, loadFromStorage, removeImage } = useReferenceImageStore();
   const [databaseType, setDatabaseType] = useState<DatabaseType>('public');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [publicProducts, setPublicProducts] = useState<ProductWithImages[]>([]);
@@ -279,7 +279,7 @@ export default function ReferenceImageLibrary({ onBack, onSelectImages }: Refere
                 setViewMode('list');
                 setSelectedProduct(null);
               }}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
                 databaseType === 'public'
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -293,7 +293,7 @@ export default function ReferenceImageLibrary({ onBack, onSelectImages }: Refere
                 setViewMode('list');
                 setSelectedProduct(null);
               }}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
                 databaseType === 'private'
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -340,6 +340,49 @@ export default function ReferenceImageLibrary({ onBack, onSelectImages }: Refere
             </div>
           ) : (
             <>
+              {selectedImages.length > 0 && (
+                <div className="mb-6 border-2 border-dashed border-green-300 rounded-lg p-4 bg-green-50">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-gray-800">
+                      已选择的图片 ({selectedImages.length})
+                    </h3>
+                    <button
+                      onClick={clearImages}
+                      className="text-xs text-red-600 hover:text-red-700 transition-colors flex items-center gap-1"
+                    >
+                      <X className="w-3 h-3" />
+                      清空所有
+                    </button>
+                  </div>
+                  <div className="flex gap-2 flex-wrap">
+                    {selectedImages.map((image) => (
+                      <div
+                        key={image.id}
+                        className="relative group w-24 h-24 rounded-lg overflow-hidden border-2 border-green-500 shadow-md"
+                      >
+                        <img
+                          src={image.thumbnailUrl || image.url}
+                          alt={image.fileName}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute top-1 left-1 bg-green-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                          ✓
+                        </div>
+                        <button
+                          onClick={() => removeImage(image.id)}
+                          className="absolute top-1 right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                        >
+                          <X className="w-3 h-3 text-white" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-green-700 mt-2">
+                    这些图片将作为参考，在接下来的操作中自动保持选中状态
+                  </p>
+                </div>
+              )}
+
               {databaseType === 'public' && viewMode === 'list' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {publicProducts.map((product) => {
