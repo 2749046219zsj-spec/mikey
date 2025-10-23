@@ -65,12 +65,16 @@ export const ProfessionalToolbar: React.FC<ProfessionalToolbarProps> = ({
 
           <button
             onClick={onOpenReferenceLibrary}
-            className="px-3 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg text-xs font-medium hover:shadow-md transition-all flex items-center gap-1.5"
+            className={`px-3 py-2 rounded-lg text-xs font-medium hover:shadow-md transition-all flex items-center gap-1.5 ${
+              selectedReferenceCount > 0
+                ? 'bg-gradient-to-r from-green-500 to-green-600 text-white ring-2 ring-green-300 animate-pulse-subtle'
+                : 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
+            }`}
           >
             <Images size={14} />
             参考图库
             {selectedReferenceCount > 0 && (
-              <span className="ml-1 px-1.5 py-0.5 bg-white/20 rounded-full text-[10px]">
+              <span className="ml-1 px-1.5 py-0.5 bg-white/30 rounded-full text-[10px] font-bold">
                 {selectedReferenceCount}
               </span>
             )}

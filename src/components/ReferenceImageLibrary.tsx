@@ -4,6 +4,7 @@ import { PublicReferenceImageService, ProductWithImages, PublicReferenceImage } 
 import { ReferenceImageService } from '../services/referenceImageService';
 import type { ReferenceImage } from '../types/referenceImage';
 import { useAuth } from '../contexts/AuthContext';
+import { useReferenceImageStore } from '../stores/referenceImageStore';
 
 interface ReferenceImageLibraryProps {
   onBack: () => void;
@@ -16,13 +17,13 @@ type ViewMode = 'list' | 'detail' | 'upload';
 
 export default function ReferenceImageLibrary({ onBack, onSelectImages }: ReferenceImageLibraryProps) {
   const { user } = useAuth();
+  const { selectedImages, toggleImage, isImageSelected, clearImages, loadFromStorage } = useReferenceImageStore();
   const [databaseType, setDatabaseType] = useState<DatabaseType>('public');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [publicProducts, setPublicProducts] = useState<ProductWithImages[]>([]);
   const [privateImages, setPrivateImages] = useState<ReferenceImage[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<ProductWithImages | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [selectedImageUrls, setSelectedImageUrls] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,8 +36,9 @@ export default function ReferenceImageLibrary({ onBack, onSelectImages }: Refere
   const dropZoneRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    loadFromStorage();
     loadData();
-  }, [databaseType, user]);
+  }, [databaseType, user, loadFromStorage]);
 
   useEffect(() => {
     if (viewMode === 'upload' && uploadMode === 'file') {
@@ -206,20 +208,23 @@ export default function ReferenceImageLibrary({ onBack, onSelectImages }: Refere
     setViewMode('detail');
   };
 
-  const toggleImageSelection = (imageUrl: string) => {
-    setSelectedImageUrls(prev =>
-      prev.includes(imageUrl)
-        ? prev.filter(url => url !== imageUrl)
-        : [...prev, imageUrl]
-    );
+  const toggleImageSelection = (image: PublicReferenceImage | ReferenceImage) => {
+    const imageData = {
+      id: image.id,
+      url: image.image_url,
+      thumbnailUrl: 'thumbnail_url' in image ? image.thumbnail_url : undefined,
+      fileName: image.file_name,
+      source: databaseType,
+    };
+    toggleImage(imageData);
   };
 
   const handleConfirmSelection = () => {
-    if (selectedImageUrls.length === 0) {
+    if (selectedImages.length === 0) {
       alert('请选择至少一张图片');
       return;
     }
-    onSelectImages(selectedImageUrls);
+    onSelectImages(selectedImages.map(img => img.url));
     onBack();
   };
 
@@ -244,12 +249,22 @@ export default function ReferenceImageLibrary({ onBack, onSelectImages }: Refere
               <h1 className="text-2xl font-bold text-gray-900">参考图库</h1>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-600">
-                已选择 <span className="font-bold text-blue-600">{selectedImageUrls.length}</span> 张
-              </span>
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-gray-600">
+                  已选择 <span className="font-bold text-blue-600">{selectedImages.length}</span> 张
+                </span>
+                {selectedImages.length > 0 && (
+                  <button
+                    onClick={clearImages}
+                    className="text-sm text-red-600 hover:text-red-700 transition-colors"
+                  >
+                    清空
+                  </button>
+                )}
+              </div>
               <button
                 onClick={handleConfirmSelection}
-                disabled={selectedImageUrls.length === 0}
+                disabled={selectedImages.length === 0}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
               >
                 确认选择
@@ -403,7 +418,7 @@ export default function ReferenceImageLibrary({ onBack, onSelectImages }: Refere
                       <div className="space-y-2">
                         <h3 className="font-medium text-gray-700 mb-3">缩略图列表</h3>
                         {selectedProduct.images.map((image, index) => {
-                          const isSelected = selectedImageUrls.includes(image.image_url);
+                          const imageSelected = isImageSelected(image.image_url);
                           return (
                             <div
                               key={image.id}
@@ -414,6 +429,8 @@ export default function ReferenceImageLibrary({ onBack, onSelectImages }: Refere
                                 className={`cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
                                   selectedImageIndex === index
                                     ? 'border-blue-600 shadow-md'
+                                    : imageSelected
+                                    ? 'border-green-500 shadow-sm'
                                     : 'border-gray-200 hover:border-gray-300'
                                 }`}
                               >
@@ -427,15 +444,15 @@ export default function ReferenceImageLibrary({ onBack, onSelectImages }: Refere
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  toggleImageSelection(image.image_url);
+                                  toggleImageSelection(image);
                                 }}
                                 className={`absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center transition-all ${
-                                  isSelected
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-white border-2 border-gray-300 hover:border-blue-600'
+                                  imageSelected
+                                    ? 'bg-green-600 text-white'
+                                    : 'bg-white border-2 border-gray-300 hover:border-green-600'
                                 }`}
                               >
-                                {isSelected && <Check className="w-4 h-4" />}
+                                {imageSelected && <Check className="w-4 h-4" />}
                               </button>
                             </div>
                           );
@@ -457,14 +474,14 @@ export default function ReferenceImageLibrary({ onBack, onSelectImages }: Refere
                                 图片 {selectedImageIndex + 1} / {selectedProduct.images.length}
                               </p>
                               <button
-                                onClick={() => toggleImageSelection(getCurrentImage()!.image_url)}
+                                onClick={() => toggleImageSelection(getCurrentImage()!)}
                                 className={`px-6 py-2 rounded-lg transition-colors font-medium ${
-                                  selectedImageUrls.includes(getCurrentImage()!.image_url)
-                                    ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                  isImageSelected(getCurrentImage()!.image_url)
+                                    ? 'bg-green-600 text-white hover:bg-green-700'
                                     : 'bg-blue-600 text-white hover:bg-blue-700'
                                 }`}
                               >
-                                {selectedImageUrls.includes(getCurrentImage()!.image_url) ? '取消选择' : '选择此图片'}
+                                {isImageSelected(getCurrentImage()!.image_url) ? '✓ 已选择' : '选择此图片'}
                               </button>
                             </div>
                           </div>
@@ -478,14 +495,14 @@ export default function ReferenceImageLibrary({ onBack, onSelectImages }: Refere
               {databaseType === 'private' && viewMode === 'list' && (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                   {privateImages.map((image) => {
-                    const isSelected = selectedImageUrls.includes(image.image_url);
+                    const imageSelected = isImageSelected(image.image_url);
                     return (
                       <div
                         key={image.id}
                         className={`relative group rounded-lg overflow-hidden border-2 transition-all ${
-                          isSelected
-                            ? 'border-blue-600 shadow-lg ring-2 ring-blue-200'
-                            : 'border-gray-200 hover:border-blue-300 hover:shadow-md'
+                          imageSelected
+                            ? 'border-green-600 shadow-lg ring-2 ring-green-200'
+                            : 'border-gray-200 hover:border-green-300 hover:shadow-md'
                         }`}
                       >
                         <img
@@ -493,18 +510,18 @@ export default function ReferenceImageLibrary({ onBack, onSelectImages }: Refere
                           alt={image.file_name}
                           className="w-full h-48 object-cover cursor-pointer"
                           loading="lazy"
-                          onClick={() => toggleImageSelection(image.image_url)}
+                          onClick={() => toggleImageSelection(image)}
                         />
 
                         <button
-                          onClick={() => toggleImageSelection(image.image_url)}
+                          onClick={() => toggleImageSelection(image)}
                           className={`absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center transition-all ${
-                            isSelected
-                              ? 'bg-blue-600 text-white'
+                            imageSelected
+                              ? 'bg-green-600 text-white'
                               : 'bg-white border-2 border-gray-300 opacity-0 group-hover:opacity-100'
                           }`}
                         >
-                          {isSelected && <Check className="w-4 h-4" />}
+                          {imageSelected && <Check className="w-4 h-4" />}
                         </button>
 
                         <button
