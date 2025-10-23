@@ -311,7 +311,7 @@ export const ImageGallery: React.FC = () => {
     try {
       const result = await GalleryService.uploadToGallery(
         user.id,
-        user.email || '匿名用户',
+        user.username || '匿名用户',
         imageUrl
       );
 
