@@ -33,7 +33,7 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [currentMode, setCurrentMode] = useState<AppMode>('normal');
   const [hasOpenedReferenceLibrary, setHasOpenedReferenceLibrary] = useState(false);
-  const { addImageToUnified, selectedImages: referenceImages, openAdvancedSelector, removeImageFromUnified, loadDefaultImages, setDefaultImageUrls } = useImageSelector();
+  const { addImageToUnified, selectedImages: referenceImages, openAdvancedSelector, removeImageFromUnified } = useImageSelector();
 
   useEffect(() => {
     if (shouldEnterCreation && user) {
@@ -41,23 +41,6 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
       onCreationEntered?.();
     }
   }, [shouldEnterCreation, user, onCreationEntered]);
-
-  useEffect(() => {
-    const loadUserDefaultImages = async () => {
-      if (user) {
-        try {
-          const defaultImageUrls = await userService.getDefaultReferenceImages(user.id);
-          if (defaultImageUrls.length > 0) {
-            await loadDefaultImages(defaultImageUrls);
-          }
-        } catch (error) {
-          console.error('Failed to load default reference images:', error);
-        }
-      }
-    };
-
-    loadUserDefaultImages();
-  }, [user, loadDefaultImages]);
 
   const [styleCount, setStyleCount] = useState(3);
   const [inputText, setInputText] = useState('');

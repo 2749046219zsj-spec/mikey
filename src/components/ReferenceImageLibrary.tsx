@@ -4,7 +4,6 @@ import { PublicReferenceImageService, ProductWithImages, PublicReferenceImage } 
 import { ReferenceImageService } from '../services/referenceImageService';
 import type { ReferenceImage } from '../types/referenceImage';
 import { useAuth } from '../contexts/AuthContext';
-import { userService } from '../services/userService';
 
 interface ReferenceImageLibraryProps {
   onBack: () => void;
@@ -38,23 +37,6 @@ export default function ReferenceImageLibrary({ onBack, onSelectImages }: Refere
   useEffect(() => {
     loadData();
   }, [databaseType, user]);
-
-  useEffect(() => {
-    const loadDefaultImages = async () => {
-      if (user) {
-        try {
-          const defaultImageUrls = await userService.getDefaultReferenceImages(user.id);
-          if (defaultImageUrls.length > 0) {
-            setSelectedImageUrls(defaultImageUrls);
-          }
-        } catch (error) {
-          console.error('Failed to load default reference images:', error);
-        }
-      }
-    };
-
-    loadDefaultImages();
-  }, [user]);
 
   useEffect(() => {
     if (viewMode === 'upload' && uploadMode === 'file') {
@@ -232,20 +214,11 @@ export default function ReferenceImageLibrary({ onBack, onSelectImages }: Refere
     );
   };
 
-  const handleConfirmSelection = async () => {
+  const handleConfirmSelection = () => {
     if (selectedImageUrls.length === 0) {
       alert('请选择至少一张图片');
       return;
     }
-
-    if (user) {
-      try {
-        await userService.saveDefaultReferenceImages(user.id, selectedImageUrls);
-      } catch (error) {
-        console.error('Failed to save default reference images:', error);
-      }
-    }
-
     onSelectImages(selectedImageUrls);
     onBack();
   };
