@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Download, Save, HardDrive } from 'lucide-react';
 import { savedImageService } from '../services/savedImageService';
 
@@ -16,13 +17,19 @@ export const ImageDownloadMenu: React.FC<ImageDownloadMenuProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [quota, setQuota] = useState<{ image_quota: number; images_saved: number } | null>(null);
   const [loading, setLoading] = useState(false);
-  const [menuPosition, setMenuPosition] = useState<'right' | 'left'>('right');
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number; right?: number }>({ top: 0, left: 0 });
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(target) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(target)
+      ) {
         setIsOpen(false);
       }
     };
@@ -42,14 +49,31 @@ export const ImageDownloadMenu: React.FC<ImageDownloadMenuProps> = ({
     if (buttonRef.current) {
       const buttonRect = buttonRef.current.getBoundingClientRect();
       const menuWidth = 224; // 14rem = 224px
+      const menuHeight = 160; // Approximate menu height
       const spaceOnRight = window.innerWidth - buttonRect.right;
+      const spaceBelow = window.innerHeight - buttonRect.bottom;
 
-      // If not enough space on right, position on left
+      let top = buttonRect.bottom + 8; // 8px margin below button
+      let left = buttonRect.right - menuWidth; // Default: align right edge
+
+      // If not enough space on right, align to left edge of button
       if (spaceOnRight < menuWidth) {
-        setMenuPosition('left');
-      } else {
-        setMenuPosition('right');
+        left = buttonRect.left;
       }
+
+      // If not enough space below, position above button
+      if (spaceBelow < menuHeight) {
+        top = buttonRect.top - menuHeight - 8;
+      }
+
+      // Ensure menu stays within viewport
+      if (left < 8) left = 8;
+      if (left + menuWidth > window.innerWidth - 8) {
+        left = window.innerWidth - menuWidth - 8;
+      }
+      if (top < 8) top = 8;
+
+      setMenuPosition({ top, left });
     }
   };
 
@@ -83,7 +107,7 @@ export const ImageDownloadMenu: React.FC<ImageDownloadMenuProps> = ({
   };
 
   return (
-    <div className="relative" ref={menuRef}>
+    <div className="relative">
       <button
         ref={buttonRef}
         onClick={(e) => {
@@ -96,10 +120,16 @@ export const ImageDownloadMenu: React.FC<ImageDownloadMenuProps> = ({
         <Download className="w-4 h-4" />
       </button>
 
-      {isOpen && (
-        <div className={`absolute top-full mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden z-[9999] ${
-          menuPosition === 'right' ? 'right-0' : 'left-0'
-        }`}>
+      {isOpen && createPortal(
+        <div
+          ref={menuRef}
+          className="fixed w-56 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden z-[9999]"
+          style={{
+            top: `${menuPosition.top}px`,
+            left: `${menuPosition.left}px`
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="p-2 bg-gray-50 border-b border-gray-200">
             <div className="text-xs text-gray-600">
               {quota ? (
@@ -140,7 +170,8 @@ export const ImageDownloadMenu: React.FC<ImageDownloadMenuProps> = ({
               </div>
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
