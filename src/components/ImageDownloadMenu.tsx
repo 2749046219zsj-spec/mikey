@@ -16,7 +16,9 @@ export const ImageDownloadMenu: React.FC<ImageDownloadMenuProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [quota, setQuota] = useState<{ image_quota: number; images_saved: number } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [menuPosition, setMenuPosition] = useState<'right' | 'left'>('right');
   const menuRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -28,12 +30,28 @@ export const ImageDownloadMenu: React.FC<ImageDownloadMenuProps> = ({
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       loadQuota();
+      adjustMenuPosition();
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isOpen]);
+
+  const adjustMenuPosition = () => {
+    if (buttonRef.current) {
+      const buttonRect = buttonRef.current.getBoundingClientRect();
+      const menuWidth = 224; // 14rem = 224px
+      const spaceOnRight = window.innerWidth - buttonRect.right;
+
+      // If not enough space on right, position on left
+      if (spaceOnRight < menuWidth) {
+        setMenuPosition('left');
+      } else {
+        setMenuPosition('right');
+      }
+    }
+  };
 
   const loadQuota = async () => {
     try {
@@ -67,6 +85,7 @@ export const ImageDownloadMenu: React.FC<ImageDownloadMenuProps> = ({
   return (
     <div className="relative" ref={menuRef}>
       <button
+        ref={buttonRef}
         onClick={(e) => {
           e.stopPropagation();
           setIsOpen(!isOpen);
@@ -78,7 +97,9 @@ export const ImageDownloadMenu: React.FC<ImageDownloadMenuProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden z-[9999]">
+        <div className={`absolute top-full mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden z-[9999] ${
+          menuPosition === 'right' ? 'right-0' : 'left-0'
+        }`}>
           <div className="p-2 bg-gray-50 border-b border-gray-200">
             <div className="text-xs text-gray-600">
               {quota ? (
