@@ -108,8 +108,6 @@ export default function AppContent() {
     if (currentMode === 'professional' && canUseChat && !hasOpenedReferenceLibrary) {
       setShowReferenceLibrary(true);
       setHasOpenedReferenceLibrary(true);
-    } else if (currentMode === 'normal') {
-      setHasOpenedReferenceLibrary(false);
     }
   }, [currentMode, canUseChat, hasOpenedReferenceLibrary]);
 
