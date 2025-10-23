@@ -23,7 +23,7 @@ export const savedImageService = {
     const { data, error } = await supabase
       .from('user_profiles')
       .select('image_quota, images_saved')
-      .eq('user_id', user.id)
+      .eq('id', user.id)
       .maybeSingle();
 
     if (error) throw error;
