@@ -9,17 +9,20 @@ import { ImageSelector } from './components/ImageSelector';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ContactModal } from './components/ContactModal';
 import ReferenceImageLibrary from './components/ReferenceImageLibrary';
+import { PublicGallery } from './components/PublicGallery';
 import { useChat } from './hooks/useChat';
 import { useWidgetChat } from './hooks/useWidgetChat';
 import { useAuth } from './contexts/AuthContext';
 import { userService } from './services/userService';
 import { useImageSelector } from './hooks/useImageSelector';
+import { Image as ImageIcon } from 'lucide-react';
 
 export default function AppContent() {
   const { user, refreshUserData } = useAuth();
   const [editContent, setEditContent] = useState<{ text: string; images: File[] } | null>(null);
   const [showContactModal, setShowContactModal] = useState(false);
   const [showReferenceLibrary, setShowReferenceLibrary] = useState(false);
+  const [showGallery, setShowGallery] = useState(true);
   const [currentMode, setCurrentMode] = useState<AppMode>('normal');
   const [hasOpenedReferenceLibrary, setHasOpenedReferenceLibrary] = useState(false);
   const { addImageToUnified, selectedImages: referenceImages, openAdvancedSelector, removeImageFromUnified } = useImageSelector();
@@ -277,8 +280,45 @@ export default function AppContent() {
 
   return (
     <ErrorBoundary>
-      <div className="h-screen bg-slate-50 flex flex-col">
-        <ChatHeader
+      {showGallery ? (
+        <div className="h-screen bg-slate-50 flex flex-col overflow-y-auto">
+          <div className="border-b border-gray-200 bg-white/90 backdrop-blur-sm sticky top-0 z-10">
+            <div className="max-w-7xl mx-auto px-4 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-pink-500 rounded-full flex items-center justify-center">
+                    <ImageIcon size={20} className="text-white" />
+                  </div>
+                  <h1 className="text-2xl font-bold text-gray-900">AI 创意画廊</h1>
+                </div>
+                <button
+                  onClick={() => setShowGallery(false)}
+                  className="px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-600 text-white rounded-lg hover:from-purple-600 hover:to-blue-700 transition-all duration-200 shadow-md font-medium"
+                >
+                  开始创作
+                </button>
+              </div>
+            </div>
+          </div>
+          <PublicGallery />
+          <ImageModal />
+        </div>
+      ) : (
+        <div className="h-screen bg-slate-50 flex flex-col">
+          <div className="border-b border-gray-100 bg-white/95 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
+            <div className="max-w-4xl mx-auto px-4 py-3">
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => setShowGallery(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-lg hover:from-orange-600 hover:to-pink-600 transition-all duration-200 shadow-md font-medium"
+                >
+                  <ImageIcon size={16} />
+                  浏览画廊
+                </button>
+              </div>
+            </div>
+          </div>
+          <ChatHeader
           onClearChat={currentMode === 'professional' ? assistantClearChat : clearChat}
           messageCount={currentMode === 'professional' ? assistantMessages.length : messages.length}
           selectedModel={selectedModel}
@@ -357,20 +397,20 @@ export default function AppContent() {
           onProfessionalTextChange={setInputText}
         />
 
-        <ImageModal />
-        <ImageGallery />
-        <ImageSelector />
-        <ContactModal isOpen={showContactModal} onClose={() => setShowContactModal(false)} />
+          <ImageModal />
+          <ImageGallery />
+          <ImageSelector />
+          <ContactModal isOpen={showContactModal} onClose={() => setShowContactModal(false)} />
 
-        {showReferenceLibrary && (
-          <ReferenceImageLibrary
+          {showReferenceLibrary && (
+            <ReferenceImageLibrary
             onBack={handleReferenceLibraryBack}
             onSelectImages={handleReferenceLibrarySelect}
           />
         )}
 
-        {showPromptUpload && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000]" onClick={() => setShowPromptUpload(false)}>
+          {showPromptUpload && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000]" onClick={() => setShowPromptUpload(false)}>
             <div className="bg-white rounded-lg shadow-2xl w-[600px] max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between p-4 border-b border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-800">本地提示词上传</h3>
@@ -398,9 +438,10 @@ export default function AppContent() {
                 <button onClick={handlePromptUpload} disabled={!uploadedPrompts.trim()} className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">识别并上传</button>
               </div>
             </div>
-          </div>
-        )}
-      </div>
+            </div>
+          )}
+        </div>
+      )}
     </ErrorBoundary>
   );
 }

@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight, X, Eye, EyeOff, Download, DownloadCloud, CheckSquare, Square, Upload } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Eye, EyeOff, Download, DownloadCloud, CheckSquare, Square, Upload, Heart } from 'lucide-react';
 import { useImageGallery } from '../hooks/useImageGallery';
 import { useImageModal } from '../hooks/useImageModal';
 import { ImageWithFallback } from './ImageWithFallback';
 import { ReferenceImageService } from '../services/referenceImageService';
+import { GalleryService } from '../services/galleryService';
 import { useAuth } from '../contexts/AuthContext';
 
 export const ImageGallery: React.FC = () => {
@@ -29,6 +30,9 @@ export const ImageGallery: React.FC = () => {
   const [isDownloadingSelected, setIsDownloadingSelected] = useState(false);
   const [uploadingImages, setUploadingImages] = useState<Set<number>>(new Set());
   const [uploadSuccess, setUploadSuccess] = useState<Set<number>>(new Set());
+  const [likingImages, setLikingImages] = useState<Set<number>>(new Set());
+  const [likedImages, setLikedImages] = useState<Set<number>>(new Set());
+  const [inGalleryImages, setInGalleryImages] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -279,6 +283,63 @@ export const ImageGallery: React.FC = () => {
     }
   };
 
+  const uploadToPublicGallery = async (imageUrl: string, index: number) => {
+    if (!user) {
+      alert('请先登录后才能分享到画廊');
+      return;
+    }
+
+    if (likingImages.has(index) || likedImages.has(index)) {
+      return;
+    }
+
+    const isInGallery = await GalleryService.checkIfInGallery(imageUrl);
+    if (isInGallery) {
+      setInGalleryImages(prev => new Set(prev).add(index));
+      setTimeout(() => {
+        setInGalleryImages(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(index);
+          return newSet;
+        });
+      }, 3000);
+      return;
+    }
+
+    setLikingImages(prev => new Set(prev).add(index));
+
+    try {
+      const result = await GalleryService.uploadToGallery(
+        user.id,
+        user.email || '匿名用户',
+        imageUrl
+      );
+
+      if (result.success) {
+        setLikedImages(prev => new Set(prev).add(index));
+
+        setTimeout(() => {
+          setLikedImages(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(index);
+            return newSet;
+          });
+        }, 3000);
+      } else {
+        alert(result.error || '上传失败');
+      }
+    } catch (error) {
+      console.error('Upload to gallery failed:', error);
+      alert('分享到画廊失败，请重试');
+    } finally {
+      setLikingImages(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(index);
+        return newSet;
+      });
+    }
+  };
+
   if (images.length === 0) return null;
 
   return (
@@ -442,6 +503,37 @@ export const ImageGallery: React.FC = () => {
 
                 {/* Action buttons */}
                 <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      uploadToPublicGallery(imageUrl, index);
+                    }}
+                    disabled={likingImages.has(index) || likedImages.has(index) || inGalleryImages.has(index)}
+                    className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
+                      likedImages.has(index)
+                        ? 'bg-red-500 text-white'
+                        : inGalleryImages.has(index)
+                        ? 'bg-orange-500 text-white'
+                        : likingImages.has(index)
+                        ? 'bg-pink-500 text-white'
+                        : 'bg-black/50 hover:bg-red-500 text-white'
+                    } disabled:cursor-not-allowed`}
+                    title={
+                      likedImages.has(index)
+                        ? '已分享到画廊'
+                        : inGalleryImages.has(index)
+                        ? '已在画廊中'
+                        : '点赞并分享到画廊'
+                    }
+                  >
+                    {likedImages.has(index) || inGalleryImages.has(index) ? (
+                      <Heart size={10} className="fill-current" />
+                    ) : likingImages.has(index) ? (
+                      <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Heart size={10} />
+                    )}
+                  </button>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
