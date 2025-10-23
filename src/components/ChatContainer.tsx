@@ -43,7 +43,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = React.memo(({
           </h2>
           <p className="text-gray-600 leading-relaxed">
             在这里你可以发挥无限的创作能力只需要告诉我你的产品
-        风格，元素工艺，无需任何操作一键生成效果，解放新生产力，
+        风格，元素,工艺，无需任何操作一键生成效果，解放新生产力，
                  --（承接定制需求wx：S2514088671）--
           </p>
         </div>
