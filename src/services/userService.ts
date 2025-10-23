@@ -144,27 +144,4 @@ export const adminService = {
 
     return await response.json();
   },
-
-  async updateUserQuota(userId: string, imageQuota: number) {
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .update({ image_quota: imageQuota })
-      .eq('user_id', userId)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
-  },
-
-  async getUserQuotaInfo(userId: string) {
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .select('image_quota, images_saved')
-      .eq('user_id', userId)
-      .maybeSingle();
-
-    if (error) throw error;
-    return data;
-  },
 };

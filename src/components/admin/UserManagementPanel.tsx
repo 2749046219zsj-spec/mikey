@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { UserProfile, UserPermissions } from '../../types/user';
 import { adminService } from '../../services/userService';
-import { Edit, CheckCircle, XCircle, Save, X, Key, ImageIcon } from 'lucide-react';
+import { Edit, CheckCircle, XCircle, Save, X, Key } from 'lucide-react';
 
 interface UserManagementPanelProps {
   users: UserProfile[];
@@ -16,14 +16,10 @@ export default function UserManagementPanel({ users, onUsersChange }: UserManage
   const [loading, setLoading] = useState<string | null>(null);
   const [showPasswordModal, setShowPasswordModal] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState('');
-  const [userQuotas, setUserQuotas] = useState<Record<string, { image_quota: number; images_saved: number }>>({});
-  const [editingQuota, setEditingQuota] = useState<string | null>(null);
-  const [quotaEditValue, setQuotaEditValue] = useState<number>(500);
 
   useEffect(() => {
     users.forEach((user) => {
       loadUserPermissions(user.id);
-      loadUserQuota(user.id);
     });
   }, [users]);
 
@@ -35,17 +31,6 @@ export default function UserManagementPanel({ users, onUsersChange }: UserManage
       }
     } catch (error) {
       console.error('Error loading permissions:', error);
-    }
-  };
-
-  const loadUserQuota = async (userId: string) => {
-    try {
-      const quota = await adminService.getUserQuotaInfo(userId);
-      if (quota) {
-        setUserQuotas((prev) => ({ ...prev, [userId]: quota }));
-      }
-    } catch (error) {
-      console.error('Error loading quota:', error);
     }
   };
 
@@ -105,26 +90,6 @@ export default function UserManagementPanel({ users, onUsersChange }: UserManage
     }
   };
 
-  const handleEditQuota = (userId: string, currentQuota: number) => {
-    setEditingQuota(userId);
-    setQuotaEditValue(currentQuota);
-  };
-
-  const handleSaveQuota = async (userId: string) => {
-    setLoading(userId);
-    try {
-      await adminService.updateUserQuota(userId, quotaEditValue);
-      await loadUserQuota(userId);
-      setEditingQuota(null);
-      alert('配额更新成功');
-    } catch (error) {
-      console.error('Error updating quota:', error);
-      alert('配额更新失败');
-    } finally {
-      setLoading(null);
-    }
-  };
-
   return (
     <>
       <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
@@ -142,7 +107,6 @@ export default function UserManagementPanel({ users, onUsersChange }: UserManage
               <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">状态</th>
               <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">角色</th>
               <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">绘图次数</th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">图片配额</th>
               <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">客服助手</th>
               <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">访问级别</th>
               <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">操作</th>
@@ -216,49 +180,6 @@ export default function UserManagementPanel({ users, onUsersChange }: UserManage
                           <span className="text-gray-900">
                             {permissions.remaining_draws} / {permissions.draw_limit}
                           </span>
-                        )}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4">
-                    {userQuotas[user.id] && (
-                      <div className="space-y-1">
-                        {editingQuota === user.id ? (
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="number"
-                              value={quotaEditValue}
-                              onChange={(e) => setQuotaEditValue(parseInt(e.target.value))}
-                              className="w-24 px-2 py-1 border border-gray-300 rounded text-sm"
-                              placeholder="配额"
-                            />
-                            <button
-                              onClick={() => handleSaveQuota(user.id)}
-                              disabled={loading === user.id}
-                              className="p-1 text-green-600 hover:text-green-700"
-                            >
-                              <Save className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => setEditingQuota(null)}
-                              className="p-1 text-gray-600 hover:text-gray-700"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <span className="text-gray-900">
-                              {userQuotas[user.id].images_saved} / {userQuotas[user.id].image_quota}
-                            </span>
-                            <button
-                              onClick={() => handleEditQuota(user.id, userQuotas[user.id].image_quota)}
-                              className="p-1 text-blue-600 hover:text-blue-700"
-                              title="编辑配额"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </button>
-                          </div>
                         )}
                       </div>
                     )}

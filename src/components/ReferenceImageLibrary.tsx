@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, ChevronRight, Loader2, Upload, Link as LinkIcon, HardDrive, X, Check, Trash2, Download, Square, CheckSquare } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Loader2, Upload, Link as LinkIcon, HardDrive, X, Check, Trash2 } from 'lucide-react';
 import { PublicReferenceImageService, ProductWithImages, PublicReferenceImage } from '../services/publicReferenceImageService';
 import { ReferenceImageService } from '../services/referenceImageService';
 import type { ReferenceImage } from '../types/referenceImage';
 import { useAuth } from '../contexts/AuthContext';
-import { ImageDownloadMenu } from './ImageDownloadMenu';
 
 interface ReferenceImageLibraryProps {
   onBack: () => void;
@@ -412,50 +411,32 @@ export default function ReferenceImageLibrary({ onBack, onSelectImages }: Refere
                             >
                               <div
                                 onClick={() => setSelectedImageIndex(index)}
-                                className={`cursor-pointer border-2 transition-all ${
+                                className={`cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
                                   selectedImageIndex === index
                                     ? 'border-blue-600 shadow-md'
                                     : 'border-gray-200 hover:border-gray-300'
                                 }`}
                               >
-                                <div className="rounded-lg overflow-hidden">
-                                  <img
-                                    src={image.thumbnail_url || image.image_url}
-                                    alt={image.file_name}
-                                    className="w-full h-24 object-cover"
-                                    loading="lazy"
-                                  />
-                                </div>
+                                <img
+                                  src={image.thumbnail_url || image.image_url}
+                                  alt={image.file_name}
+                                  className="w-full h-24 object-cover"
+                                  loading="lazy"
+                                />
                               </div>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   toggleImageSelection(image.image_url);
                                 }}
-                                className={`absolute top-1 left-1 w-5 h-5 rounded flex items-center justify-center transition-all z-10 ${
+                                className={`absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center transition-all ${
                                   isSelected
                                     ? 'bg-blue-600 text-white'
-                                    : 'bg-black/50 hover:bg-black/70 text-white'
+                                    : 'bg-white border-2 border-gray-300 hover:border-blue-600'
                                 }`}
                               >
-                                {isSelected ? (
-                                  <CheckSquare size={12} className="text-white" />
-                                ) : (
-                                  <Square size={12} />
-                                )}
+                                {isSelected && <Check className="w-4 h-4" />}
                               </button>
-
-                              <div
-                                className="absolute top-1 right-1 z-[100]"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <div className="scale-75">
-                                  <ImageDownloadMenu
-                                    imageUrl={image.image_url}
-                                    onSaveSuccess={() => {}}
-                                  />
-                                </div>
-                              </div>
                             </div>
                           );
                         })}
@@ -501,46 +482,40 @@ export default function ReferenceImageLibrary({ onBack, onSelectImages }: Refere
                     return (
                       <div
                         key={image.id}
-                        className={`relative group rounded-lg border-2 transition-all ${
+                        className={`relative group rounded-lg overflow-hidden border-2 transition-all ${
                           isSelected
                             ? 'border-blue-600 shadow-lg ring-2 ring-blue-200'
                             : 'border-gray-200 hover:border-blue-300 hover:shadow-md'
                         }`}
                       >
-                        <div className="overflow-hidden rounded-t-lg">
-                          <img
-                            src={image.thumbnail_url || image.image_url}
-                            alt={image.file_name}
-                            className="w-full h-48 object-cover cursor-pointer"
-                            loading="lazy"
-                            onClick={() => toggleImageSelection(image.image_url)}
-                          />
-                        </div>
+                        <img
+                          src={image.thumbnail_url || image.image_url}
+                          alt={image.file_name}
+                          className="w-full h-48 object-cover cursor-pointer"
+                          loading="lazy"
+                          onClick={() => toggleImageSelection(image.image_url)}
+                        />
 
                         <button
                           onClick={() => toggleImageSelection(image.image_url)}
-                          className={`absolute top-2 left-2 w-6 h-6 rounded flex items-center justify-center transition-all z-10 ${
+                          className={`absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center transition-all ${
                             isSelected
                               ? 'bg-blue-600 text-white'
-                              : 'bg-black/50 hover:bg-black/70 text-white'
+                              : 'bg-white border-2 border-gray-300 opacity-0 group-hover:opacity-100'
                           }`}
                         >
-                          {isSelected ? (
-                            <CheckSquare size={14} className="text-white" />
-                          ) : (
-                            <Square size={14} />
-                          )}
+                          {isSelected && <Check className="w-4 h-4" />}
                         </button>
 
-                        <div
-                          className="absolute top-2 right-2 z-[100]"
-                          onClick={(e) => e.stopPropagation()}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeletePrivateImage(image);
+                          }}
+                          className="absolute top-2 left-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
                         >
-                          <ImageDownloadMenu
-                            imageUrl={image.image_url}
-                            onSaveSuccess={() => {}}
-                          />
-                        </div>
+                          <Trash2 className="w-3 h-3 text-white" />
+                        </button>
 
                         <div className="p-2 bg-white">
                           <p className="text-xs text-gray-600 truncate">{image.file_name}</p>
