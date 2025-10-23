@@ -20,9 +20,11 @@ import { Image as ImageIcon } from 'lucide-react';
 
 interface AppContentProps {
   onShowAuth?: (mode: 'login' | 'register') => void;
+  shouldEnterCreation?: boolean;
+  onCreationEntered?: () => void;
 }
 
-export default function AppContent({ onShowAuth }: AppContentProps) {
+export default function AppContent({ onShowAuth, shouldEnterCreation, onCreationEntered }: AppContentProps) {
   const { user, refreshUserData } = useAuth();
   const [editContent, setEditContent] = useState<{ text: string; images: File[] } | null>(null);
   const [showContactModal, setShowContactModal] = useState(false);
@@ -32,6 +34,13 @@ export default function AppContent({ onShowAuth }: AppContentProps) {
   const [currentMode, setCurrentMode] = useState<AppMode>('normal');
   const [hasOpenedReferenceLibrary, setHasOpenedReferenceLibrary] = useState(false);
   const { addImageToUnified, selectedImages: referenceImages, openAdvancedSelector, removeImageFromUnified } = useImageSelector();
+
+  useEffect(() => {
+    if (shouldEnterCreation && user) {
+      setShowGallery(false);
+      onCreationEntered?.();
+    }
+  }, [shouldEnterCreation, user, onCreationEntered]);
 
   const [styleCount, setStyleCount] = useState(3);
   const [inputText, setInputText] = useState('');

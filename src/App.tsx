@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import AuthPage from './components/auth/AuthPage';
 import UserDashboard from './components/user/UserDashboard';
@@ -12,6 +12,14 @@ function App() {
   const { user, loading, logout } = useAuth();
   const [viewMode, setViewMode] = useState<ViewMode>('app');
   const [authMode, setAuthMode] = useState<AuthMode>('login');
+  const [shouldEnterCreation, setShouldEnterCreation] = useState(false);
+
+  useEffect(() => {
+    if (user && viewMode === 'auth') {
+      setViewMode('app');
+      setShouldEnterCreation(true);
+    }
+  }, [user, viewMode]);
 
   if (loading) {
     return (
@@ -85,7 +93,11 @@ function App() {
           </button>
         </div>
       )}
-      <AppContent onShowAuth={handleShowAuth} />
+      <AppContent
+        onShowAuth={handleShowAuth}
+        shouldEnterCreation={shouldEnterCreation}
+        onCreationEntered={() => setShouldEnterCreation(false)}
+      />
     </div>
   );
 }
