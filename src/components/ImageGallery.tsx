@@ -444,7 +444,7 @@ export const ImageGallery: React.FC = () => {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ height: 'calc(100vh - 210px)' }}>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 gap-2">
             {images.map((imageUrl, index) => (
               <div
                 key={index}
