@@ -82,7 +82,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
             </div>
             <div>
               <h1 className="text-xl font-semibold text-gray-800">AI Chat</h1>
-              <p className="text-sm text-gray-600">Powered by Gemini 2.5 Flash</p>
+              <p className="text-sm text-gray-600">更快更完美的设计模型</p>
               {queueInfo?.isProcessing && (
                 <div className="flex items-center gap-2">
                   <p className="text-xs text-purple-600 font-medium">
