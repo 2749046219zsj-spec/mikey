@@ -3,16 +3,18 @@ import { ArrowLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { PublicReferenceImageService, ProductWithImages, PublicReferenceImage } from '../services/publicReferenceImageService';
 import { ReferenceImageService } from '../services/referenceImageService';
 import type { ReferenceImage } from '../types/referenceImage';
+import { userService } from '../services/userService';
 
 interface ReferenceImageSelectorProps {
   onClose: () => void;
   onSelect?: (imageUrl: string) => void;
   userId?: string;
+  onImagesSelected?: (imageUrls: string[]) => void;
 }
 
 type DatabaseType = 'public' | 'private';
 
-export default function ReferenceImageSelector({ onClose, onSelect, userId }: ReferenceImageSelectorProps) {
+export default function ReferenceImageSelector({ onClose, onSelect, userId, onImagesSelected }: ReferenceImageSelectorProps) {
   const [databaseType, setDatabaseType] = useState<DatabaseType>('public');
   const [publicProducts, setPublicProducts] = useState<ProductWithImages[]>([]);
   const [privateImages, setPrivateImages] = useState<ReferenceImage[]>([]);
@@ -20,6 +22,7 @@ export default function ReferenceImageSelector({ onClose, onSelect, userId }: Re
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedImageUrls, setSelectedImageUrls] = useState<string[]>([]);
 
   useEffect(() => {
     loadData();
@@ -52,16 +55,43 @@ export default function ReferenceImageSelector({ onClose, onSelect, userId }: Re
     setSelectedImageIndex(0);
   };
 
-  const handleSelectImage = () => {
+  const handleSelectImage = async () => {
     if (selectedProduct && selectedProduct.images.length > 0) {
       const selectedImage = selectedProduct.images[selectedImageIndex];
-      onSelect?.(selectedImage.image_url);
+      const imageUrl = selectedImage.image_url;
+
+      const newSelectedUrls = [...selectedImageUrls, imageUrl];
+      setSelectedImageUrls(newSelectedUrls);
+
+      if (userId) {
+        try {
+          await userService.saveDefaultReferenceImages(userId, newSelectedUrls);
+        } catch (error) {
+          console.error('Failed to save default reference images:', error);
+        }
+      }
+
+      onSelect?.(imageUrl);
+      onImagesSelected?.(newSelectedUrls);
       onClose();
     }
   };
 
-  const handleSelectPrivateImage = (image: ReferenceImage) => {
-    onSelect?.(image.image_url);
+  const handleSelectPrivateImage = async (image: ReferenceImage) => {
+    const imageUrl = image.image_url;
+    const newSelectedUrls = [...selectedImageUrls, imageUrl];
+    setSelectedImageUrls(newSelectedUrls);
+
+    if (userId) {
+      try {
+        await userService.saveDefaultReferenceImages(userId, newSelectedUrls);
+      } catch (error) {
+        console.error('Failed to save default reference images:', error);
+      }
+    }
+
+    onSelect?.(imageUrl);
+    onImagesSelected?.(newSelectedUrls);
     onClose();
   };
 

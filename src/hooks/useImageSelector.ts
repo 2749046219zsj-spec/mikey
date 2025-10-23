@@ -18,6 +18,7 @@ interface ImageSelectorState {
   currentPromptIndex: number;
   onConfirm: ((imageFile: File) => void) | null;
   onConfirmMultiple: ((result: { mode: SelectionMode; unifiedImages?: File[]; promptImages?: PromptWithImages[] }) => void) | null;
+  defaultImageUrls: string[];
   openSelector: (prompts: string[], onConfirm: (imageFile: File) => void) => void;
   openAdvancedSelector: (prompts: string[], onConfirm: (result: { mode: SelectionMode; unifiedImages?: File[]; promptImages?: PromptWithImages[] }) => void) => void;
   closeSelector: () => void;
@@ -29,6 +30,8 @@ interface ImageSelectorState {
   addImageToPrompt: (promptIndex: number, file: File) => void;
   removeImageFromPrompt: (promptIndex: number, imageIndex: number) => void;
   setCurrentPromptIndex: (index: number) => void;
+  setDefaultImageUrls: (urls: string[]) => void;
+  loadDefaultImages: (imageUrls: string[]) => Promise<void>;
 }
 
 export const useImageSelector = create<ImageSelectorState>((set, get) => ({
@@ -42,6 +45,7 @@ export const useImageSelector = create<ImageSelectorState>((set, get) => ({
   currentPromptIndex: 0,
   onConfirm: null,
   onConfirmMultiple: null,
+  defaultImageUrls: [],
 
   openSelector: (prompts: string[], onConfirm: (imageFile: File) => void) => set(() => ({
     isOpen: true,
@@ -122,5 +126,31 @@ export const useImageSelector = create<ImageSelectorState>((set, get) => ({
 
   setCurrentPromptIndex: (index: number) => set(() => ({
     currentPromptIndex: index
-  }))
+  })),
+
+  setDefaultImageUrls: (urls: string[]) => set(() => ({
+    defaultImageUrls: urls
+  })),
+
+  loadDefaultImages: async (imageUrls: string[]) => {
+    if (imageUrls.length === 0) return;
+
+    try {
+      const imageFiles = await Promise.all(
+        imageUrls.map(async (url) => {
+          const response = await fetch(url);
+          const blob = await response.blob();
+          const fileName = url.split('/').pop() || 'reference-image.jpg';
+          return new File([blob], fileName, { type: blob.type });
+        })
+      );
+
+      set(() => ({
+        selectedImages: imageFiles,
+        defaultImageUrls: imageUrls
+      }));
+    } catch (error) {
+      console.error('Failed to load default reference images:', error);
+    }
+  }
 }));

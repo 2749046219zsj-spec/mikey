@@ -30,6 +30,35 @@ export const userService = {
     if (error) throw error;
     return data || [];
   },
+
+  async saveDefaultReferenceImages(userId: string, imageUrls: string[]): Promise<void> {
+    const { error } = await supabase
+      .from('user_profiles')
+      .update({
+        default_reference_images: {
+          images: imageUrls,
+          lastUsedAt: new Date().toISOString()
+        }
+      })
+      .eq('id', userId);
+
+    if (error) throw error;
+  },
+
+  async getDefaultReferenceImages(userId: string): Promise<string[]> {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('default_reference_images')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    if (!data?.default_reference_images) return [];
+
+    const config = data.default_reference_images as { images?: string[] };
+    return config.images || [];
+  },
 };
 
 export const adminService = {
