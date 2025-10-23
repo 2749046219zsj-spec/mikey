@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, X, Eye, EyeOff, Download, DownloadCloud, Che
 import { useImageGallery } from '../hooks/useImageGallery';
 import { useImageModal } from '../hooks/useImageModal';
 import { ImageWithFallback } from './ImageWithFallback';
+import { ImageDownloadMenu } from './ImageDownloadMenu';
 
 export const ImageGallery: React.FC = () => {
   const {
@@ -395,17 +396,16 @@ export const ImageGallery: React.FC = () => {
                   )}
                 </button>
 
-                {/* Download button */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    downloadImage(imageUrl, index);
-                  }}
-                  className="absolute top-1 right-1 w-6 h-6 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                  title="Download as JPG"
+                {/* Download menu */}
+                <div
+                  className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  <Download size={10} />
-                </button>
+                  <ImageDownloadMenu
+                    imageUrl={imageUrl}
+                    onSaveSuccess={() => {}}
+                  />
+                </div>
 
                 {/* Image number */}
                 <div className="absolute bottom-1 left-1 px-1 py-0.5 bg-black/50 text-white text-xs rounded">
