@@ -10,6 +10,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { ContactModal } from './components/ContactModal';
 import ReferenceImageLibrary from './components/ReferenceImageLibrary';
 import { PublicGallery } from './components/PublicGallery';
+import { LoginPromptModal } from './components/LoginPromptModal';
 import { useChat } from './hooks/useChat';
 import { useWidgetChat } from './hooks/useWidgetChat';
 import { useAuth } from './contexts/AuthContext';
@@ -17,12 +18,17 @@ import { userService } from './services/userService';
 import { useImageSelector } from './hooks/useImageSelector';
 import { Image as ImageIcon } from 'lucide-react';
 
-export default function AppContent() {
+interface AppContentProps {
+  onShowAuth?: (mode: 'login' | 'register') => void;
+}
+
+export default function AppContent({ onShowAuth }: AppContentProps) {
   const { user, refreshUserData } = useAuth();
   const [editContent, setEditContent] = useState<{ text: string; images: File[] } | null>(null);
   const [showContactModal, setShowContactModal] = useState(false);
   const [showReferenceLibrary, setShowReferenceLibrary] = useState(false);
   const [showGallery, setShowGallery] = useState(true);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [currentMode, setCurrentMode] = useState<AppMode>('normal');
   const [hasOpenedReferenceLibrary, setHasOpenedReferenceLibrary] = useState(false);
   const { addImageToUnified, selectedImages: referenceImages, openAdvancedSelector, removeImageFromUnified } = useImageSelector();
@@ -278,6 +284,24 @@ export default function AppContent() {
     handleSendPromptsToGenerate(prompts);
   };
 
+  const handleStartCreating = () => {
+    if (!user) {
+      setShowLoginPrompt(true);
+    } else {
+      setShowGallery(false);
+    }
+  };
+
+  const handleLoginPromptLogin = () => {
+    setShowLoginPrompt(false);
+    onShowAuth?.('login');
+  };
+
+  const handleLoginPromptRegister = () => {
+    setShowLoginPrompt(false);
+    onShowAuth?.('register');
+  };
+
   return (
     <ErrorBoundary>
       {showGallery ? (
@@ -292,7 +316,7 @@ export default function AppContent() {
                   <h1 className="text-2xl font-bold text-gray-900">AI 创意画廊</h1>
                 </div>
                 <button
-                  onClick={() => setShowGallery(false)}
+                  onClick={handleStartCreating}
                   className="px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-600 text-white rounded-lg hover:from-purple-600 hover:to-blue-700 transition-all duration-200 shadow-md font-medium"
                 >
                   开始创作
@@ -302,6 +326,12 @@ export default function AppContent() {
           </div>
           <PublicGallery />
           <ImageModal />
+          <LoginPromptModal
+            isOpen={showLoginPrompt}
+            onClose={() => setShowLoginPrompt(false)}
+            onLogin={handleLoginPromptLogin}
+            onRegister={handleLoginPromptRegister}
+          />
         </div>
       ) : (
         <div className="h-screen bg-slate-50 flex flex-col">

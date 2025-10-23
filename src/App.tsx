@@ -5,11 +5,13 @@ import UserDashboard from './components/user/UserDashboard';
 import AdminDashboard from './components/admin/AdminDashboard';
 import AppContent from './AppContent';
 
-type ViewMode = 'app' | 'dashboard' | 'admin';
+type ViewMode = 'app' | 'dashboard' | 'admin' | 'auth';
+type AuthMode = 'login' | 'register';
 
 function App() {
   const { user, loading, logout } = useAuth();
   const [viewMode, setViewMode] = useState<ViewMode>('app');
+  const [authMode, setAuthMode] = useState<AuthMode>('login');
 
   if (loading) {
     return (
@@ -22,11 +24,11 @@ function App() {
     );
   }
 
-  if (!user) {
-    return <AuthPage />;
+  if (viewMode === 'auth') {
+    return <AuthPage initialMode={authMode} onBack={() => setViewMode('app')} />;
   }
 
-  if (!user.is_active) {
+  if (user && !user.is_active) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-6">
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md text-center">
@@ -43,7 +45,7 @@ function App() {
     );
   }
 
-  if (viewMode === 'dashboard') {
+  if (viewMode === 'dashboard' && user) {
     return (
       <UserDashboard
         onLogout={() => {
@@ -56,27 +58,34 @@ function App() {
     );
   }
 
-  if (viewMode === 'admin' && user.is_admin) {
+  if (viewMode === 'admin' && user && user.is_admin) {
     return <AdminDashboard onBack={() => setViewMode('dashboard')} />;
   }
 
+  const handleShowAuth = (mode: 'login' | 'register') => {
+    setAuthMode(mode);
+    setViewMode('auth');
+  };
+
   return (
     <div>
-      <div className="absolute top-4 right-4 z-50 flex items-center gap-4 bg-white rounded-lg shadow-lg px-4 py-2">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">剩余绘图次数:</span>
-          <span className="text-lg font-bold text-blue-600">
-            {user.permissions.remaining_draws}
-          </span>
+      {user && (
+        <div className="absolute top-4 right-4 z-50 flex items-center gap-4 bg-white rounded-lg shadow-lg px-4 py-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">剩余绘图次数:</span>
+            <span className="text-lg font-bold text-blue-600">
+              {user.permissions.remaining_draws}
+            </span>
+          </div>
+          <button
+            onClick={() => setViewMode('dashboard')}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+          >
+            我的账户
+          </button>
         </div>
-        <button
-          onClick={() => setViewMode('dashboard')}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
-        >
-          我的账户
-        </button>
-      </div>
-      <AppContent />
+      )}
+      <AppContent onShowAuth={handleShowAuth} />
     </div>
   );
 }
