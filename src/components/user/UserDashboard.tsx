@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { Image, MessageCircle, LogOut, User, Shield, ArrowLeft } from 'lucide-react';
+import { Image, MessageCircle, LogOut, User, Shield, ArrowLeft, Edit, Check, X } from 'lucide-react';
+import { userService } from '../../services/userService';
 
 interface UserDashboardProps {
   onLogout: () => void;
@@ -8,12 +10,49 @@ interface UserDashboardProps {
 }
 
 export default function UserDashboard({ onLogout, onNavigateToAdmin, onBack }: UserDashboardProps) {
-  const { user } = useAuth();
+  const { user, refreshUserData } = useAuth();
+  const [isEditingUsername, setIsEditingUsername] = useState(false);
+  const [newUsername, setNewUsername] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState('');
 
   if (!user) return null;
 
   const { permissions } = user;
   const drawsPercentage = (permissions.remaining_draws / permissions.draw_limit) * 100;
+
+  const handleStartEdit = () => {
+    setNewUsername(user.username);
+    setIsEditingUsername(true);
+    setError('');
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingUsername(false);
+    setNewUsername('');
+    setError('');
+  };
+
+  const handleSaveUsername = async () => {
+    if (!newUsername.trim() || newUsername === user.username) {
+      handleCancelEdit();
+      return;
+    }
+
+    setIsUpdating(true);
+    setError('');
+
+    try {
+      await userService.updateUsername(user.id, newUsername);
+      await refreshUserData();
+      setIsEditingUsername(false);
+      setNewUsername('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '更新失败');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-6">
@@ -33,9 +72,65 @@ export default function UserDashboard({ onLogout, onNavigateToAdmin, onBack }: U
               <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-green-500 rounded-full flex items-center justify-center">
                 <User className="w-8 h-8 text-white" />
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">{user.username}</h1>
-                <p className="text-gray-600">{user.email}</p>
+              <div className="flex-1">
+                {isEditingUsername ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={newUsername}
+                        onChange={(e) => setNewUsername(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleSaveUsername();
+                          if (e.key === 'Escape') handleCancelEdit();
+                        }}
+                        className="px-3 py-2 border border-gray-300 rounded-lg text-lg font-bold text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="输入新用户名"
+                        maxLength={20}
+                        autoFocus
+                        disabled={isUpdating}
+                      />
+                      <button
+                        onClick={handleSaveUsername}
+                        disabled={isUpdating || !newUsername.trim()}
+                        className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="保存"
+                      >
+                        {isUpdating ? (
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Check className="w-5 h-5" />
+                        )}
+                      </button>
+                      <button
+                        onClick={handleCancelEdit}
+                        disabled={isUpdating}
+                        className="p-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors disabled:opacity-50"
+                        title="取消"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                    {error && (
+                      <p className="text-sm text-red-600">{error}</p>
+                    )}
+                    <p className="text-xs text-gray-500">2-20个字符，按Enter保存，Esc取消</p>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h1 className="text-2xl font-bold text-gray-900">{user.username}</h1>
+                      <button
+                        onClick={handleStartEdit}
+                        className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors group"
+                        title="编辑用户名"
+                      >
+                        <Edit className="w-4 h-4 text-gray-400 group-hover:text-blue-600" />
+                      </button>
+                    </div>
+                    <p className="text-gray-600">{user.email}</p>
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-3">

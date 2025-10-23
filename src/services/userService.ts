@@ -30,6 +30,43 @@ export const userService = {
     if (error) throw error;
     return data || [];
   },
+
+  async updateUsername(userId: string, newUsername: string): Promise<UserProfile> {
+    const trimmedUsername = newUsername.trim();
+
+    if (!trimmedUsername) {
+      throw new Error('用户名不能为空');
+    }
+
+    if (trimmedUsername.length < 2) {
+      throw new Error('用户名至少需要2个字符');
+    }
+
+    if (trimmedUsername.length > 20) {
+      throw new Error('用户名不能超过20个字符');
+    }
+
+    const { data: existing } = await supabase
+      .from('user_profiles')
+      .select('id')
+      .eq('username', trimmedUsername)
+      .neq('id', userId)
+      .maybeSingle();
+
+    if (existing) {
+      throw new Error('该用户名已被使用');
+    }
+
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .update({ username: trimmedUsername, updated_at: new Date().toISOString() })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
 };
 
 export const adminService = {
