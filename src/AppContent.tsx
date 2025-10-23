@@ -344,32 +344,20 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
         </div>
       ) : (
         <div className="h-screen bg-slate-50 flex flex-col">
-          <div className="border-b border-gray-100 bg-white/95 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
-            <div className="max-w-4xl mx-auto px-4 py-3">
-              <div className="flex items-center justify-between">
-                <button
-                  onClick={() => setShowGallery(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-lg hover:from-orange-600 hover:to-pink-600 transition-all duration-200 shadow-md font-medium"
-                >
-                  <ImageIcon size={16} />
-                  浏览画廊
-                </button>
-              </div>
-            </div>
-          </div>
           <ChatHeader
-          onClearChat={currentMode === 'professional' ? assistantClearChat : clearChat}
-          messageCount={currentMode === 'professional' ? assistantMessages.length : messages.length}
-          selectedModel={selectedModel}
-          onModelChange={setSelectedModel}
-          isLoading={isLoading}
-          queueInfo={queueInfo}
-          onStopQueue={stopQueue}
-          onClearQueue={clearQueue}
-          currentMode={currentMode}
-          onModeChange={setCurrentMode}
-          canUseProfessionalMode={canUseChat}
-        />
+            onClearChat={currentMode === 'professional' ? assistantClearChat : clearChat}
+            messageCount={currentMode === 'professional' ? assistantMessages.length : messages.length}
+            selectedModel={selectedModel}
+            onModelChange={setSelectedModel}
+            isLoading={isLoading}
+            queueInfo={queueInfo}
+            onStopQueue={stopQueue}
+            onClearQueue={clearQueue}
+            currentMode={currentMode}
+            onModeChange={setCurrentMode}
+            canUseProfessionalMode={canUseChat}
+            onShowGallery={() => setShowGallery(true)}
+          />
 
         <ChatContainer
           messages={currentMode === 'professional' ? assistantMessages : messages}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bot, Trash2, StopCircle, XCircle, Sparkles, Wrench } from 'lucide-react';
+import { Bot, Trash2, StopCircle, XCircle, Sparkles, Wrench, Image as ImageIcon } from 'lucide-react';
 import { ModelSelector } from './ModelSelector';
 
 export type AppMode = 'normal' | 'professional';
@@ -20,6 +20,7 @@ interface ChatHeaderProps {
   currentMode: AppMode;
   onModeChange: (mode: AppMode) => void;
   canUseProfessionalMode: boolean;
+  onShowGallery?: () => void;
 }
 
 export const ChatHeader: React.FC<ChatHeaderProps> = ({
@@ -33,7 +34,8 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   onClearQueue,
   currentMode,
   onModeChange,
-  canUseProfessionalMode
+  canUseProfessionalMode,
+  onShowGallery
 }) => {
   const getModelDisplayName = (modelId: string) => {
     switch (modelId) {
@@ -48,19 +50,28 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
     <div className="border-b border-gray-200 bg-white/90 backdrop-blur-sm sticky top-0 z-10">
       <div className="max-w-4xl mx-auto px-4 py-4">
         {/* 模式切换标签 */}
-        {canUseProfessionalMode && (
-          <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-4">
+          {onShowGallery && (
             <button
-              onClick={() => onModeChange('normal')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                currentMode === 'normal'
-                  ? 'bg-gradient-to-r from-purple-500 to-blue-600 text-white shadow-md'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
+              onClick={onShowGallery}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-lg hover:from-orange-600 hover:to-pink-600 transition-all duration-200 shadow-md font-medium"
             >
-              <Sparkles size={18} />
-              普通模式
+              <ImageIcon size={18} />
+              浏览画廊
             </button>
+          )}
+          <button
+            onClick={() => onModeChange('normal')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+              currentMode === 'normal'
+                ? 'bg-gradient-to-r from-purple-500 to-blue-600 text-white shadow-md'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            <Sparkles size={18} />
+            普通模式
+          </button>
+          {canUseProfessionalMode && (
             <button
               onClick={() => onModeChange('professional')}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
@@ -72,8 +83,8 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
               <Wrench size={18} />
               专业模式
             </button>
-          </div>
-        )}
+          )}
+        </div>
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
