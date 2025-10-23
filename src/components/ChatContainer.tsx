@@ -42,8 +42,9 @@ export const ChatContainer: React.FC<ChatContainerProps> = React.memo(({
             欢迎您来到uralili设计网站
           </h2>
           <p className="text-gray-600 leading-relaxed">
-            Start a conversation with Gemini 2.5 Flash. You can send text messages, 
-            upload images for analysis, or ask questions about anything.
+            在这里你可以发挥无限的创作能力只需要告诉我你的产品
+          风格，元素工艺，无需任何操作一键生成效果，解放新生产力，
+                  --（承接定制需求wx：S2514088671）--
           </p>
         </div>
       </div>
