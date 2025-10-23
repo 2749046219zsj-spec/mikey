@@ -39,7 +39,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = React.memo(({
             <Bot size={24} className="text-white" />
           </div>
           <h2 className="text-2xl font-semibold text-gray-800 mb-2">
-            Welcome to Gemini AI
+            欢迎您来到uralili设计网站
           </h2>
           <p className="text-gray-600 leading-relaxed">
             Start a conversation with Gemini 2.5 Flash. You can send text messages, 
