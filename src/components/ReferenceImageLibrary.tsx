@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, ChevronRight, Loader2, Upload, Link as LinkIcon, HardDrive, X, Check, Trash2 } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Loader2, Upload, Link as LinkIcon, HardDrive, X, Check, Trash2, Download, Square, CheckSquare } from 'lucide-react';
 import { PublicReferenceImageService, ProductWithImages, PublicReferenceImage } from '../services/publicReferenceImageService';
 import { ReferenceImageService } from '../services/referenceImageService';
 import type { ReferenceImage } from '../types/referenceImage';
 import { useAuth } from '../contexts/AuthContext';
+import { ImageDownloadMenu } from './ImageDownloadMenu';
 
 interface ReferenceImageLibraryProps {
   onBack: () => void;
@@ -429,14 +430,30 @@ export default function ReferenceImageLibrary({ onBack, onSelectImages }: Refere
                                   e.stopPropagation();
                                   toggleImageSelection(image.image_url);
                                 }}
-                                className={`absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center transition-all ${
+                                className={`absolute top-1 left-1 w-5 h-5 rounded flex items-center justify-center transition-all ${
                                   isSelected
                                     ? 'bg-blue-600 text-white'
-                                    : 'bg-white border-2 border-gray-300 hover:border-blue-600'
+                                    : 'bg-black/50 hover:bg-black/70 text-white'
                                 }`}
                               >
-                                {isSelected && <Check className="w-4 h-4" />}
+                                {isSelected ? (
+                                  <CheckSquare size={12} className="text-white" />
+                                ) : (
+                                  <Square size={12} />
+                                )}
                               </button>
+
+                              <div
+                                className="absolute top-1 right-1"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <div className="scale-75">
+                                  <ImageDownloadMenu
+                                    imageUrl={image.image_url}
+                                    onSaveSuccess={() => {}}
+                                  />
+                                </div>
+                              </div>
                             </div>
                           );
                         })}
@@ -498,24 +515,28 @@ export default function ReferenceImageLibrary({ onBack, onSelectImages }: Refere
 
                         <button
                           onClick={() => toggleImageSelection(image.image_url)}
-                          className={`absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center transition-all ${
+                          className={`absolute top-2 left-2 w-6 h-6 rounded flex items-center justify-center transition-all ${
                             isSelected
                               ? 'bg-blue-600 text-white'
-                              : 'bg-white border-2 border-gray-300 opacity-0 group-hover:opacity-100'
+                              : 'bg-black/50 hover:bg-black/70 text-white'
                           }`}
                         >
-                          {isSelected && <Check className="w-4 h-4" />}
+                          {isSelected ? (
+                            <CheckSquare size={14} className="text-white" />
+                          ) : (
+                            <Square size={14} />
+                          )}
                         </button>
 
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeletePrivateImage(image);
-                          }}
-                          className="absolute top-2 left-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                        <div
+                          className="absolute top-2 right-2"
+                          onClick={(e) => e.stopPropagation()}
                         >
-                          <Trash2 className="w-3 h-3 text-white" />
-                        </button>
+                          <ImageDownloadMenu
+                            imageUrl={image.image_url}
+                            onSaveSuccess={() => {}}
+                          />
+                        </div>
 
                         <div className="p-2 bg-white">
                           <p className="text-xs text-gray-600 truncate">{image.file_name}</p>
