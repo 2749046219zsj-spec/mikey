@@ -6,6 +6,7 @@ import { ReferenceImageService } from '../services/referenceImageService';
 import { PublicReferenceImageService, type ProductWithImages } from '../services/publicReferenceImageService';
 import type { ReferenceImage } from '../types/referenceImage';
 import { useAuth } from '../contexts/AuthContext';
+import { useReferenceImageStore } from '../stores/referenceImageStore';
 
 export const ImageSelector: React.FC = () => {
   const {
@@ -32,6 +33,7 @@ export const ImageSelector: React.FC = () => {
 
   const { user } = useAuth();
   const { images } = useImageGallery();
+  const { selectedImages: referenceLibraryImages } = useReferenceImageStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadAreaRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -41,6 +43,7 @@ export const ImageSelector: React.FC = () => {
   const [publicProducts, setPublicProducts] = useState<ProductWithImages[]>([]);
   const [loadingPublicProducts, setLoadingPublicProducts] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [hasLoadedReferenceImages, setHasLoadedReferenceImages] = useState(false);
 
   const isAdvancedMode = onConfirmMultiple !== null;
 
@@ -99,6 +102,37 @@ export const ImageSelector: React.FC = () => {
 
     loadPublicProducts();
   }, [isOpen, databaseTab]);
+
+  useEffect(() => {
+    const loadReferenceLibraryImages = async () => {
+      if (isOpen && isAdvancedMode && mode === 'unified' && !hasLoadedReferenceImages && referenceLibraryImages.length > 0) {
+        console.log('Auto-loading reference library images:', referenceLibraryImages.length);
+
+        for (const refImage of referenceLibraryImages) {
+          try {
+            const response = await fetch(refImage.url, {
+              mode: 'cors',
+              credentials: 'omit'
+            });
+            const blob = await response.blob();
+            const fileName = refImage.fileName || 'reference_image.jpg';
+            const file = new File([blob], fileName, { type: blob.type || 'image/jpeg' });
+            addImageToUnified(file);
+          } catch (error) {
+            console.error('Failed to load reference image:', refImage.url, error);
+          }
+        }
+
+        setHasLoadedReferenceImages(true);
+      }
+    };
+
+    if (isOpen) {
+      loadReferenceLibraryImages();
+    } else {
+      setHasLoadedReferenceImages(false);
+    }
+  }, [isOpen, isAdvancedMode, mode, referenceLibraryImages, hasLoadedReferenceImages, addImageToUnified]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
