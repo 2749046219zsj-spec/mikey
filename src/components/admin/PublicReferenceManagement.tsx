@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Loader2, Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Plus, Edit2, Trash2, Loader2, Upload, X, Image as ImageIcon, List } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import type { PublicReferenceProduct, PublicReferenceImage } from '../../services/publicReferenceImageService';
 import type { ProductCategory } from '../../services/productService';
 import { productService } from '../../services/productService';
+import ProductSpecificationManager from './ProductSpecificationManager';
 
 export default function PublicReferenceManagement() {
   const [products, setProducts] = useState<PublicReferenceProduct[]>([]);
@@ -13,6 +14,7 @@ export default function PublicReferenceManagement() {
   const [editingProduct, setEditingProduct] = useState<PublicReferenceProduct | null>(null);
   const [productImages, setProductImages] = useState<Record<string, PublicReferenceImage[]>>({});
   const [expandedProduct, setExpandedProduct] = useState<string | null>(null);
+  const [showSpecManager, setShowSpecManager] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -403,6 +405,29 @@ export default function PublicReferenceManagement() {
 
             {expandedProduct === product.id && (
               <div className="p-4 border-t border-gray-200 bg-gray-50">
+                <div className="flex gap-2 mb-4">
+                  <button
+                    onClick={() => setShowSpecManager(showSpecManager === product.id ? null : product.id)}
+                    className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg ${
+                      showSpecManager === product.id
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    <List className="w-4 h-4" />
+                    {showSpecManager === product.id ? '关闭规格管理' : '管理规格'}
+                  </button>
+                </div>
+
+                {showSpecManager === product.id && (
+                  <div className="mb-4 bg-white rounded-lg p-4 border border-gray-200">
+                    <ProductSpecificationManager
+                      productId={product.id}
+                      onClose={() => setShowSpecManager(null)}
+                    />
+                  </div>
+                )}
+
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     上传图片

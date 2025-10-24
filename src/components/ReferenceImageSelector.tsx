@@ -3,6 +3,7 @@ import { ArrowLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { PublicReferenceImageService, ProductWithImages, PublicReferenceImage } from '../services/publicReferenceImageService';
 import { ReferenceImageService } from '../services/referenceImageService';
 import type { ReferenceImage } from '../types/referenceImage';
+import ProductSpecifications from './ProductSpecifications';
 
 interface ReferenceImageSelectorProps {
   onClose: () => void;
@@ -208,15 +209,21 @@ export default function ReferenceImageSelector({ onClose, onSelect, userId }: Re
                     </div>
                   </div>
 
-                  <div className="lg:w-3/4">
+                  <div className="lg:w-3/4 space-y-4">
                     {getCurrentImage() && (
-                      <div className="space-y-4">
+                      <>
                         <div className="bg-gray-50 rounded-lg p-4">
                           <h3 className="font-semibold text-lg text-gray-900 mb-1">
                             {selectedProduct.title}
                           </h3>
                           <p className="text-sm text-gray-500">货号: {selectedProduct.product_code}</p>
+                          {selectedProduct.description && (
+                            <p className="text-sm text-gray-600 mt-2">{selectedProduct.description}</p>
+                          )}
                         </div>
+
+                        <ProductSpecifications productId={selectedProduct.id} />
+
                         <div className="relative bg-gray-100 rounded-lg overflow-hidden">
                           <img
                             src={getCurrentImage()!.image_url}
@@ -235,7 +242,7 @@ export default function ReferenceImageSelector({ onClose, onSelect, userId }: Re
                             选择此图片
                           </button>
                         </div>
-                      </div>
+                      </>
                     )}
                   </div>
                 </div>
