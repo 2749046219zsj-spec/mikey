@@ -10,6 +10,7 @@ import { useAuth } from '../contexts/AuthContext';
 export const ImageGallery: React.FC = () => {
   const {
     images,
+    getImageMetadata,
     selectedIndex,
     isVisible,
     isKeyboardActive,
@@ -309,10 +310,18 @@ export const ImageGallery: React.FC = () => {
     setLikingImages(prev => new Set(prev).add(index));
 
     try {
+      const metadata = getImageMetadata(imageUrl);
       const result = await GalleryService.uploadToGallery(
         user.id,
         user.username || '匿名用户',
-        imageUrl
+        imageUrl,
+        metadata?.prompt,
+        metadata ? {
+          modelName: metadata.modelName,
+          stylePreset: metadata.stylePreset,
+          imageCount: metadata.imageCount,
+          referenceImages: metadata.referenceImages
+        } : undefined
       );
 
       if (result.success) {

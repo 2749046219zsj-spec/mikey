@@ -35,7 +35,7 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
   const [currentMode, setCurrentMode] = useState<AppMode>('normal');
   const [hasOpenedReferenceLibrary, setHasOpenedReferenceLibrary] = useState(false);
   const { addImageToUnified, selectedImages: referenceImages, openAdvancedSelector, removeImageFromUnified } = useImageSelector();
-  const { selectedImages: selectedReferenceImages } = useReferenceImageStore();
+  const { selectedImages: selectedReferenceImages, addImage: addReferenceImage } = useReferenceImageStore();
 
   useEffect(() => {
     if (shouldEnterCreation && user) {
@@ -303,6 +303,39 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
     }
   };
 
+  const handleOpenProfessionalFromGallery = (config: {
+    mode: 'remake' | 'reference';
+    prompt?: string;
+    modelName?: string;
+    generationParams?: Record<string, any>;
+    referenceImage?: string;
+  }) => {
+    if (!user) {
+      setShowLoginPrompt(true);
+      return;
+    }
+
+    setShowGallery(false);
+    setCurrentMode('professional');
+
+    if (config.mode === 'remake' && config.prompt) {
+      setInputText(config.prompt);
+      if (config.generationParams?.stylePreset) {
+        setSelectedItems(prev => ({
+          ...prev,
+          styles: [config.generationParams.stylePreset]
+        }));
+      }
+    } else if (config.mode === 'reference' && config.referenceImage) {
+      addReferenceImage({
+        id: `gallery-${Date.now()}`,
+        url: config.referenceImage,
+        fileName: 'gallery-image.jpg',
+        source: 'gallery'
+      });
+    }
+  };
+
   const handleLoginPromptLogin = () => {
     setShowLoginPrompt(false);
     onShowAuth?.('login');
@@ -335,7 +368,7 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
               </div>
             </div>
           </div>
-          <PublicGallery />
+          <PublicGallery onOpenProfessional={handleOpenProfessionalFromGallery} />
           <ImageModal />
           <LoginPromptModal
             isOpen={showLoginPrompt}

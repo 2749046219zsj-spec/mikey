@@ -1,12 +1,23 @@
 import { supabase } from '../lib/supabase';
 import { GalleryImage, GallerySortBy } from '../types/gallery';
 
+export interface GenerationParams {
+  modelName?: string;
+  stylePreset?: string;
+  imageCount?: number;
+  productId?: string;
+  craftId?: string;
+  referenceImages?: string[];
+  [key: string]: any;
+}
+
 export class GalleryService {
   static async uploadToGallery(
     userId: string,
     username: string,
     imageUrl: string,
-    prompt?: string
+    prompt?: string,
+    generationParams?: GenerationParams
   ): Promise<{ success: boolean; error?: string }> {
     try {
       const { error } = await supabase
@@ -16,6 +27,8 @@ export class GalleryService {
           username,
           image_url: imageUrl,
           prompt: prompt || null,
+          model_name: generationParams?.modelName || null,
+          generation_params: generationParams || {},
         });
 
       if (error) throw error;
@@ -176,6 +189,49 @@ export class GalleryService {
     } catch (error) {
       console.error('Failed to check if image in gallery:', error);
       return false;
+    }
+  }
+
+  static async logGalleryUsage(
+    galleryId: string,
+    userId: string,
+    actionType: 'remake' | 'use_as_reference'
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { error } = await supabase
+        .from('gallery_usage_logs')
+        .insert({
+          gallery_id: galleryId,
+          user_id: userId,
+          action_type: actionType,
+        });
+
+      if (error) throw error;
+
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to log gallery usage:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : '记录失败',
+      };
+    }
+  }
+
+  static async getGalleryImageById(galleryId: string): Promise<GalleryImage | null> {
+    try {
+      const { data, error } = await supabase
+        .from('public_gallery')
+        .select('*')
+        .eq('id', galleryId)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      return data;
+    } catch (error) {
+      console.error('Failed to fetch gallery image:', error);
+      return null;
     }
   }
 }

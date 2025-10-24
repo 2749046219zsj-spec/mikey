@@ -3,17 +3,27 @@ import { Sparkles, TrendingUp, Clock, Image as ImageIcon } from 'lucide-react';
 import { GalleryImage, GallerySortBy } from '../types/gallery';
 import { GalleryService } from '../services/galleryService';
 import { GalleryImageCard } from './GalleryImageCard';
+import { GalleryDetailModal } from './GalleryDetailModal';
 import { useAuth } from '../contexts/AuthContext';
-import { useImageModal } from '../hooks/useImageModal';
 
-export const PublicGallery: React.FC = () => {
+interface PublicGalleryProps {
+  onOpenProfessional?: (config: {
+    mode: 'remake' | 'reference';
+    prompt?: string;
+    modelName?: string;
+    generationParams?: Record<string, any>;
+    referenceImage?: string;
+  }) => void;
+}
+
+export const PublicGallery: React.FC<PublicGalleryProps> = ({ onOpenProfessional }) => {
   const { user } = useAuth();
-  const { openModal } = useImageModal();
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [sortBy, setSortBy] = useState<GallerySortBy>('latest');
   const [isLoading, setIsLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
+  const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
 
   const loadImages = async (reset: boolean = false) => {
     if (!hasMore && !reset) return;
@@ -83,6 +93,47 @@ export const PublicGallery: React.FC = () => {
 
   const handleDelete = (imageId: string) => {
     setImages((prev) => prev.filter((img) => img.id !== imageId));
+  };
+
+  const handleRemake = async (image: GalleryImage) => {
+    if (!user) {
+      alert('请先登录');
+      return;
+    }
+
+    await GalleryService.logGalleryUsage(image.id, user.id, 'remake');
+
+    if (onOpenProfessional) {
+      setSelectedImage(null);
+      onOpenProfessional({
+        mode: 'remake',
+        prompt: image.prompt || '',
+        modelName: image.model_name || undefined,
+        generationParams: image.generation_params
+      });
+    } else {
+      alert('专业模式功能正在加载中...');
+    }
+  };
+
+  const handleUseAsReference = async (image: GalleryImage) => {
+    if (!user) {
+      alert('请先登录');
+      return;
+    }
+
+    await GalleryService.logGalleryUsage(image.id, user.id, 'use_as_reference');
+
+    if (onOpenProfessional) {
+      setSelectedImage(null);
+      onOpenProfessional({
+        mode: 'reference',
+        referenceImage: image.image_url,
+        modelName: image.model_name || undefined
+      });
+    } else {
+      alert('专业模式功能正在加载中...');
+    }
   };
 
   return (
@@ -155,7 +206,7 @@ export const PublicGallery: React.FC = () => {
                 currentUserId={user?.id}
                 onLikeToggle={handleLikeToggle}
                 onDelete={handleDelete}
-                onClick={() => openModal(image.image_url)}
+                onClick={() => setSelectedImage(image)}
               />
             ))}
           </div>
@@ -179,6 +230,16 @@ export const PublicGallery: React.FC = () => {
           </div>
         )}
       </div>
+
+      {selectedImage && (
+        <GalleryDetailModal
+          image={selectedImage}
+          currentUserId={user?.id}
+          onClose={() => setSelectedImage(null)}
+          onRemake={handleRemake}
+          onUseAsReference={handleUseAsReference}
+        />
+      )}
     </div>
   );
 };
