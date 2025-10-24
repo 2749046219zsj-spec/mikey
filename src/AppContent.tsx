@@ -364,21 +364,7 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
     setShowGallery(false);
     setCurrentMode('normal');
 
-    let finalPrompt = params.prompt;
-
-    if (params.product || params.style || params.craft) {
-      const parts = [];
-      if (params.product) parts.push(`产品: ${params.product}`);
-      if (params.style) parts.push(`风格: ${params.style}`);
-      if (params.craft) parts.push(`工艺: ${params.craft}`);
-      if (parts.length > 0) {
-        finalPrompt = `${parts.join(', ')}\n\n${params.prompt}`;
-      }
-    }
-
-    const images: File[] = [...params.uploadedImages];
-
-    sendMessage(finalPrompt, images);
+    sendMessage(params.prompt, params.uploadedImages);
   };
 
   return (

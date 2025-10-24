@@ -1,9 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { ChevronUp, X, Send, Upload, Image as ImageIcon } from 'lucide-react';
-import { ProductSelector } from './ProductSelector';
-import { CraftSelector } from './CraftSelector';
-import { StylePresetDropdown } from './StylePresetDropdown';
-import { ImageUpload } from './ImageUpload';
+import { X, Send, Image as ImageIcon, Upload } from 'lucide-react';
+import ReferenceImageLibrary from './ReferenceImageLibrary';
+import { useAuth } from '../contexts/AuthContext';
 
 interface GlobalInputPanelProps {
   isOpen: boolean;
@@ -16,10 +14,6 @@ interface GlobalInputPanelProps {
 
 export interface GenerationParams {
   prompt: string;
-  product: string;
-  style: string;
-  craft: string;
-  imageCount: number;
   uploadedImages: File[];
 }
 
@@ -31,17 +25,15 @@ export const GlobalInputPanel: React.FC<GlobalInputPanelProps> = ({
   initialStyle,
   initialReferenceImageUrl
 }) => {
+  const { user } = useAuth();
   const [prompt, setPrompt] = useState('');
-  const [selectedProduct, setSelectedProduct] = useState('perfume_bottle');
-  const [selectedStyle, setSelectedStyle] = useState('');
-  const [selectedCraft, setSelectedCraft] = useState('');
-  const [imageCount, setImageCount] = useState(3);
   const [uploadedImages, setUploadedImages] = useState<File[]>([]);
+  const [showReferenceLibrary, setShowReferenceLibrary] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setPrompt(initialPrompt || '');
-      setSelectedStyle(initialStyle || '');
 
       if (initialReferenceImageUrl) {
         fetch(initialReferenceImageUrl)
@@ -85,16 +77,13 @@ export const GlobalInputPanel: React.FC<GlobalInputPanelProps> = ({
 
     onSubmit({
       prompt,
-      product: selectedProduct,
-      style: selectedStyle,
-      craft: selectedCraft,
-      imageCount,
       uploadedImages
     });
 
     setPrompt('');
+    setUploadedImages([]);
     onClose();
-  }, [prompt, selectedProduct, selectedStyle, selectedCraft, imageCount, uploadedImages, onSubmit, onClose]);
+  }, [prompt, uploadedImages, onSubmit, onClose]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -103,11 +92,68 @@ export const GlobalInputPanel: React.FC<GlobalInputPanelProps> = ({
     }
   };
 
-  const handleImagesChange = useCallback((images: File[]) => {
-    setUploadedImages(images);
-  }, []);
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files).filter(file =>
+      file.type.startsWith('image/')
+    );
+
+    if (files.length > 0) {
+      setUploadedImages(prev => [...prev, ...files].slice(0, 5));
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []).filter(file =>
+      file.type.startsWith('image/')
+    );
+
+    if (files.length > 0) {
+      setUploadedImages(prev => [...prev, ...files].slice(0, 5));
+    }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setUploadedImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleReferenceLibrarySelect = (selectedImageUrls: string[]) => {
+    Promise.all(
+      selectedImageUrls.map(url =>
+        fetch(url)
+          .then(res => res.blob())
+          .then(blob => new File([blob], `reference-${Date.now()}.jpg`, { type: blob.type }))
+      )
+    ).then(files => {
+      setUploadedImages(prev => [...prev, ...files].slice(0, 5));
+    }).catch(console.error);
+
+    setShowReferenceLibrary(false);
+  };
 
   if (!isOpen) return null;
+
+  if (showReferenceLibrary && user) {
+    return (
+      <ReferenceImageLibrary
+        userId={user.id}
+        onBack={() => setShowReferenceLibrary(false)}
+        onSelectImages={handleReferenceLibrarySelect}
+      />
+    );
+  }
 
   return (
     <>
@@ -133,57 +179,77 @@ export const GlobalInputPanel: React.FC<GlobalInputPanelProps> = ({
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3">
-            <div className="flex flex-wrap gap-3 items-center animate-fade-in-up" style={{ animationDelay: '0.05s' }}>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-300">产品:</span>
-                <ProductSelector
-                  value={selectedProduct}
-                  onChange={setSelectedProduct}
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-300">风格:</span>
-                <StylePresetDropdown
-                  selectedStyle={selectedStyle}
-                  onStyleSelect={setSelectedStyle}
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-300">工艺:</span>
-                <CraftSelector
-                  selectedCraft={selectedCraft}
-                  onCraftSelect={setSelectedCraft}
-                />
-              </div>
-
-              <div className="flex items-center gap-2 bg-emerald-500/10 px-3 py-2 rounded-lg border border-emerald-500/30">
-                <span className="text-sm text-gray-300">款式数量:</span>
-                <input
-                  type="number"
-                  value={imageCount}
-                  onChange={e => setImageCount(Math.max(1, Math.min(9, Number(e.target.value))))}
-                  min={1}
-                  max={9}
-                  className="w-16 px-2 py-1 bg-slate-700 text-white rounded-lg border border-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-                <button
-                  onClick={() => setImageCount(prev => Math.min(9, prev + 1))}
-                  className="text-emerald-400 hover:text-emerald-300"
-                  aria-label="增加数量"
-                >
-                  ▲
-                </button>
-              </div>
+            <div className="flex items-center gap-3 animate-fade-in-up" style={{ animationDelay: '0.05s' }}>
+              <button
+                onClick={() => setShowReferenceLibrary(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-md font-medium"
+              >
+                <ImageIcon size={18} />
+                <span>参考图库</span>
+              </button>
             </div>
 
-            <div className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-              <ImageUpload
-                images={uploadedImages}
-                onImagesChange={handleImagesChange}
-                maxImages={5}
-              />
+            <div
+              className={`animate-fade-in-up border-2 border-dashed rounded-xl transition-all ${
+                isDragging
+                  ? 'border-orange-500 bg-orange-500/10'
+                  : 'border-slate-600 bg-slate-800/30'
+              }`}
+              style={{ animationDelay: '0.1s' }}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              {uploadedImages.length > 0 ? (
+                <div className="p-3">
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {uploadedImages.map((file, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={`上传 ${index + 1}`}
+                          className="w-20 h-20 object-cover rounded-lg border border-slate-600"
+                        />
+                        <button
+                          onClick={() => handleRemoveImage(index)}
+                          className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  {uploadedImages.length < 5 && (
+                    <label className="flex items-center justify-center gap-2 py-2 text-sm text-gray-400 hover:text-gray-300 cursor-pointer">
+                      <Upload size={16} />
+                      <span>继续添加 (最多5张)</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                        onChange={handleFileSelect}
+                      />
+                    </label>
+                  )}
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center py-8 cursor-pointer">
+                  <div className="w-12 h-12 bg-slate-700 rounded-full flex items-center justify-center mb-3">
+                    <Upload size={24} className="text-gray-400" />
+                  </div>
+                  <p className="text-sm text-gray-400">
+                    Click, drag images or Ctrl+V to paste
+                  </p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleFileSelect}
+                  />
+                </label>
+              )}
             </div>
 
             <div className="relative animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
