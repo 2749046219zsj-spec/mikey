@@ -11,8 +11,6 @@ import { ContactModal } from './components/ContactModal';
 import ReferenceImageLibrary from './components/ReferenceImageLibrary';
 import { PublicGallery } from './components/PublicGallery';
 import { LoginPromptModal } from './components/LoginPromptModal';
-import { GlobalInputPanel, GenerationParams } from './components/GlobalInputPanel';
-import { GlobalInputTrigger } from './components/GlobalInputTrigger';
 import { useChat } from './hooks/useChat';
 import { useWidgetChat } from './hooks/useWidgetChat';
 import { useAuth } from './contexts/AuthContext';
@@ -53,12 +51,6 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
   const [showPromptUpload, setShowPromptUpload] = useState(false);
   const [uploadedPrompts, setUploadedPrompts] = useState('');
   const [sentMessageIds, setSentMessageIds] = useState<Set<string>>(new Set());
-  const [showGlobalInput, setShowGlobalInput] = useState(false);
-  const [globalInputInitial, setGlobalInputInitial] = useState<{
-    prompt?: string;
-    style?: string;
-    referenceImageUrl?: string;
-  }>({});
 
   const checkAndDecrementDraws = React.useCallback(async () => {
     if (!user) return false;
@@ -341,26 +333,6 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
     onShowAuth?.('register');
   };
 
-  const handleGlobalInputSubmit = async (params: GenerationParams) => {
-    if (!user) {
-      setShowLoginPrompt(true);
-      return;
-    }
-
-    if (!canUseChat) {
-      setShowContactModal(true);
-      return;
-    }
-
-    const canProceed = await checkAndDecrementDraws();
-    if (!canProceed) return;
-
-    setShowGallery(false);
-    setCurrentMode('normal');
-
-    sendMessage(params.prompt, params.uploadedImages);
-  };
-
   return (
     <ErrorBoundary>
       {showGallery ? (
@@ -390,22 +362,6 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
             onClose={() => setShowLoginPrompt(false)}
             onLogin={handleLoginPromptLogin}
             onRegister={handleLoginPromptRegister}
-          />
-
-          <GlobalInputTrigger onClick={() => {
-            setGlobalInputInitial({});
-            setShowGlobalInput(true);
-          }} />
-          <GlobalInputPanel
-            isOpen={showGlobalInput}
-            onClose={() => {
-              setShowGlobalInput(false);
-              setGlobalInputInitial({});
-            }}
-            onSubmit={handleGlobalInputSubmit}
-            initialPrompt={globalInputInitial.prompt}
-            initialStyle={globalInputInitial.style}
-            initialReferenceImageUrl={globalInputInitial.referenceImageUrl}
           />
         </div>
       ) : (
