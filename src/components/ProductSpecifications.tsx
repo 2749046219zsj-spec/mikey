@@ -17,12 +17,16 @@ export default function ProductSpecifications({ productId }: ProductSpecificatio
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadSpecifications();
+    if (productId) {
+      loadSpecifications();
+    }
   }, [productId]);
 
   const loadSpecifications = async () => {
     setLoading(true);
     try {
+      console.log('[ProductSpecifications] Loading specs for product:', productId);
+
       const { data, error } = await supabase
         .from('product_specifications')
         .select('id, spec_name, spec_value, display_order')
@@ -31,13 +35,14 @@ export default function ProductSpecifications({ productId }: ProductSpecificatio
         .order('display_order', { ascending: true });
 
       if (error) {
-        console.error('Error loading specifications:', error);
+        console.error('[ProductSpecifications] Error loading specifications:', error);
         return;
       }
 
+      console.log('[ProductSpecifications] Loaded specifications:', data);
       setSpecifications(data || []);
     } catch (error) {
-      console.error('Failed to load specifications:', error);
+      console.error('[ProductSpecifications] Failed to load specifications:', error);
     } finally {
       setLoading(false);
     }
@@ -45,11 +50,17 @@ export default function ProductSpecifications({ productId }: ProductSpecificatio
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg p-4 shadow-sm">
+      <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+        <h4 className="text-sm font-semibold text-gray-700 mb-3">产品规格</h4>
         <div className="animate-pulse space-y-3">
-          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-          <div className="h-4 bg-gray-200 rounded w-full"></div>
-          <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+          <div className="flex gap-4">
+            <div className="h-3 bg-gray-200 rounded w-24"></div>
+            <div className="h-3 bg-gray-200 rounded flex-1"></div>
+          </div>
+          <div className="flex gap-4">
+            <div className="h-3 bg-gray-200 rounded w-24"></div>
+            <div className="h-3 bg-gray-200 rounded flex-1"></div>
+          </div>
         </div>
       </div>
     );
@@ -61,6 +72,9 @@ export default function ProductSpecifications({ productId }: ProductSpecificatio
 
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
+      <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+        <h4 className="text-sm font-semibold text-gray-800">产品规格</h4>
+      </div>
       <div className="divide-y divide-gray-200">
         {specifications.map((spec) => (
           <div key={spec.id} className="flex py-3 px-4 hover:bg-gray-50 transition-colors">
