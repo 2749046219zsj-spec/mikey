@@ -54,6 +54,11 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
   const [uploadedPrompts, setUploadedPrompts] = useState('');
   const [sentMessageIds, setSentMessageIds] = useState<Set<string>>(new Set());
   const [showGlobalInput, setShowGlobalInput] = useState(false);
+  const [globalInputInitial, setGlobalInputInitial] = useState<{
+    prompt?: string;
+    style?: string;
+    referenceImageUrl?: string;
+  }>({});
 
   const checkAndDecrementDraws = React.useCallback(async () => {
     if (!user) return false;
@@ -318,24 +323,17 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
       return;
     }
 
-    setShowGallery(false);
-    setCurrentMode('professional');
-
     if (config.mode === 'remake' && config.prompt) {
-      setInputText(config.prompt);
-      if (config.generationParams?.stylePreset) {
-        setSelectedItems(prev => ({
-          ...prev,
-          styles: [config.generationParams.stylePreset]
-        }));
-      }
-    } else if (config.mode === 'reference' && config.referenceImage) {
-      addReferenceImage({
-        id: `gallery-${Date.now()}`,
-        url: config.referenceImage,
-        fileName: 'gallery-image.jpg',
-        source: 'gallery'
+      setGlobalInputInitial({
+        prompt: config.prompt,
+        style: config.generationParams?.stylePreset || ''
       });
+      setShowGlobalInput(true);
+    } else if (config.mode === 'reference' && config.referenceImage) {
+      setGlobalInputInitial({
+        referenceImageUrl: config.referenceImage
+      });
+      setShowGlobalInput(true);
     }
   };
 
@@ -414,11 +412,20 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
             onRegister={handleLoginPromptRegister}
           />
 
-          <GlobalInputTrigger onClick={() => setShowGlobalInput(true)} />
+          <GlobalInputTrigger onClick={() => {
+            setGlobalInputInitial({});
+            setShowGlobalInput(true);
+          }} />
           <GlobalInputPanel
             isOpen={showGlobalInput}
-            onClose={() => setShowGlobalInput(false)}
+            onClose={() => {
+              setShowGlobalInput(false);
+              setGlobalInputInitial({});
+            }}
             onSubmit={handleGlobalInputSubmit}
+            initialPrompt={globalInputInitial.prompt}
+            initialStyle={globalInputInitial.style}
+            initialReferenceImageUrl={globalInputInitial.referenceImageUrl}
           />
         </div>
       ) : (
