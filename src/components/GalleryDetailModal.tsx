@@ -128,19 +128,15 @@ export const GalleryDetailModal: React.FC<GalleryDetailModalProps> = ({
                         alert('请先登录');
                         return;
                       }
-                      if (!hasPrompt) {
-                        alert('该作品未公开提示词');
-                        return;
-                      }
                       onRemake(image);
                     }}
-                    disabled={!hasPrompt}
+                    disabled={!currentUserId}
                     className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-all ${
-                      hasPrompt
+                      currentUserId
                         ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white hover:shadow-lg hover:shadow-orange-200 active:scale-95'
                         : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     }`}
-                    title={hasPrompt ? '使用相同提示词生成新图片' : '作者未公开提示词'}
+                    title={currentUserId ? '使用相同提示词生成新图片' : '请先登录'}
                   >
                     <Palette size={18} />
                     <span>做同款</span>
@@ -154,30 +150,26 @@ export const GalleryDetailModal: React.FC<GalleryDetailModalProps> = ({
                       }
                       onUseAsReference(image);
                     }}
-                    className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium bg-blue-500 text-white hover:bg-blue-600 hover:shadow-lg active:scale-95 transition-all"
-                    title="以此图为参考创作新作品"
+                    disabled={!currentUserId}
+                    className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-all ${
+                      currentUserId
+                        ? 'bg-blue-500 text-white hover:bg-blue-600 hover:shadow-lg active:scale-95'
+                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    }`}
+                    title={currentUserId ? '以此图为参考创作新作品' : '请先登录'}
                   >
                     <ImageIcon size={18} />
                     <span>用作参考图</span>
                   </button>
                 </div>
-                {!hasPrompt && (
+                {(image.use_as_reference_count > 0 || image.remake_count > 0) && (
                   <p className="text-xs text-gray-500 mt-3 text-center">
-                    作者未公开提示词，无法使用"做同款"功能
+                    {image.remake_count > 0 && `${image.remake_count} 人做了同款`}
+                    {image.remake_count > 0 && image.use_as_reference_count > 0 && ' · '}
+                    {image.use_as_reference_count > 0 && `${image.use_as_reference_count} 人用作参考`}
                   </p>
                 )}
               </div>
-
-              {(image.remake_count > 0 || image.use_as_reference_count > 0) && (
-                <div className="text-xs text-gray-500 text-center space-y-1">
-                  {image.remake_count > 0 && (
-                    <p>{image.remake_count} 人做了同款</p>
-                  )}
-                  {image.use_as_reference_count > 0 && (
-                    <p>{image.use_as_reference_count} 人用作参考</p>
-                  )}
-                </div>
-              )}
             </div>
           </div>
         </div>
