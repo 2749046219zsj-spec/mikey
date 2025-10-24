@@ -118,9 +118,9 @@ export const FloatingAIPanel: React.FC<FloatingAIPanelProps> = ({
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-[60] animate-slide-up">
+    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[60] animate-slide-up">
       <div className={`bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-slate-700 transition-all ${
-        isMinimized ? 'w-80' : 'w-96'
+        isMinimized ? 'w-80' : 'w-[600px]'
       }`}>
         <div className="flex items-center justify-between p-4 border-b border-slate-700">
           <h2 className="text-base font-semibold text-white">AI 图片生成配置</h2>
@@ -147,11 +147,11 @@ export const FloatingAIPanel: React.FC<FloatingAIPanelProps> = ({
         </div>
 
         {!isMinimized && (
-          <div className="p-4 space-y-3 max-h-[calc(100vh-200px)] overflow-y-auto">
+          <div className="p-4 space-y-3 max-h-[400px] overflow-y-auto">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowReferenceLibrary(true)}
-                className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-md font-medium"
+                className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-md font-medium"
               >
                 <ImageIcon size={16} />
                 <span>参考图库</span>
@@ -170,13 +170,13 @@ export const FloatingAIPanel: React.FC<FloatingAIPanelProps> = ({
             >
               {uploadedImages.length > 0 ? (
                 <div className="p-3">
-                  <div className="flex flex-wrap gap-2 mb-2">
+                  <div className="flex flex-wrap gap-3 mb-2">
                     {uploadedImages.map((file, index) => (
                       <div key={index} className="relative group">
                         <img
                           src={URL.createObjectURL(file)}
                           alt={`上传 ${index + 1}`}
-                          className="w-16 h-16 object-cover rounded-lg border border-slate-600"
+                          className="w-20 h-20 object-cover rounded-lg border border-slate-600"
                         />
                         <button
                           onClick={() => handleRemoveImage(index)}
@@ -202,12 +202,15 @@ export const FloatingAIPanel: React.FC<FloatingAIPanelProps> = ({
                   )}
                 </div>
               ) : (
-                <label className="flex flex-col items-center justify-center py-6 cursor-pointer">
-                  <div className="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center mb-2">
-                    <Upload size={20} className="text-gray-400" />
+                <label className="flex flex-col items-center justify-center py-8 cursor-pointer">
+                  <div className="w-12 h-12 bg-slate-700 rounded-full flex items-center justify-center mb-3">
+                    <Upload size={24} className="text-gray-400" />
                   </div>
-                  <p className="text-xs text-gray-400">
-                    Click, drag or Ctrl+V
+                  <p className="text-sm text-gray-300 font-medium mb-1">
+                    点击、拖拽或 Ctrl+V 上传图片
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    最多支持5张图片
                   </p>
                   <input
                     type="file"
@@ -226,7 +229,7 @@ export const FloatingAIPanel: React.FC<FloatingAIPanelProps> = ({
                 onChange={e => setPrompt(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="输入消息或选择上方工具..."
-                className="w-full px-3 py-2 pr-12 bg-slate-800/80 backdrop-blur-sm border border-slate-600 rounded-xl text-white text-sm placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                className="w-full px-4 py-3 pr-14 bg-slate-800/80 backdrop-blur-sm border border-slate-600 rounded-xl text-white text-sm placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all"
                 rows={3}
               />
 
