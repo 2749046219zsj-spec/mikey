@@ -9,6 +9,7 @@ interface ChatMessageProps {
   message: Message;
   onRetryToInput?: (messageId: string, onEdit: (text: string, images: File[]) => void) => void;
   onSetEditContent?: (text: string, images: File[]) => void;
+  userPrompt?: string;
 }
 
 // 检测文本中的图片链接
@@ -58,11 +59,11 @@ const extractImageUrls = (text: string): { text: string; images: string[] } => {
 
   return { text: cleanText, images };
 };
-export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onRetryToInput, onSetEditContent }) => {
+export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onRetryToInput, onSetEditContent, userPrompt }) => {
   const isUser = message.type === 'user';
   const { openModal } = useImageModal();
   const { addImages } = useImageGallery();
-  
+
   const { text: cleanText, images: extractedImages } = React.useMemo(() => {
     return isUser ?
       { text: message.content, images: [] } :
@@ -71,17 +72,22 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onRetryToInpu
 
   const allImages = [...(message.images || []), ...extractedImages];
 
-  // Add AI generated images to gallery
+  // Add AI generated images to gallery with prompt metadata
   React.useEffect(() => {
     if (!isUser && extractedImages.length > 0) {
       // 使用 setTimeout 来避免在渲染过程中更新状态
       const timeoutId = setTimeout(() => {
-        addImages(extractedImages);
+        const imagesWithMetadata = extractedImages.map(url => ({
+          url,
+          prompt: userPrompt,
+          modelName: message.model
+        }));
+        addImages(imagesWithMetadata);
       }, 0);
 
       return () => clearTimeout(timeoutId);
     }
-  }, [isUser, extractedImages, addImages]);
+  }, [isUser, extractedImages, addImages, userPrompt, message.model]);
   
   const downloadImage = async (imageUrl: string, index: number) => {
     try {

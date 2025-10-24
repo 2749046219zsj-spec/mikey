@@ -54,12 +54,18 @@ export const ChatContainer: React.FC<ChatContainerProps> = React.memo(({
   return (
     <div className="flex-1 overflow-y-auto chat-scrollbar">
       <div className="max-w-4xl mx-auto px-4 py-6">
-        {messages.map((message) => (
+        {messages.map((message, index) => {
+          const previousUserMessage = message.type === 'ai' && index > 0 && messages[index - 1].type === 'user'
+            ? messages[index - 1]
+            : null;
+
+          return (
           <div key={message.id}>
             <ChatMessage
               message={message}
               onRetryToInput={onRetryToInput}
               onSetEditContent={onSetEditContent}
+              userPrompt={previousUserMessage?.content}
             />
             {isProfessionalMode && message.type === 'ai' && !message.hasError && onSendPromptsToGenerate && (
               <div className="max-w-[80%] ml-11">
@@ -72,7 +78,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = React.memo(({
               </div>
             )}
           </div>
-        ))}
+        );
+        })}
         
         {isLoading && (
           <div className="flex gap-3 mb-6">
