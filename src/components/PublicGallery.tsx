@@ -4,6 +4,7 @@ import { GalleryImage, GallerySortBy } from '../types/gallery';
 import { GalleryService } from '../services/galleryService';
 import { GalleryImageCard } from './GalleryImageCard';
 import { GalleryDetailModal } from './GalleryDetailModal';
+import { FloatingAIPanel } from './FloatingAIPanel';
 import { useAuth } from '../contexts/AuthContext';
 
 interface PublicGalleryProps {
@@ -18,6 +19,9 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
+  const [showFloatingPanel, setShowFloatingPanel] = useState(false);
+  const [floatingPrompt, setFloatingPrompt] = useState<string>('');
+  const [floatingImages, setFloatingImages] = useState<File[]>([]);
 
   const loadImages = async (reset: boolean = false) => {
     if (!hasMore && !reset) return;
@@ -89,23 +93,43 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
     setImages((prev) => prev.filter((img) => img.id !== imageId));
   };
 
-  const handleGallerySubmit = async (prompt: string, images: File[]) => {
+  const handleRemake = async (image: GalleryImage) => {
     if (!user) {
       alert('请先登录');
       return;
     }
 
-    if (selectedImage) {
-      await GalleryService.logGalleryUsage(
-        selectedImage.id,
-        user.id,
-        images.length > 0 ? 'use_as_reference' : 'remake'
-      );
+    await GalleryService.logGalleryUsage(image.id, user.id, 'remake');
+    setFloatingPrompt(image.prompt || '');
+    setShowFloatingPanel(true);
+  };
+
+  const handleUseAsReference = async (image: GalleryImage) => {
+    if (!user) {
+      alert('请先登录');
+      return;
     }
 
+    await GalleryService.logGalleryUsage(image.id, user.id, 'use_as_reference');
+
+    try {
+      const response = await fetch(image.image_url);
+      const blob = await response.blob();
+      const file = new File([blob], 'reference.jpg', { type: blob.type });
+      setFloatingImages([file]);
+      setShowFloatingPanel(true);
+    } catch (error) {
+      console.error('Failed to load reference image:', error);
+    }
+  };
+
+  const handleFloatingPanelSubmit = async (prompt: string, images: File[]) => {
     if (onSubmitGeneration) {
       onSubmitGeneration(prompt, images);
     }
+    setShowFloatingPanel(false);
+    setFloatingPrompt('');
+    setFloatingImages([]);
   };
 
   return (
@@ -208,9 +232,22 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
           image={selectedImage}
           currentUserId={user?.id}
           onClose={() => setSelectedImage(null)}
-          onSubmit={handleGallerySubmit}
+          onRemake={handleRemake}
+          onUseAsReference={handleUseAsReference}
         />
       )}
+
+      <FloatingAIPanel
+        isOpen={showFloatingPanel}
+        onClose={() => {
+          setShowFloatingPanel(false);
+          setFloatingPrompt('');
+          setFloatingImages([]);
+        }}
+        onSubmit={handleFloatingPanelSubmit}
+        initialPrompt={floatingPrompt}
+        initialImages={floatingImages}
+      />
     </div>
   );
 };
