@@ -118,7 +118,7 @@ export const FloatingAIPanel: React.FC<FloatingAIPanelProps> = ({
   }
 
   return (
-    <div className="fixed bottom-4 left-1/2 z-[60] animate-slide-up-center max-w-[90vw]">
+    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[60] max-w-[90vw]">
       <div className={`bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-slate-700 transition-all ${
         isMinimized ? 'w-80' : 'w-[800px]'
       }`}>
