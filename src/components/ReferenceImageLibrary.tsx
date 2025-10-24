@@ -5,6 +5,7 @@ import { ReferenceImageService } from '../services/referenceImageService';
 import type { ReferenceImage } from '../types/referenceImage';
 import { useAuth } from '../contexts/AuthContext';
 import { useReferenceImageStore } from '../stores/referenceImageStore';
+import ProductSpecifications from './ProductSpecifications';
 
 interface ReferenceImageLibraryProps {
   onBack: () => void;
@@ -458,8 +459,11 @@ export default function ReferenceImageLibrary({ onBack, onSelectImages }: Refere
                     )}
 
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                      <div className="space-y-2">
-                        <h3 className="font-medium text-gray-700 mb-3">缩略图列表</h3>
+                      <div className="space-y-4">
+                        <h3 className="font-medium text-gray-700">缩略图列表</h3>
+
+                        <ProductSpecifications productId={selectedProduct.id} />
+
                         {selectedProduct.images.map((image, index) => {
                           const imageSelected = isImageSelected(image.image_url);
                           return (
