@@ -7,16 +7,10 @@ import { GalleryDetailModal } from './GalleryDetailModal';
 import { useAuth } from '../contexts/AuthContext';
 
 interface PublicGalleryProps {
-  onOpenProfessional?: (config: {
-    mode: 'remake' | 'reference';
-    prompt?: string;
-    modelName?: string;
-    generationParams?: Record<string, any>;
-    referenceImage?: string;
-  }) => void;
+  onSubmitGeneration?: (prompt: string, images: File[]) => void;
 }
 
-export const PublicGallery: React.FC<PublicGalleryProps> = ({ onOpenProfessional }) => {
+export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration }) => {
   const { user } = useAuth();
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [sortBy, setSortBy] = useState<GallerySortBy>('latest');
@@ -95,44 +89,22 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onOpenProfessional
     setImages((prev) => prev.filter((img) => img.id !== imageId));
   };
 
-  const handleRemake = async (image: GalleryImage) => {
+  const handleGallerySubmit = async (prompt: string, images: File[]) => {
     if (!user) {
       alert('请先登录');
       return;
     }
 
-    await GalleryService.logGalleryUsage(image.id, user.id, 'remake');
-
-    if (onOpenProfessional) {
-      setSelectedImage(null);
-      onOpenProfessional({
-        mode: 'remake',
-        prompt: image.prompt || '',
-        modelName: image.model_name || undefined,
-        generationParams: image.generation_params
-      });
-    } else {
-      alert('专业模式功能正在加载中...');
-    }
-  };
-
-  const handleUseAsReference = async (image: GalleryImage) => {
-    if (!user) {
-      alert('请先登录');
-      return;
+    if (selectedImage) {
+      await GalleryService.logGalleryUsage(
+        selectedImage.id,
+        user.id,
+        images.length > 0 ? 'use_as_reference' : 'remake'
+      );
     }
 
-    await GalleryService.logGalleryUsage(image.id, user.id, 'use_as_reference');
-
-    if (onOpenProfessional) {
-      setSelectedImage(null);
-      onOpenProfessional({
-        mode: 'reference',
-        referenceImage: image.image_url,
-        modelName: image.model_name || undefined
-      });
-    } else {
-      alert('专业模式功能正在加载中...');
+    if (onSubmitGeneration) {
+      onSubmitGeneration(prompt, images);
     }
   };
 
@@ -236,8 +208,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onOpenProfessional
           image={selectedImage}
           currentUserId={user?.id}
           onClose={() => setSelectedImage(null)}
-          onRemake={handleRemake}
-          onUseAsReference={handleUseAsReference}
+          onSubmit={handleGallerySubmit}
         />
       )}
     </div>

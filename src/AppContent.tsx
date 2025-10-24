@@ -311,30 +311,24 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
     }
   };
 
-  const handleOpenProfessionalFromGallery = (config: {
-    mode: 'remake' | 'reference';
-    prompt?: string;
-    modelName?: string;
-    generationParams?: Record<string, any>;
-    referenceImage?: string;
-  }) => {
+  const handleGallerySubmit = async (prompt: string, images: File[]) => {
     if (!user) {
       setShowLoginPrompt(true);
       return;
     }
 
-    if (config.mode === 'remake' && config.prompt) {
-      setGlobalInputInitial({
-        prompt: config.prompt,
-        style: config.generationParams?.stylePreset || ''
-      });
-      setShowGlobalInput(true);
-    } else if (config.mode === 'reference' && config.referenceImage) {
-      setGlobalInputInitial({
-        referenceImageUrl: config.referenceImage
-      });
-      setShowGlobalInput(true);
+    if (!canUseChat) {
+      setShowContactModal(true);
+      return;
     }
+
+    const canProceed = await checkAndDecrementDraws();
+    if (!canProceed) return;
+
+    setShowGallery(false);
+    setCurrentMode('normal');
+
+    sendMessage(prompt, images);
   };
 
   const handleLoginPromptLogin = () => {
@@ -389,7 +383,7 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
               </div>
             </div>
           </div>
-          <PublicGallery onOpenProfessional={handleOpenProfessionalFromGallery} />
+          <PublicGallery onSubmitGeneration={handleGallerySubmit} />
           <ImageModal />
           <LoginPromptModal
             isOpen={showLoginPrompt}
