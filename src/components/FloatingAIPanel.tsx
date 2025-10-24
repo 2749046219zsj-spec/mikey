@@ -120,7 +120,7 @@ export const FloatingAIPanel: React.FC<FloatingAIPanelProps> = ({
   return (
     <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[60] animate-slide-up">
       <div className={`bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-slate-700 transition-all ${
-        isMinimized ? 'w-80' : 'w-[600px]'
+        isMinimized ? 'w-80' : 'w-[900px]'
       }`}>
         <div className="flex items-center justify-between p-4 border-b border-slate-700">
           <h2 className="text-base font-semibold text-white">AI 图片生成配置</h2>
@@ -147,36 +147,39 @@ export const FloatingAIPanel: React.FC<FloatingAIPanelProps> = ({
         </div>
 
         {!isMinimized && (
-          <div className="p-4 space-y-3 max-h-[400px] overflow-y-auto">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setShowReferenceLibrary(true)}
-                className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-md font-medium"
-              >
-                <ImageIcon size={16} />
-                <span>参考图库</span>
-              </button>
-            </div>
+          <div className="p-4">
+            <div className="flex gap-4">
+              {/* Left: Reference Library Button */}
+              <div className="flex-shrink-0">
+                <button
+                  onClick={() => setShowReferenceLibrary(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-md font-medium h-full"
+                >
+                  <ImageIcon size={16} />
+                  <span>参考图库</span>
+                </button>
+              </div>
 
-            <div
-              className={`border-2 border-dashed rounded-xl transition-all ${
-                isDragging
-                  ? 'border-orange-500 bg-orange-500/10'
-                  : 'border-slate-600 bg-slate-800/30'
-              }`}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-            >
-              {uploadedImages.length > 0 ? (
-                <div className="p-3">
-                  <div className="flex flex-wrap gap-3 mb-2">
+              {/* Middle: Image Upload Area */}
+              <div
+                className={`flex-shrink-0 w-64 border-2 border-dashed rounded-xl transition-all ${
+                  isDragging
+                    ? 'border-orange-500 bg-orange-500/10'
+                    : 'border-slate-600 bg-slate-800/30'
+                }`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
+                {uploadedImages.length > 0 ? (
+                  <div className="p-2">
+                    <div className="flex flex-wrap gap-2 mb-1">
                     {uploadedImages.map((file, index) => (
                       <div key={index} className="relative group">
                         <img
                           src={URL.createObjectURL(file)}
                           alt={`上传 ${index + 1}`}
-                          className="w-20 h-20 object-cover rounded-lg border border-slate-600"
+                          className="w-14 h-14 object-cover rounded-lg border border-slate-600"
                         />
                         <button
                           onClick={() => handleRemoveImage(index)}
@@ -187,63 +190,64 @@ export const FloatingAIPanel: React.FC<FloatingAIPanelProps> = ({
                       </div>
                     ))}
                   </div>
-                  {uploadedImages.length < 5 && (
-                    <label className="flex items-center justify-center gap-2 py-2 text-xs text-gray-400 hover:text-gray-300 cursor-pointer">
-                      <Upload size={14} />
-                      <span>继续添加 (最多5张)</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        className="hidden"
-                        onChange={handleFileSelect}
-                      />
-                    </label>
-                  )}
+                    {uploadedImages.length < 5 && (
+                      <label className="flex items-center justify-center gap-1 py-1.5 text-xs text-gray-400 hover:text-gray-300 cursor-pointer">
+                        <Upload size={12} />
+                        <span>添加更多</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          className="hidden"
+                          onChange={handleFileSelect}
+                        />
+                      </label>
+                    )}
                 </div>
-              ) : (
-                <label className="flex flex-col items-center justify-center py-8 cursor-pointer">
-                  <div className="w-12 h-12 bg-slate-700 rounded-full flex items-center justify-center mb-3">
-                    <Upload size={24} className="text-gray-400" />
-                  </div>
-                  <p className="text-sm text-gray-300 font-medium mb-1">
-                    点击、拖拽或 Ctrl+V 上传图片
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    最多支持5张图片
-                  </p>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    className="hidden"
-                    onChange={handleFileSelect}
-                  />
-                </label>
-              )}
+                ) : (
+                  <label className="flex flex-col items-center justify-center h-full py-6 cursor-pointer">
+                    <div className="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center mb-2">
+                      <Upload size={20} className="text-gray-400" />
+                    </div>
+                    <p className="text-xs text-gray-300 font-medium mb-0.5">
+                      上传图片
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      最多5张
+                    </p>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={handleFileSelect}
+                    />
+                  </label>
+                )}
+              </div>
+
+              {/* Right: Input Area */}
+              <div className="flex-1 relative">
+                <textarea
+                  value={prompt}
+                  onChange={e => setPrompt(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="输入消息或选择上方工具..."
+                  className="w-full h-full px-4 py-3 pr-14 bg-slate-800/80 backdrop-blur-sm border border-slate-600 rounded-xl text-white text-sm placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all min-h-[100px]"
+                />
+
+                <button
+                  onClick={handleSubmit}
+                  disabled={!prompt.trim()}
+                  className="absolute right-2 bottom-2 w-10 h-10 bg-gradient-to-r from-orange-500 to-pink-500 rounded-full flex items-center justify-center hover:shadow-lg hover:scale-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  aria-label="发送"
+                >
+                  <Send size={16} className="text-white" />
+                </button>
+              </div>
             </div>
 
-            <div className="relative">
-              <textarea
-                value={prompt}
-                onChange={e => setPrompt(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="输入消息或选择上方工具..."
-                className="w-full px-4 py-3 pr-14 bg-slate-800/80 backdrop-blur-sm border border-slate-600 rounded-xl text-white text-sm placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all"
-                rows={3}
-              />
-
-              <button
-                onClick={handleSubmit}
-                disabled={!prompt.trim()}
-                className="absolute right-2 bottom-2 w-10 h-10 bg-gradient-to-r from-orange-500 to-pink-500 rounded-full flex items-center justify-center hover:shadow-lg hover:scale-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                aria-label="发送"
-              >
-                <Send size={16} className="text-white" />
-              </button>
-            </div>
-
-            <p className="text-xs text-gray-400 text-center">
+            <p className="text-xs text-gray-400 text-center mt-2">
               按 Enter 发送，Shift+Enter 换行
             </p>
           </div>
