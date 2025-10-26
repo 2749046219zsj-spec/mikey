@@ -11,6 +11,7 @@ import { ContactModal } from './components/ContactModal';
 import ReferenceImageLibrary from './components/ReferenceImageLibrary';
 import { PublicGallery } from './components/PublicGallery';
 import { LoginPromptModal } from './components/LoginPromptModal';
+import { CompetitorImagePreview } from './components/CompetitorImagePreview';
 import { useChat } from './hooks/useChat';
 import { useWidgetChat } from './hooks/useWidgetChat';
 import { useAuth } from './contexts/AuthContext';
@@ -462,6 +463,12 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
               styleCount={styleCount}
               onStyleCountChange={setStyleCount}
               selectedReferenceCount={selectedReferenceImages.length}
+            />
+
+            {/* 竞品图片预览区域 */}
+            <CompetitorImagePreview
+              onSelectImage={addImageToUnified}
+              selectedImages={referenceImages}
             />
 
             {/* 参考图显示区域 - 在工具栏和输入框之间 */}
