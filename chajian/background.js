@@ -3,8 +3,8 @@
  * 支持用户登录认证和个人图库上传
  */
 
-// 加载 Supabase 库
-importScripts('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js');
+// 加载 Supabase 库（本地文件）
+importScripts('supabase.js');
 
 let config = null;
 let supabaseClient = null;
