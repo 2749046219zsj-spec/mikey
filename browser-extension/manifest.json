@@ -1,16 +1,15 @@
 {
   "manifest_version": 3,
-  "name": "图片管理插件",
-  "version": "2.0.0",
-  "description": "支持多用户的图片上传和管理系统",
+  "name": "竞品图库上传助手",
+  "version": "1.0.0",
+  "description": "快速将网页图片上传到竞品图库系统",
   "permissions": [
     "contextMenus",
     "storage",
     "notifications"
   ],
   "host_permissions": [
-    "<all_urls>",
-    "https://*.supabase.co/*"
+    "<all_urls>"
   ],
   "background": {
     "service_worker": "background.js"
@@ -33,8 +32,5 @@
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
-  },
-  "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'"
   }
 }

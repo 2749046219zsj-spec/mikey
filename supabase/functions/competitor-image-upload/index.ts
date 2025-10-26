@@ -27,37 +27,11 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // 获取认证 token
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: '需要登录才能上传到竞品图库' }),
-        {
-          status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    // 创建 Supabase 客户端（使用 service role 进行操作）
-    const supabaseAdmin = createClient(
+    // 创建 Supabase 客户端
+    const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
-
-    // 验证用户身份
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
-
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: '认证失败，请重新登录' }),
-        {
-          status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
 
     // 解析 multipart/form-data
     const formData = await req.formData();
@@ -92,7 +66,7 @@ Deno.serve(async (req: Request) => {
 
     // 上传文件到 Supabase Storage
     const fileBuffer = await file.arrayBuffer();
-    const { data: uploadData, error: uploadError } = await supabaseAdmin
+    const { data: uploadData, error: uploadError } = await supabaseClient
       .storage
       .from('reference-images')
       .upload(fileName, fileBuffer, {
@@ -113,21 +87,17 @@ Deno.serve(async (req: Request) => {
     }
 
     // 获取公开URL
-    const { data: urlData } = supabaseAdmin
+    const { data: urlData } = supabaseClient
       .storage
       .from('reference-images')
       .getPublicUrl(fileName);
 
     // 保存记录到数据库（public_reference_images表）
-    // 重要：添加 user_id 实现用户隔离
-    const { data: dbData, error: dbError } = await supabaseAdmin
+    const { data: dbData, error: dbError } = await supabaseClient
       .from('public_reference_images')
       .insert({
-        user_id: user.id,  // 关联到当前用户
         name: file.name,
-        file_name: file.name,
         image_url: urlData.publicUrl,
-        thumbnail_url: urlData.publicUrl,
         category: category,
         tags: ['竞品', '浏览器上传'],
         metadata: {

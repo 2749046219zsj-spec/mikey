@@ -1,6 +1,0 @@
-{
-  "supabaseUrl": "https://tvghcqbgktwummwjiexp.supabase.co",
-  "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2Z2hjcWJna3R3dW1td2ppZXhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5MTA4MDQsImV4cCI6MjA3NTQ4NjgwNH0.7yxFYrZ8NlPNjsxhoXbl-QodDViT8vdfg4v4N8x8opA",
-  "competitorUploadEndpoint": "https://tvghcqbgktwummwjiexp.supabase.co/functions/v1/competitor-image-upload",
-  "enabled": true
-}

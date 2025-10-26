@@ -212,7 +212,7 @@ export default function ReferenceImageLibrary({ onBack, onSelectImages }: Refere
     if (!confirm(`确定要删除竞品图片 ${image.file_name} 吗？`)) return;
 
     try {
-      await PublicReferenceImageService.deleteCompetitorImage(image.id);
+      await PublicReferenceImageService.deleteCompetitorImage(image.file_name);
       removeImage(image.id);
       await loadData();
       setErrorMessage('');
