@@ -94,7 +94,7 @@ async function handleUserLibraryUpload(info, tab) {
 }
 
 /**
- * 处理竞品图库上传（保留原功能）
+ * 处理竞品图库上传（需要登录）
  */
 async function handleCompetitorUpload(info, tab) {
   try {
@@ -108,6 +108,13 @@ async function handleCompetitorUpload(info, tab) {
       return;
     }
 
+    // 检查登录状态
+    const { session } = await chrome.storage.local.get(['session']);
+    if (!session || !session.access_token) {
+      showNotification('需要登录', '请先登录才能上传到竞品图库');
+      return;
+    }
+
     const imageUrl = info.srcUrl;
     showNotification('上传中', '正在上传到竞品图库...');
 
@@ -117,9 +124,9 @@ async function handleCompetitorUpload(info, tab) {
       originalUrl: imageUrl,
       pageUrl: tab.url,
       pageTitle: tab.title
-    });
+    }, session.access_token);
 
-    showNotification('上传成功', '图片已上传到竞品图库');
+    showNotification('上传成功', '图片已上传到您的竞品图库');
 
     // 更新统计
     await updateStatistics();
@@ -247,9 +254,9 @@ async function uploadToUserLibrary(imageBlob, user, metadata) {
 }
 
 /**
- * 上传到竞品图库
+ * 上传到竞品图库（需要认证 token）
  */
-async function uploadToCompetitorLibrary(imageBlob, metadata) {
+async function uploadToCompetitorLibrary(imageBlob, metadata, accessToken) {
   const formData = new FormData();
 
   const timestamp = Date.now();
@@ -260,11 +267,10 @@ async function uploadToCompetitorLibrary(imageBlob, metadata) {
   formData.append('metadata', JSON.stringify(metadata));
   formData.append('category', 'competitor');
 
-  const headers = {};
-  if (config.supabaseAnonKey) {
-    headers['Authorization'] = `Bearer ${config.supabaseAnonKey}`;
-    headers['apikey'] = config.supabaseAnonKey;
-  }
+  const headers = {
+    'Authorization': `Bearer ${accessToken}`,
+    'apikey': config.supabaseAnonKey
+  };
 
   const response = await fetch(config.competitorUploadEndpoint, {
     method: 'POST',
@@ -274,7 +280,7 @@ async function uploadToCompetitorLibrary(imageBlob, metadata) {
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || `上传失败: HTTP ${response.status}`);
+    throw new Error(errorData.error || errorData.message || `上传失败: HTTP ${response.status}`);
   }
 
   return await response.json();
