@@ -41,12 +41,19 @@ export const AssistantMessageActions: React.FC<AssistantMessageActionsProps> = (
 
       if (numberMatch) {
         const lineNumber = parseInt(numberMatch[1]);
-        const lineContent = numberMatch[2].trim();
+        let lineContent = numberMatch[2].trim();
 
         // 如果有之前积累的提示词，先保存
         if (currentPrompt.trim().length > 20) {
           prompts.push(currentPrompt.trim());
         }
+
+        // 清理标题中的markdown符号 (如 **标题**: 或 **标题**)
+        lineContent = lineContent
+          .replace(/^\*\*([^*]+)\*\*[:：]?\s*/, '$1: ')  // 匹配 **标题**: 或 **标题**:
+          .replace(/^\*\*([^*]+)\*\*\s*/, '$1 ')         // 匹配 **标题**
+          .replace(/^【([^】]+)】[:：]?\s*/, '$1: ')      // 匹配 【标题】:
+          .trim();
 
         // 开始新的提示词
         currentNumber = lineNumber;
@@ -57,6 +64,7 @@ export const AssistantMessageActions: React.FC<AssistantMessageActionsProps> = (
         const cleanLine = line
           .replace(/^\*\*/, '')  // 去除开头的 **
           .replace(/\*\*$/, '')  // 去除结尾的 **
+          .replace(/^\*\*([^*]+)\*\*[:：]?\s*/, '$1: ')  // 去除内联的 **文字**:
           .replace(/^\|\|/, '')  // 去除开头的 ||
           .trim();
 
