@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { Image, MessageCircle, LogOut, User, Shield, ArrowLeft, Edit, Check, X } from 'lucide-react';
+import { Image, MessageCircle, LogOut, User, Shield, ArrowLeft, Edit, Check, X, Database } from 'lucide-react';
 import { userService } from '../../services/userService';
+import PublicReferenceManagement from '../admin/PublicReferenceManagement';
 
 interface UserDashboardProps {
   onLogout: () => void;
@@ -15,11 +16,42 @@ export default function UserDashboard({ onLogout, onNavigateToAdmin, onBack }: U
   const [newUsername, setNewUsername] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState('');
+  const [showPublicReferenceManagement, setShowPublicReferenceManagement] = useState(false);
 
   if (!user) return null;
 
   const { permissions } = user;
   const drawsPercentage = (permissions.remaining_draws / permissions.draw_limit) * 100;
+
+  if (showPublicReferenceManagement) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setShowPublicReferenceManagement(false)}
+                  className="flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                  title="返回用户中心"
+                >
+                  <ArrowLeft className="w-5 h-5 text-gray-700" />
+                </button>
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                  <Database className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">公共参考图管理</h2>
+                  <p className="text-gray-600 text-sm">管理和编辑公共参考图库</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <PublicReferenceManagement />
+        </div>
+      </div>
+    );
+  }
 
   const handleStartEdit = () => {
     setNewUsername(user.username);
@@ -134,6 +166,15 @@ export default function UserDashboard({ onLogout, onNavigateToAdmin, onBack }: U
               </div>
             </div>
             <div className="flex items-center gap-3">
+              {permissions.can_edit_public_database && (
+                <button
+                  onClick={() => setShowPublicReferenceManagement(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-lg transition-colors shadow-md"
+                >
+                  <Database className="w-5 h-5" />
+                  公共图库管理
+                </button>
+              )}
               {user.is_admin && onNavigateToAdmin && (
                 <button
                   onClick={onNavigateToAdmin}
@@ -236,12 +277,29 @@ export default function UserDashboard({ onLogout, onNavigateToAdmin, onBack }: U
                 {permissions.app_access_level === 'full' ? '完整访问' : '基础访问'}
               </span>
             </div>
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <span className="font-medium text-gray-900">公共数据库编辑</span>
+              <span
+                className={`px-4 py-2 rounded-lg font-medium ${
+                  permissions.can_edit_public_database
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-gray-100 text-gray-600'
+                }`}
+              >
+                {permissions.can_edit_public_database ? '允许' : '禁止'}
+              </span>
+            </div>
             <div className="p-4 bg-blue-50 rounded-lg">
               <p className="text-sm text-gray-700">
                 {permissions.app_access_level === 'full'
                   ? '您可以访问所有应用功能和模块'
                   : '您当前只能访问"图1部分应用"，升级权限以获取更多功能'}
               </p>
+              {permissions.can_edit_public_database && (
+                <p className="text-sm text-gray-700 mt-2">
+                  您拥有公共图库编辑权限，可以上传和管理公共参考图片
+                </p>
+              )}
             </div>
           </div>
         </div>
