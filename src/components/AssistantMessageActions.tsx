@@ -27,13 +27,29 @@ export const AssistantMessageActions: React.FC<AssistantMessageActionsProps> = (
       return prompts.filter(prompt => prompt.trim().length > 20);
     }
 
-    // 方法2: 直接按编号分割，支持单行长文本格式
-    // 使用正则匹配所有 "数字. " 或 "数字、" 开头的段落
-    const paragraphPattern = /(\d+)[.、。]\s*([^\n]*(?:\n(?!\d+[.、。]\s)[^\n]*)*)/g;
-    const matches = content.matchAll(paragraphPattern);
+    // 方法2: 直接按编号分割，支持跨行长文本格式
+    // 先按编号位置分割文本
+    const numberPattern = /(?:^|\n)(\d+)[.、。]\s+/g;
+    const positions: Array<{ index: number; number: number }> = [];
+    let match: RegExpExecArray | null;
 
-    for (const match of matches) {
-      let promptText = match[2].trim();
+    while ((match = numberPattern.exec(content)) !== null) {
+      positions.push({
+        index: match.index + (match[0].startsWith('\n') ? 1 : 0),
+        number: parseInt(match[1])
+      });
+    }
+
+    // 提取每个编号之间的内容
+    for (let i = 0; i < positions.length; i++) {
+      const start = positions[i].index;
+      const end = i < positions.length - 1 ? positions[i + 1].index : content.length;
+
+      // 提取从当前编号到下一个编号之间的所有文本
+      let promptText = content.substring(start, end).trim();
+
+      // 移除开头的编号标记
+      promptText = promptText.replace(/^\d+[.、。]\s+/, '');
 
       // 清理markdown格式符号
       promptText = promptText
@@ -43,7 +59,7 @@ export const AssistantMessageActions: React.FC<AssistantMessageActionsProps> = (
         .replace(/\*\*([^*]+)\*\*/g, '$1')
         // 移除【】包裹
         .replace(/【([^】]+)】[:：]?\s*/g, '$1: ')
-        // 移除多余的换行
+        // 移除多余的换行（保留段落结构但合并为单行）
         .replace(/\n+/g, ' ')
         // 移除多余空格
         .replace(/\s+/g, ' ')
