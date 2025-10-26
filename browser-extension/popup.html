@@ -3,97 +3,231 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>竞品图库上传助手</title>
+  <title>图片管理插件</title>
   <link rel="stylesheet" href="popup.css">
+  <style>
+    .auth-section { display: none; }
+    .auth-section.active { display: block; }
+    .main-section { display: none; }
+    .main-section.active { display: block; }
+
+    .user-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    .user-name {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .btn-logout {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .btn-logout:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
+    .image-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      max-height: 250px;
+      overflow-y: auto;
+      margin: 16px 0;
+    }
+
+    .image-card {
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #e0e0e0;
+      background: white;
+    }
+
+    .image-card img {
+      width: 100%;
+      height: 100px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .image-card-footer {
+      padding: 6px;
+      background: #f9f9f9;
+    }
+
+    .image-name {
+      font-size: 11px;
+      color: #666;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 4px;
+    }
+
+    .btn-delete {
+      width: 100%;
+      padding: 4px;
+      background: #ff4444;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    .btn-delete:hover {
+      background: #cc0000;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #999;
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    .auth-link {
+      color: #667eea;
+      text-decoration: none;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .auth-link:hover {
+      text-decoration: underline;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #999;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
-    <!-- 头部 -->
-    <div class="header">
-      <h1 class="title">竞品图库上传助手</h1>
-      <div class="status-indicator">
-        <span class="status-dot" id="statusDot"></span>
-        <span class="status-text" id="statusText">未配置</span>
+    <!-- 加载中 -->
+    <div id="loading-section" class="loading">
+      <div>正在加载...</div>
+    </div>
+
+    <!-- 登录界面 -->
+    <div id="login-section" class="auth-section">
+      <div class="header">
+        <h1 class="title">用户登录</h1>
+      </div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label for="login-email">邮箱</label>
+          <input type="email" id="login-email" class="input" required placeholder="your@email.com" autocomplete="email">
+        </div>
+
+        <div class="form-group">
+          <label for="login-password">密码</label>
+          <input type="password" id="login-password" class="input" required placeholder="密码" autocomplete="current-password">
+        </div>
+
+        <button type="submit" class="btn btn-primary">登录</button>
+      </form>
+
+      <div style="text-align: center; margin-top: 12px;">
+        <a href="#" id="show-register" class="auth-link">没有账号？立即注册</a>
       </div>
     </div>
 
-    <!-- 统计信息 -->
-    <div class="stats-card">
-      <div class="stat-item">
-        <div class="stat-label">总上传数</div>
-        <div class="stat-value" id="totalUploads">0</div>
+    <!-- 注册界面 -->
+    <div id="register-section" class="auth-section">
+      <div class="header">
+        <h1 class="title">用户注册</h1>
       </div>
-      <div class="stat-item">
-        <div class="stat-label">最后上传</div>
-        <div class="stat-value small" id="lastUpload">-</div>
+
+      <form id="register-form">
+        <div class="form-group">
+          <label for="reg-username">用户名</label>
+          <input type="text" id="reg-username" class="input" required placeholder="用户名" autocomplete="username">
+        </div>
+
+        <div class="form-group">
+          <label for="reg-email">邮箱</label>
+          <input type="email" id="reg-email" class="input" required placeholder="your@email.com" autocomplete="email">
+        </div>
+
+        <div class="form-group">
+          <label for="reg-password">密码</label>
+          <input type="password" id="reg-password" class="input" required placeholder="至少6位密码" autocomplete="new-password">
+        </div>
+
+        <button type="submit" class="btn btn-primary">注册</button>
+      </form>
+
+      <div style="text-align: center; margin-top: 12px;">
+        <a href="#" id="show-login" class="auth-link">已有账号？返回登录</a>
       </div>
     </div>
 
-    <!-- 配置区域 -->
-    <div class="config-section">
-      <h2 class="section-title">配置设置</h2>
-
-      <!-- 启用开关 -->
-      <div class="form-group">
-        <label class="switch-label">
-          <span>启用上传功能</span>
-          <label class="switch">
-            <input type="checkbox" id="enabledSwitch" checked>
-            <span class="slider"></span>
-          </label>
-        </label>
+    <!-- 主界面（登录后） -->
+    <div id="main-section" class="main-section">
+      <div class="user-header">
+        <div>
+          <div class="user-name" id="username">-</div>
+          <div style="font-size: 11px; opacity: 0.9;" id="storage-info">0 / 100 MB</div>
+        </div>
+        <button class="btn-logout" id="logout-btn">退出</button>
       </div>
 
-      <!-- API地址 -->
-      <div class="form-group">
-        <label for="apiEndpoint">API上传地址</label>
-        <input
-          type="text"
-          id="apiEndpoint"
-          class="input"
-          placeholder="https://your-project.supabase.co/functions/v1/..."
-        >
-        <div class="help-text">
-          Supabase Edge Function的完整URL地址
+      <div class="stats-card">
+        <div class="stat-item">
+          <div class="stat-label">我的图片</div>
+          <div class="stat-value" id="image-count">0</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">竞品上传</div>
+          <div class="stat-value" id="competitor-uploads">0</div>
         </div>
       </div>
 
-      <!-- Supabase匿名密钥 -->
-      <div class="form-group">
-        <label for="supabaseAnonKey">Supabase匿名密钥</label>
-        <input
-          type="password"
-          id="supabaseAnonKey"
-          class="input"
-          placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-        >
+      <div class="button-group" style="margin: 16px 0;">
+        <button class="btn btn-primary" id="upload-btn">上传图片</button>
+        <button class="btn btn-secondary" id="refresh-btn">刷新</button>
+      </div>
+
+      <div id="image-list"></div>
+
+      <div class="info-section" style="margin-top: 16px;">
+        <h2 class="section-title">快捷方式</h2>
         <div class="help-text">
-          从项目.env文件中的VITE_SUPABASE_ANON_KEY获取
+          🖱️ 右键点击网页图片<br>
+          📁 选择"上传到我的图库"<br>
+          🏢 或选择"上传到竞品图库"
         </div>
       </div>
-
-      <!-- 按钮组 -->
-      <div class="button-group">
-        <button class="btn btn-secondary" id="testBtn">测试连接</button>
-        <button class="btn btn-primary" id="saveBtn">保存配置</button>
-      </div>
-    </div>
-
-    <!-- 使用说明 -->
-    <div class="info-section">
-      <h2 class="section-title">使用说明</h2>
-      <ol class="info-list">
-        <li>配置API地址和匿名密钥</li>
-        <li>浏览任意网页，右键点击图片</li>
-        <li>选择"上传到竞品图库"</li>
-        <li>等待上传完成通知</li>
-      </ol>
     </div>
 
     <!-- 消息提示 -->
     <div class="message" id="message"></div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="popup.js"></script>
 </body>
 </html>
