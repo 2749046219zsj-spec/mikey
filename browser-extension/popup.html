@@ -51,10 +51,24 @@
           type="text"
           id="apiEndpoint"
           class="input"
-          placeholder="https://your-api.com/upload"
+          placeholder="https://your-project.supabase.co/functions/v1/..."
         >
         <div class="help-text">
-          请输入图片上传的API端点地址
+          Supabase Edge Function的完整URL地址
+        </div>
+      </div>
+
+      <!-- Supabase匿名密钥 -->
+      <div class="form-group">
+        <label for="supabaseAnonKey">Supabase匿名密钥</label>
+        <input
+          type="password"
+          id="supabaseAnonKey"
+          class="input"
+          placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        >
+        <div class="help-text">
+          从项目.env文件中的VITE_SUPABASE_ANON_KEY获取
         </div>
       </div>
 
@@ -69,7 +83,7 @@
     <div class="info-section">
       <h2 class="section-title">使用说明</h2>
       <ol class="info-list">
-        <li>在上方配置API上传地址</li>
+        <li>配置API地址和匿名密钥</li>
         <li>浏览任意网页，右键点击图片</li>
         <li>选择"上传到竞品图库"</li>
         <li>等待上传完成通知</li>

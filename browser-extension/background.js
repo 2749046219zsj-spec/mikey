@@ -6,6 +6,7 @@
 // 默认配置
 const DEFAULT_CONFIG = {
   apiEndpoint: '', // 将在popup中配置
+  supabaseAnonKey: '', // Supabase匿名密钥
   enabled: true
 };
 
@@ -128,7 +129,7 @@ async function fetchImageAsBlob(imageUrl) {
  */
 async function uploadToServer(imageBlob, metadata) {
   const { config } = await chrome.storage.local.get(['config']);
-  const { apiEndpoint } = config;
+  const { apiEndpoint, supabaseAnonKey } = config;
 
   // 创建FormData
   const formData = new FormData();
@@ -144,12 +145,19 @@ async function uploadToServer(imageBlob, metadata) {
   formData.append('uploadedAt', new Date().toISOString());
 
   try {
+    // 构建请求头
+    const headers = {};
+
+    // 添加Supabase授权头（如果配置了）
+    if (supabaseAnonKey) {
+      headers['Authorization'] = `Bearer ${supabaseAnonKey}`;
+      headers['apikey'] = supabaseAnonKey;
+    }
+
     const response = await fetch(apiEndpoint, {
       method: 'POST',
       body: formData,
-      headers: {
-        // 不要设置Content-Type，让浏览器自动设置multipart/form-data边界
-      }
+      headers: headers
     });
 
     if (!response.ok) {

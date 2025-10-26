@@ -1,9 +1,10 @@
 {
-  "apiEndpoint": "https://your-project.supabase.co/functions/v1/competitor-image-upload",
+  "apiEndpoint": "https://tvghcqbgktwummwjiexp.supabase.co/functions/v1/competitor-image-upload",
+  "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2Z2hjcWJna3R3dW1td2ppZXhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5MTA4MDQsImV4cCI6MjA3NTQ4NjgwNH0.7yxFYrZ8NlPNjsxhoXbl-QodDViT8vdfg4v4N8x8opA",
   "enabled": true,
   "notes": {
-    "apiEndpoint": "替换为你的实际Supabase项目URL",
-    "format": "https://{project-id}.supabase.co/functions/v1/competitor-image-upload",
-    "howToFind": "在项目根目录的.env文件中查看VITE_SUPABASE_URL"
+    "apiEndpoint": "Supabase Edge Function的完整URL",
+    "supabaseAnonKey": "Supabase项目的匿名密钥（anon key）",
+    "howToFind": "在项目根目录的.env文件中查看VITE_SUPABASE_URL和VITE_SUPABASE_ANON_KEY"
   }
 }

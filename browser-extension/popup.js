@@ -10,6 +10,7 @@ const elements = {
   lastUpload: document.getElementById('lastUpload'),
   enabledSwitch: document.getElementById('enabledSwitch'),
   apiEndpoint: document.getElementById('apiEndpoint'),
+  supabaseAnonKey: document.getElementById('supabaseAnonKey'),
   testBtn: document.getElementById('testBtn'),
   saveBtn: document.getElementById('saveBtn'),
   message: document.getElementById('message')
@@ -32,6 +33,7 @@ async function loadConfig() {
     if (config) {
       elements.enabledSwitch.checked = config.enabled !== false;
       elements.apiEndpoint.value = config.apiEndpoint || '';
+      elements.supabaseAnonKey.value = config.supabaseAnonKey || '';
       updateStatus(config);
     }
   } catch (error) {
@@ -67,7 +69,7 @@ async function loadStatistics() {
  * 更新状态显示
  */
 function updateStatus(config) {
-  if (config && config.enabled && config.apiEndpoint) {
+  if (config && config.enabled && config.apiEndpoint && config.supabaseAnonKey) {
     elements.statusDot.classList.add('active');
     elements.statusText.textContent = '已启用';
   } else {
@@ -105,13 +107,20 @@ function bindEvents() {
 async function saveConfig() {
   const config = {
     enabled: elements.enabledSwitch.checked,
-    apiEndpoint: elements.apiEndpoint.value.trim()
+    apiEndpoint: elements.apiEndpoint.value.trim(),
+    supabaseAnonKey: elements.supabaseAnonKey.value.trim()
   };
 
-  // 验证API地址
-  if (config.enabled && !config.apiEndpoint) {
-    showMessage('请输入API上传地址', 'error');
-    return;
+  // 验证必填字段
+  if (config.enabled) {
+    if (!config.apiEndpoint) {
+      showMessage('请输入API上传地址', 'error');
+      return;
+    }
+    if (!config.supabaseAnonKey) {
+      showMessage('请输入Supabase匿名密钥', 'error');
+      return;
+    }
   }
 
   if (config.apiEndpoint && !isValidUrl(config.apiEndpoint)) {
