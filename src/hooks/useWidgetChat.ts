@@ -106,11 +106,19 @@ export const useWidgetChat = () => {
     });
   }, [state.selectedModel]);
 
+  const retryToInput = useCallback((messageId: string, onEdit: (text: string, images: File[]) => void) => {
+    const message = state.messages.find(m => m.id === messageId);
+    if (message && message.originalText !== undefined && message.originalImages !== undefined) {
+      onEdit(message.originalText, message.originalImages || []);
+    }
+  }, [state.messages]);
+
   return {
     messages: state.messages,
     isLoading: state.isLoading,
     error: state.error,
     sendMessage,
-    clearChat
+    clearChat,
+    retryToInput
   };
 };

@@ -90,7 +90,8 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
     isLoading: assistantLoading,
     error: assistantError,
     sendMessage: assistantSendMessage,
-    clearChat: assistantClearChat
+    clearChat: assistantClearChat,
+    retryToInput: assistantRetryToInput
   } = useWidgetChat();
 
 
@@ -442,7 +443,7 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
           messages={currentMode === 'professional' ? assistantMessages : messages}
           isLoading={currentMode === 'professional' ? assistantLoading : isLoading}
           error={currentMode === 'professional' ? assistantError : error}
-          onRetryToInput={retryToInput}
+          onRetryToInput={currentMode === 'professional' ? assistantRetryToInput : retryToInput}
           onSetEditContent={handleSetEditContent}
           isProfessionalMode={currentMode === 'professional'}
           onSendPromptsToGenerate={handleAssistantMessageAction}
