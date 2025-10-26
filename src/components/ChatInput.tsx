@@ -54,14 +54,19 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
   // 当有编辑内容时，填充到输入框
   React.useEffect(() => {
     if (editContent) {
-      setText(editContent.text);
+      // 在专业模式下，使用 onProfessionalTextChange 更新文本
+      if (isProfessionalMode && onProfessionalTextChange) {
+        onProfessionalTextChange(editContent.text);
+      } else {
+        setText(editContent.text);
+      }
       setImages(editContent.images);
       if (textareaRef.current) {
         textareaRef.current.focus();
         adjustTextareaHeight();
       }
     }
-  }, [editContent]);
+  }, [editContent, isProfessionalMode, onProfessionalTextChange]);
 
   const handleSubmit = () => {
     const textToSend = isProfessionalMode ? professionalModeText : text;
