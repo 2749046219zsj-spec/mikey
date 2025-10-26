@@ -205,6 +205,8 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
 
   const extractPrompts = (content: string): string[] => {
     const prompts: string[] = [];
+
+    // 方法1: 匹配双引号格式 1. "内容"
     const quotedNumberedMatches = content.match(/\d+\.\s*[""]([^""]+)[""]/g);
     if (quotedNumberedMatches && quotedNumberedMatches.length > 0) {
       quotedNumberedMatches.forEach(match => {
@@ -213,15 +215,70 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
       });
       return prompts.filter(prompt => prompt.trim().length > 20);
     }
-    const lines = content.split('\n');
-    const numberedLines: string[] = [];
-    lines.forEach(line => {
-      const trimmedLine = line.trim();
-      const match = trimmedLine.match(/^(\d+)[.、。]\s*(.+)$/);
-      if (match && match[2]) numberedLines.push(match[2].trim());
-    });
-    if (numberedLines.length > 0) return numberedLines.filter(prompt => prompt.trim().length > 20);
-    return [];
+
+    // 方法2: 直接按编号分割，支持跨行长文本格式
+    // 先按编号位置分割文本
+    const numberPattern = /(?:^|\n)(\d+)[.、。]\s+/g;
+    const positions: Array<{ index: number; number: number }> = [];
+    let match: RegExpExecArray | null;
+
+    while ((match = numberPattern.exec(content)) !== null) {
+      positions.push({
+        index: match.index + (match[0].startsWith('\n') ? 1 : 0),
+        number: parseInt(match[1])
+      });
+    }
+
+    // 提取每个编号之间的内容
+    for (let i = 0; i < positions.length; i++) {
+      const start = positions[i].index;
+      const end = i < positions.length - 1 ? positions[i + 1].index : content.length;
+
+      // 提取从当前编号到下一个编号之间的所有文本
+      let promptText = content.substring(start, end).trim();
+
+      // 移除开头的编号标记
+      promptText = promptText.replace(/^\d+[.、。]\s+/, '');
+
+      // 清理markdown格式符号
+      promptText = promptText
+        // 移除 **标题**: 或 **标题**:
+        .replace(/\*\*([^*]+)\*\*[:：]\s*/g, '$1: ')
+        // 移除其他 ** 包裹
+        .replace(/\*\*([^*]+)\*\*/g, '$1')
+        // 移除【】包裹
+        .replace(/【([^】]+)】[:：]?\s*/g, '$1: ')
+        // 移除多余的换行（保留段落结构但合并为单行）
+        .replace(/\n+/g, ' ')
+        // 移除多余空格
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      if (promptText.length > 20) {
+        prompts.push(promptText);
+      }
+    }
+
+    // 如果方法2没有找到，尝试方法3: 简单按行匹配
+    if (prompts.length === 0) {
+      const lines = content.split('\n');
+      const numberedLines: string[] = [];
+      lines.forEach(line => {
+        const trimmedLine = line.trim();
+        const lineMatch = trimmedLine.match(/^(\d+)[.、。]\s*(.+)$/);
+        if (lineMatch && lineMatch[2]) {
+          // 清理markdown格式
+          let cleanText = lineMatch[2]
+            .replace(/\*\*([^*]+)\*\*[:：]?\s*/g, '$1: ')
+            .replace(/\*\*([^*]+)\*\*/g, '$1')
+            .trim();
+          numberedLines.push(cleanText);
+        }
+      });
+      if (numberedLines.length > 0) return numberedLines.filter(prompt => prompt.trim().length > 20);
+    }
+
+    return prompts.filter(prompt => prompt.trim().length > 20);
   };
 
   const handlePromptUpload = () => {
