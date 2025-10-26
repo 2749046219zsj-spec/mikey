@@ -235,3 +235,14 @@ export class GalleryService {
     }
   }
 }
+
+export const galleryService = {
+  uploadToGallery: GalleryService.uploadToGallery,
+  getGalleryImages: GalleryService.getGalleryImages,
+  toggleLike: GalleryService.toggleLike,
+  deleteGalleryImage: GalleryService.deleteGalleryImage,
+  getUserGalleryImages: GalleryService.getUserGalleryImages,
+  checkIfInGallery: GalleryService.checkIfInGallery,
+  logGalleryUsage: GalleryService.logGalleryUsage,
+  getImageById: GalleryService.getGalleryImageById,
+};

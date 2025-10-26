@@ -4,8 +4,11 @@ import AuthPage from './components/auth/AuthPage';
 import UserDashboard from './components/user/UserDashboard';
 import AdminDashboard from './components/admin/AdminDashboard';
 import AppContent from './AppContent';
+import ShareLandingPage from './components/ShareLandingPage';
+import { galleryService } from './services/galleryService';
+import { GalleryImage } from './types/gallery';
 
-type ViewMode = 'app' | 'dashboard' | 'admin' | 'auth';
+type ViewMode = 'app' | 'dashboard' | 'admin' | 'auth' | 'share';
 type AuthMode = 'login' | 'register';
 
 function App() {
@@ -13,6 +16,30 @@ function App() {
   const [viewMode, setViewMode] = useState<ViewMode>('app');
   const [authMode, setAuthMode] = useState<AuthMode>('login');
   const [shouldEnterCreation, setShouldEnterCreation] = useState(false);
+  const [shareImage, setShareImage] = useState<GalleryImage | null>(null);
+  const [shareLoading, setShareLoading] = useState(false);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const shareId = urlParams.get('share');
+
+    if (shareId) {
+      setViewMode('share');
+      setShareLoading(true);
+
+      galleryService.getImageById(shareId).then(image => {
+        if (image) {
+          setShareImage(image);
+        } else {
+          setViewMode('app');
+        }
+        setShareLoading(false);
+      }).catch(() => {
+        setViewMode('app');
+        setShareLoading(false);
+      });
+    }
+  }, []);
 
   useEffect(() => {
     if (user && viewMode === 'auth') {
@@ -21,7 +48,7 @@ function App() {
     }
   }, [user, viewMode]);
 
-  if (loading) {
+  if (loading || shareLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
         <div className="text-center">
@@ -29,6 +56,19 @@ function App() {
           <p className="text-gray-600 text-lg">加载中...</p>
         </div>
       </div>
+    );
+  }
+
+  if (viewMode === 'share' && shareImage) {
+    return (
+      <ShareLandingPage
+        image={shareImage}
+        onNavigateToMain={() => {
+          window.history.pushState({}, '', '/');
+          setViewMode('app');
+          setShareImage(null);
+        }}
+      />
     );
   }
 
