@@ -11,7 +11,6 @@ import { ContactModal } from './components/ContactModal';
 import ReferenceImageLibrary from './components/ReferenceImageLibrary';
 import { PublicGallery } from './components/PublicGallery';
 import { LoginPromptModal } from './components/LoginPromptModal';
-import { CompetitorGallery } from './components/CompetitorGallery';
 import { useChat } from './hooks/useChat';
 import { useWidgetChat } from './hooks/useWidgetChat';
 import { useAuth } from './contexts/AuthContext';
@@ -32,7 +31,6 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
   const [showContactModal, setShowContactModal] = useState(false);
   const [showReferenceLibrary, setShowReferenceLibrary] = useState(false);
   const [showGallery, setShowGallery] = useState(true);
-  const [showCompetitorGallery, setShowCompetitorGallery] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [currentMode, setCurrentMode] = useState<AppMode>('normal');
   const [hasOpenedReferenceLibrary, setHasOpenedReferenceLibrary] = useState(false);
@@ -395,9 +393,7 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
 
   return (
     <ErrorBoundary>
-      {showCompetitorGallery ? (
-        <CompetitorGallery />
-      ) : showGallery ? (
+      {showGallery ? (
         <div className="h-screen bg-slate-50 flex flex-col overflow-y-auto">
           <div className="border-b border-gray-200 bg-white/90 backdrop-blur-sm sticky top-0 z-10">
             <div className="max-w-7xl mx-auto px-4 py-4">
@@ -408,20 +404,12 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
                   </div>
                   <h1 className="text-2xl font-bold text-gray-900">AI 创意画廊</h1>
                 </div>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setShowCompetitorGallery(true)}
-                    className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg hover:from-emerald-600 hover:to-teal-700 transition-all duration-200 shadow-md font-medium"
-                  >
-                    竞品图库
-                  </button>
-                  <button
-                    onClick={handleStartCreating}
-                    className="px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-600 text-white rounded-lg hover:from-purple-600 hover:to-blue-700 transition-all duration-200 shadow-md font-medium"
-                  >
-                    开始创作
-                  </button>
-                </div>
+                <button
+                  onClick={handleStartCreating}
+                  className="px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-600 text-white rounded-lg hover:from-purple-600 hover:to-blue-700 transition-all duration-200 shadow-md font-medium"
+                >
+                  开始创作
+                </button>
               </div>
             </div>
           </div>
