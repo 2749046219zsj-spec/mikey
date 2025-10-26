@@ -27,8 +27,77 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    // 获取认证token
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: '未授权：缺少认证信息' }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
     // 创建 Supabase 客户端
     const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: authHeader },
+        },
+      }
+    );
+
+    // 验证用户身份
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: '未授权：无效的认证信息' }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    // 检查用户权限
+    const { data: profile } = await supabaseClient
+      .from('user_profiles')
+      .select('is_admin')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    const isAdmin = profile?.is_admin ?? false;
+
+    // 如果不是管理员，检查是否有编辑权限
+    if (!isAdmin) {
+      const { data: permissions } = await supabaseClient
+        .from('user_permissions')
+        .select('can_edit_public_database')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      const canEdit = permissions?.can_edit_public_database ?? false;
+
+      if (!canEdit) {
+        return new Response(
+          JSON.stringify({
+            error: '权限不足：您没有权限上传公共参考图片',
+            message: '请联系管理员开通编辑权限'
+          }),
+          {
+            status: 403,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+    }
+
+    // 使用 service role key 进行文件操作
+    const supabaseServiceClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
@@ -66,7 +135,7 @@ Deno.serve(async (req: Request) => {
 
     // 上传文件到 Supabase Storage
     const fileBuffer = await file.arrayBuffer();
-    const { data: uploadData, error: uploadError } = await supabaseClient
+    const { data: uploadData, error: uploadError } = await supabaseServiceClient
       .storage
       .from('reference-images')
       .upload(fileName, fileBuffer, {
@@ -87,17 +156,19 @@ Deno.serve(async (req: Request) => {
     }
 
     // 获取公开URL
-    const { data: urlData } = supabaseClient
+    const { data: urlData } = supabaseServiceClient
       .storage
       .from('reference-images')
       .getPublicUrl(fileName);
 
     // 保存记录到数据库（public_reference_images表）
+    // 使用普通客户端以应用RLS策略
     const { data: dbData, error: dbError } = await supabaseClient
       .from('public_reference_images')
       .insert({
         name: file.name,
         image_url: urlData.publicUrl,
+        file_name: file.name,
         category: category,
         tags: ['竞品', '浏览器上传'],
         metadata: {
@@ -109,6 +180,8 @@ Deno.serve(async (req: Request) => {
           uploadedAt: uploadedAt || new Date().toISOString(),
         },
         is_active: true,
+        user_id: user.id,
+        created_by: user.id,
       })
       .select()
       .single();

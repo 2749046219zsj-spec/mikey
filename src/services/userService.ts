@@ -2,6 +2,32 @@ import { supabase } from '../lib/supabase';
 import { UserProfile, UserPermissions, UsageLog } from '../types/user';
 
 export const userService = {
+  async canEditPublicDatabase(): Promise<boolean> {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return false;
+    }
+
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('is_admin')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (profile?.is_admin) {
+      return true;
+    }
+
+    const { data: permissions } = await supabase
+      .from('user_permissions')
+      .select('can_edit_public_database')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    return permissions?.can_edit_public_database ?? false;
+  },
+
   async logAction(userId: string, actionType: string, details: Record<string, any> = {}) {
     const { error } = await supabase
       .from('usage_logs')

@@ -15,6 +15,7 @@ export interface UserPermissions {
   remaining_draws: number;
   chat_assistant_enabled: boolean;
   app_access_level: 'basic' | 'full';
+  can_edit_public_database: boolean;
   updated_at: string;
 }
 
