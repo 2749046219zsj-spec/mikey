@@ -27,61 +27,88 @@ export const AssistantMessageActions: React.FC<AssistantMessageActionsProps> = (
       return prompts.filter(prompt => prompt.trim().length > 20);
     }
 
-    // 方法2: 智能提取多行段落
-    // 将内容按行分割，识别编号开始的行，然后收集直到下一个编号
-    const lines = content.split('\n');
-    let currentPrompt = '';
-    let currentNumber = 0;
+    // 方法2: 直接按编号分割，支持单行长文本格式
+    // 使用正则匹配所有 "数字. " 或 "数字、" 开头的段落
+    const paragraphPattern = /(\d+)[.、。]\s*([^\n]*(?:\n(?!\d+[.、。]\s)[^\n]*)*)/g;
+    const matches = content.matchAll(paragraphPattern);
 
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
+    for (const match of matches) {
+      let promptText = match[2].trim();
 
-      // 检查是否是编号开始的行 (支持 1. 或 1、 或 1。)
-      const numberMatch = line.match(/^(\d+)[.、。]\s*(.*)$/);
+      // 清理markdown格式符号
+      promptText = promptText
+        // 移除 **标题**: 或 **标题**:
+        .replace(/\*\*([^*]+)\*\*[:：]\s*/g, '$1: ')
+        // 移除其他 ** 包裹
+        .replace(/\*\*([^*]+)\*\*/g, '$1')
+        // 移除【】包裹
+        .replace(/【([^】]+)】[:：]?\s*/g, '$1: ')
+        // 移除多余的换行
+        .replace(/\n+/g, ' ')
+        // 移除多余空格
+        .replace(/\s+/g, ' ')
+        .trim();
 
-      if (numberMatch) {
-        const lineNumber = parseInt(numberMatch[1]);
-        let lineContent = numberMatch[2].trim();
-
-        // 如果有之前积累的提示词，先保存
-        if (currentPrompt.trim().length > 20) {
-          prompts.push(currentPrompt.trim());
-        }
-
-        // 清理标题中的markdown符号 (如 **标题**: 或 **标题**)
-        lineContent = lineContent
-          .replace(/^\*\*([^*]+)\*\*[:：]?\s*/, '$1: ')  // 匹配 **标题**: 或 **标题**:
-          .replace(/^\*\*([^*]+)\*\*\s*/, '$1 ')         // 匹配 **标题**
-          .replace(/^【([^】]+)】[:：]?\s*/, '$1: ')      // 匹配 【标题】:
-          .trim();
-
-        // 开始新的提示词
-        currentNumber = lineNumber;
-        currentPrompt = lineContent;
-      } else if (currentNumber > 0 && line.length > 0) {
-        // 如果当前行不为空，且我们正在收集提示词，则追加到当前提示词
-        // 去除markdown格式符号
-        const cleanLine = line
-          .replace(/^\*\*/, '')  // 去除开头的 **
-          .replace(/\*\*$/, '')  // 去除结尾的 **
-          .replace(/^\*\*([^*]+)\*\*[:：]?\s*/, '$1: ')  // 去除内联的 **文字**:
-          .replace(/^\|\|/, '')  // 去除开头的 ||
-          .trim();
-
-        if (cleanLine) {
-          currentPrompt += (currentPrompt ? ' ' : '') + cleanLine;
-        }
-      } else if (line.length === 0 && currentPrompt.trim().length > 20) {
-        // 遇到空行，如果当前提示词足够长，保存它
-        prompts.push(currentPrompt.trim());
-        currentPrompt = '';
-        currentNumber = 0;
+      if (promptText.length > 20) {
+        prompts.push(promptText);
       }
     }
 
-    // 保存最后一个提示词
-    if (currentPrompt.trim().length > 20) {
-      prompts.push(currentPrompt.trim());
+    // 如果方法2没有找到，尝试方法3: 按行分割的传统方式
+    if (prompts.length === 0) {
+      const lines = content.split('\n');
+      let currentPrompt = '';
+      let currentNumber = 0;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+
+        // 检查是否是编号开始的行 (支持 1. 或 1、 或 1。)
+        const numberMatch = line.match(/^(\d+)[.、。]\s*(.*)$/);
+
+        if (numberMatch) {
+          const lineNumber = parseInt(numberMatch[1]);
+          let lineContent = numberMatch[2].trim();
+
+          // 如果有之前积累的提示词，先保存
+          if (currentPrompt.trim().length > 20) {
+            prompts.push(currentPrompt.trim());
+          }
+
+          // 清理标题中的markdown符号
+          lineContent = lineContent
+            .replace(/^\*\*([^*]+)\*\*[:：]?\s*/, '$1: ')
+            .replace(/^\*\*([^*]+)\*\*\s*/, '$1 ')
+            .replace(/^【([^】]+)】[:：]?\s*/, '$1: ')
+            .trim();
+
+          // 开始新的提示词
+          currentNumber = lineNumber;
+          currentPrompt = lineContent;
+        } else if (currentNumber > 0 && line.length > 0) {
+          // 追加内容到当前提示词
+          const cleanLine = line
+            .replace(/^\*\*/, '')
+            .replace(/\*\*$/, '')
+            .replace(/^\*\*([^*]+)\*\*[:：]?\s*/, '$1: ')
+            .replace(/^\|\|/, '')
+            .trim();
+
+          if (cleanLine) {
+            currentPrompt += (currentPrompt ? ' ' : '') + cleanLine;
+          }
+        } else if (line.length === 0 && currentPrompt.trim().length > 20) {
+          // 遇到空行，保存当前提示词
+          prompts.push(currentPrompt.trim());
+          currentPrompt = '';
+          currentNumber = 0;
+        }
+      }
+
+      // 保存最后一个提示词
+      if (currentPrompt.trim().length > 20) {
+        prompts.push(currentPrompt.trim());
+      }
     }
 
     return prompts.filter(prompt => prompt.trim().length > 20);
