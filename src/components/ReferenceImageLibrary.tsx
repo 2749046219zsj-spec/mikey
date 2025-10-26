@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, ChevronRight, Loader2, Upload, Link as LinkIcon, HardDrive, X, Check, Trash2 } from 'lucide-react';
-import { PublicReferenceImageService, ProductWithImages, PublicReferenceImage } from '../services/publicReferenceImageService';
+import { PublicReferenceImageService, ProductWithImages, PublicReferenceImage, CompetitorImage } from '../services/publicReferenceImageService';
 import { ReferenceImageService } from '../services/referenceImageService';
 import type { ReferenceImage } from '../types/referenceImage';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,7 +12,7 @@ interface ReferenceImageLibraryProps {
   onSelectImages: (imageUrls: string[]) => void;
 }
 
-type DatabaseType = 'public' | 'private';
+type DatabaseType = 'public' | 'private' | 'competitor';
 type UploadMode = 'file' | 'url' | 'external';
 type ViewMode = 'list' | 'detail' | 'upload';
 
@@ -23,6 +23,7 @@ export default function ReferenceImageLibrary({ onBack, onSelectImages }: Refere
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [publicProducts, setPublicProducts] = useState<ProductWithImages[]>([]);
   const [privateImages, setPrivateImages] = useState<ReferenceImage[]>([]);
+  const [competitorImages, setCompetitorImages] = useState<CompetitorImage[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<ProductWithImages | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -76,6 +77,9 @@ export default function ReferenceImageLibrary({ onBack, onSelectImages }: Refere
       if (databaseType === 'public') {
         const products = await PublicReferenceImageService.getProductsWithImages();
         setPublicProducts(products);
+      } else if (databaseType === 'competitor') {
+        const images = await PublicReferenceImageService.getCompetitorImages();
+        setCompetitorImages(images);
       } else {
         if (user) {
           const images = await ReferenceImageService.getUserImages(user.id);
@@ -287,6 +291,20 @@ export default function ReferenceImageLibrary({ onBack, onSelectImages }: Refere
               }`}
             >
               公共数据库
+            </button>
+            <button
+              onClick={() => {
+                setDatabaseType('competitor');
+                setViewMode('list');
+                setSelectedProduct(null);
+              }}
+              className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
+                databaseType === 'competitor'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              竞品图库
             </button>
             <button
               onClick={() => {
@@ -536,6 +554,64 @@ export default function ReferenceImageLibrary({ onBack, onSelectImages }: Refere
                       </div>
                     </div>
                   </div>
+                </div>
+              )}
+
+              {databaseType === 'competitor' && viewMode === 'list' && (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                  {competitorImages.map((image) => {
+                    const imageSelected = isImageSelected(image.image_url);
+                    return (
+                      <div
+                        key={image.id}
+                        className={`relative group rounded-lg overflow-hidden border-2 transition-all ${
+                          imageSelected
+                            ? 'border-green-600 shadow-lg ring-2 ring-green-200'
+                            : 'border-gray-200 hover:border-green-300 hover:shadow-md'
+                        }`}
+                      >
+                        <img
+                          src={image.image_url}
+                          alt={image.file_name}
+                          className="w-full h-48 object-cover cursor-pointer"
+                          loading="lazy"
+                          onClick={() => toggleImage({
+                            id: image.id,
+                            url: image.image_url,
+                            thumbnailUrl: image.image_url,
+                            fileName: image.file_name,
+                            source: 'competitor',
+                          })}
+                        />
+
+                        <button
+                          onClick={() => toggleImage({
+                            id: image.id,
+                            url: image.image_url,
+                            thumbnailUrl: image.image_url,
+                            fileName: image.file_name,
+                            source: 'competitor',
+                          })}
+                          className={`absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center transition-all ${
+                            imageSelected
+                              ? 'bg-green-600 text-white'
+                              : 'bg-white border-2 border-gray-300 opacity-0 group-hover:opacity-100'
+                          }`}
+                        >
+                          {imageSelected && <Check className="w-4 h-4" />}
+                        </button>
+
+                        <div className="p-2 bg-white">
+                          <p className="text-xs text-gray-600 truncate">{image.file_name}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {competitorImages.length === 0 && (
+                    <div className="col-span-full text-center py-20 text-gray-500">
+                      暂无竞品参考图片
+                    </div>
+                  )}
                 </div>
               )}
 

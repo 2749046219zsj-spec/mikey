@@ -30,7 +30,54 @@ export interface ProductWithImages extends PublicReferenceProduct {
   images: PublicReferenceImage[];
 }
 
+export interface CompetitorImage {
+  id: string;
+  name: string;
+  bucket_id: string;
+  image_url: string;
+  thumbnail_url: string;
+  file_name: string;
+  created_at: string;
+  updated_at: string;
+  metadata: any;
+}
+
 export class PublicReferenceImageService {
+  static async getCompetitorImages(): Promise<CompetitorImage[]> {
+    const { data, error } = await supabase
+      .storage
+      .from('reference-images')
+      .list('competitor', {
+        limit: 100,
+        sortBy: { column: 'created_at', order: 'desc' }
+      });
+
+    if (error) {
+      console.error('Error fetching competitor images:', error);
+      throw error;
+    }
+
+    const images = (data || []).map(file => {
+      const publicURL = supabase.storage
+        .from('reference-images')
+        .getPublicUrl(`competitor/${file.name}`);
+
+      return {
+        id: file.id || file.name,
+        name: file.name,
+        bucket_id: 'reference-images',
+        image_url: publicURL.data.publicUrl,
+        thumbnail_url: publicURL.data.publicUrl,
+        file_name: file.name,
+        created_at: file.created_at || new Date().toISOString(),
+        updated_at: file.updated_at || new Date().toISOString(),
+        metadata: file.metadata
+      };
+    });
+
+    return images;
+  }
+
   static async getAllProducts(): Promise<PublicReferenceProduct[]> {
     const { data, error } = await supabase
       .from('public_reference_products')
