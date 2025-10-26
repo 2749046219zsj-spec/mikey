@@ -1,0 +1,9 @@
+{
+  "apiEndpoint": "https://your-project.supabase.co/functions/v1/competitor-image-upload",
+  "enabled": true,
+  "notes": {
+    "apiEndpoint": "替换为你的实际Supabase项目URL",
+    "format": "https://{project-id}.supabase.co/functions/v1/competitor-image-upload",
+    "howToFind": "在项目根目录的.env文件中查看VITE_SUPABASE_URL"
+  }
+}

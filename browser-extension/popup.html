@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>竞品图库上传助手</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <!-- 头部 -->
+    <div class="header">
+      <h1 class="title">竞品图库上传助手</h1>
+      <div class="status-indicator">
+        <span class="status-dot" id="statusDot"></span>
+        <span class="status-text" id="statusText">未配置</span>
+      </div>
+    </div>
+
+    <!-- 统计信息 -->
+    <div class="stats-card">
+      <div class="stat-item">
+        <div class="stat-label">总上传数</div>
+        <div class="stat-value" id="totalUploads">0</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">最后上传</div>
+        <div class="stat-value small" id="lastUpload">-</div>
+      </div>
+    </div>
+
+    <!-- 配置区域 -->
+    <div class="config-section">
+      <h2 class="section-title">配置设置</h2>
+
+      <!-- 启用开关 -->
+      <div class="form-group">
+        <label class="switch-label">
+          <span>启用上传功能</span>
+          <label class="switch">
+            <input type="checkbox" id="enabledSwitch" checked>
+            <span class="slider"></span>
+          </label>
+        </label>
+      </div>
+
+      <!-- API地址 -->
+      <div class="form-group">
+        <label for="apiEndpoint">API上传地址</label>
+        <input
+          type="text"
+          id="apiEndpoint"
+          class="input"
+          placeholder="https://your-api.com/upload"
+        >
+        <div class="help-text">
+          请输入图片上传的API端点地址
+        </div>
+      </div>
+
+      <!-- 按钮组 -->
+      <div class="button-group">
+        <button class="btn btn-secondary" id="testBtn">测试连接</button>
+        <button class="btn btn-primary" id="saveBtn">保存配置</button>
+      </div>
+    </div>
+
+    <!-- 使用说明 -->
+    <div class="info-section">
+      <h2 class="section-title">使用说明</h2>
+      <ol class="info-list">
+        <li>在上方配置API上传地址</li>
+        <li>浏览任意网页，右键点击图片</li>
+        <li>选择"上传到竞品图库"</li>
+        <li>等待上传完成通知</li>
+      </ol>
+    </div>
+
+    <!-- 消息提示 -->
+    <div class="message" id="message"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
