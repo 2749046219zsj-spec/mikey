@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { X, Palette, Image as ImageIcon, Calendar, Sparkles } from 'lucide-react';
 import { GalleryImage } from '../types/gallery';
 import { ImageWithFallback } from './ImageWithFallback';
+import ShareButtons from './ShareButtons';
 
 interface GalleryDetailModalProps {
   image: GalleryImage;
@@ -173,6 +174,16 @@ export const GalleryDetailModal: React.FC<GalleryDetailModalProps> = ({
                     {image.use_as_reference_count > 0 && `${image.use_as_reference_count} 人用作参考`}
                   </p>
                 )}
+              </div>
+
+              <div className="bg-white border border-gray-200 rounded-xl p-5">
+                <h3 className="font-semibold text-gray-900 mb-4">分享这张图片</h3>
+                <ShareButtons
+                  galleryId={image.id}
+                  imageUrl={image.image_url}
+                  title={image.prompt || 'AI创意作品'}
+                  description={`来自 ${image.username} 的精彩创作`}
+                />
               </div>
             </div>
           </div>
