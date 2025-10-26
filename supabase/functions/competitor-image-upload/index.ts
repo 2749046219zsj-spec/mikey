@@ -7,7 +7,6 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req: Request) => {
-  // 处理 OPTIONS 预检请求
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       status: 200,
@@ -16,7 +15,6 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    // 只允许 POST 请求
     if (req.method !== 'POST') {
       return new Response(
         JSON.stringify({ error: '只支持POST请求' }),
@@ -27,13 +25,11 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // 创建 Supabase 客户端
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // 解析 multipart/form-data
     const formData = await req.formData();
     const file = formData.get('file') as File;
     const metadataStr = formData.get('metadata') as string;
@@ -50,7 +46,6 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // 解析元数据
     let metadata = {};
     try {
       metadata = metadataStr ? JSON.parse(metadataStr) : {};
@@ -58,13 +53,11 @@ Deno.serve(async (req: Request) => {
       console.error('解析元数据失败:', e);
     }
 
-    // 生成唯一文件名
     const timestamp = Date.now();
     const randomStr = Math.random().toString(36).substring(2, 15);
     const extension = file.name.split('.').pop() || 'jpg';
     const fileName = `competitor/${timestamp}_${randomStr}.${extension}`;
 
-    // 上传文件到 Supabase Storage
     const fileBuffer = await file.arrayBuffer();
     const { data: uploadData, error: uploadError } = await supabaseClient
       .storage
@@ -86,17 +79,17 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // 获取公开URL
     const { data: urlData } = supabaseClient
       .storage
       .from('reference-images')
       .getPublicUrl(fileName);
 
-    // 保存记录到数据库（public_reference_images表）
     const { data: dbData, error: dbError } = await supabaseClient
       .from('public_reference_images')
       .insert({
+        product_id: null,
         name: file.name,
+        file_name: fileName,
         image_url: urlData.publicUrl,
         category: category,
         tags: ['竞品', '浏览器上传'],
@@ -115,10 +108,15 @@ Deno.serve(async (req: Request) => {
 
     if (dbError) {
       console.error('保存数据库记录失败:', dbError);
-      // 即使数据库保存失败，文件已经上传成功
+      return new Response(
+        JSON.stringify({ error: `数据库保存失败: ${dbError.message}` }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
 
-    // 返回成功响应
     return new Response(
       JSON.stringify({
         success: true,

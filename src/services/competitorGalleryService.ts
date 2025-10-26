@@ -26,7 +26,7 @@ export const competitorGalleryService = {
       let query = supabase
         .from('public_reference_images')
         .select('*')
-        .is('product_id', null)
+        .eq('category', 'competitor')
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
@@ -59,7 +59,7 @@ export const competitorGalleryService = {
         .from('public_reference_images')
         .select('*')
         .eq('id', id)
-        .is('product_id', null)
+        .eq('category', 'competitor')
         .single();
 
       if (error) throw error;
@@ -114,7 +114,7 @@ export const competitorGalleryService = {
       const { data, error } = await supabase
         .from('public_reference_images')
         .select('category')
-        .is('product_id', null)
+        .eq('category', 'competitor')
         .eq('is_active', true);
 
       if (error) throw error;
@@ -132,7 +132,7 @@ export const competitorGalleryService = {
       const { data, error } = await supabase
         .from('public_reference_images')
         .select('tags')
-        .is('product_id', null)
+        .eq('category', 'competitor')
         .eq('is_active', true);
 
       if (error) throw error;
