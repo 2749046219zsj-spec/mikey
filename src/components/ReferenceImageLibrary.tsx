@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, ChevronRight, Loader2, Upload, Link as LinkIcon, HardDrive, X, Check, Trash2 } from 'lucide-react';
-import { PublicReferenceImageService, ProductWithImages, PublicReferenceImage, CompetitorImage } from '../services/publicReferenceImageService';
+import { PublicReferenceImageService, ProductWithImages, PublicReferenceImage } from '../services/publicReferenceImageService';
+import type { CompetitorImage } from '../services/publicReferenceImageService';
 import { ReferenceImageService } from '../services/referenceImageService';
 import type { ReferenceImage } from '../types/referenceImage';
 import { useAuth } from '../contexts/AuthContext';
@@ -203,6 +204,20 @@ export default function ReferenceImageLibrary({ onBack, onSelectImages }: Refere
       await loadData();
     } catch (error) {
       console.error('Failed to delete image:', error);
+      setErrorMessage('删除失败，请重试');
+    }
+  };
+
+  const handleDeleteCompetitorImage = async (image: CompetitorImage) => {
+    if (!confirm(`确定要删除竞品图片 ${image.file_name} 吗？`)) return;
+
+    try {
+      await PublicReferenceImageService.deleteCompetitorImage(image.file_name);
+      removeImage(image.id);
+      await loadData();
+      setErrorMessage('');
+    } catch (error) {
+      console.error('Failed to delete competitor image:', error);
       setErrorMessage('删除失败，请重试');
     }
   };
@@ -599,6 +614,16 @@ export default function ReferenceImageLibrary({ onBack, onSelectImages }: Refere
                           }`}
                         >
                           {imageSelected && <Check className="w-4 h-4" />}
+                        </button>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteCompetitorImage(image);
+                          }}
+                          className="absolute top-2 left-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                        >
+                          <Trash2 className="w-3 h-3 text-white" />
                         </button>
 
                         <div className="p-2 bg-white">

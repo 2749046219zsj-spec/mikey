@@ -78,6 +78,18 @@ export class PublicReferenceImageService {
     return images;
   }
 
+  static async deleteCompetitorImage(fileName: string): Promise<void> {
+    const { error } = await supabase
+      .storage
+      .from('reference-images')
+      .remove([`competitor/${fileName}`]);
+
+    if (error) {
+      console.error('Error deleting competitor image:', error);
+      throw error;
+    }
+  }
+
   static async getAllProducts(): Promise<PublicReferenceProduct[]> {
     const { data, error } = await supabase
       .from('public_reference_products')
