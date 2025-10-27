@@ -335,12 +335,28 @@
 /* 图片画廊样式 */
 .gallery-item {
   position: relative;
-  border-radius: 1rem;
+  border-radius: 1.25rem;
   overflow: hidden;
   aspect-ratio: 1;
-  background: var(--soft-sand);
+  background: var(--pure-white);
   cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.02);
+}
+
+.gallery-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 1.25rem;
+  padding: 2px;
+  background: linear-gradient(135deg, transparent, rgba(255, 107, 53, 0.1), transparent);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
 }
 
 .gallery-item::after {
@@ -349,12 +365,16 @@
   inset: 0;
   background: var(--gradient-overlay);
   opacity: 0;
-  transition: opacity 0.4s ease;
+  transition: opacity 0.5s ease;
 }
 
 .gallery-item:hover {
-  box-shadow: var(--shadow-luxury);
-  transform: scale(1.03);
+  box-shadow: 0 12px 40px rgba(255, 107, 53, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-8px) scale(1.02);
+}
+
+.gallery-item:hover::before {
+  opacity: 1;
 }
 
 .gallery-item:hover::after {
@@ -365,11 +385,11 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .gallery-item:hover img {
-  transform: scale(1.1);
+  transform: scale(1.08);
 }
 
 /* 金色装饰线 */
@@ -540,4 +560,73 @@
   100% {
     background-position: 200% 0;
   }
+}
+
+/* 优雅的背景动画 */
+@keyframes float-gentle-alt {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(30px, -30px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.03;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.06;
+    transform: scale(1.05);
+  }
+}
+
+/* 网格背景装饰 */
+.luxury-grid-bg {
+  background-image:
+    linear-gradient(to right, rgba(255, 107, 53, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 107, 53, 0.02) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* 优雅的悬浮装饰 */
+.floating-decoration {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(60px);
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+
+.floating-decoration-1 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(255, 107, 53, 0.08) 0%, transparent 70%);
+  top: -100px;
+  left: -100px;
+  animation: float-gentle-alt 25s ease-in-out infinite;
+}
+
+.floating-decoration-2 {
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.06) 0%, transparent 70%);
+  top: 40%;
+  right: -80px;
+  animation: float-gentle-alt 30s ease-in-out infinite;
+  animation-delay: -10s;
+}
+
+.floating-decoration-3 {
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255, 155, 122, 0.05) 0%, transparent 70%);
+  bottom: 100px;
+  left: 30%;
+  animation: pulse-glow 20s ease-in-out infinite;
 }

@@ -133,14 +133,35 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
   };
 
   return (
-    <div className="min-h-screen bg-gradient-elegant">
-      {/* 优雅的顶部装饰 */}
-      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-sunset opacity-5 pointer-events-none" />
+    <div className="min-h-screen bg-elegant-cream relative overflow-hidden">
+      {/* 优雅动态背景装饰 */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        {/* 浮动的橙色光晕 */}
+        <div className="absolute top-20 -left-20 w-96 h-96 bg-hermes-coral opacity-[0.03] rounded-full blur-3xl animate-float-gentle" />
+        <div className="absolute top-60 right-20 w-80 h-80 bg-luxury-gold opacity-[0.04] rounded-full blur-3xl animate-float-gentle" style={{ animationDelay: '2s' }} />
+        <div className="absolute bottom-40 left-1/3 w-72 h-72 bg-hermes-orange opacity-[0.02] rounded-full blur-3xl animate-float-gentle" style={{ animationDelay: '4s' }} />
+
+        {/* 优雅的线条装饰 */}
+        <svg className="absolute top-0 right-0 w-1/3 h-full opacity-[0.02]" viewBox="0 0 400 800">
+          <path d="M 0,400 Q 200,200 400,400 T 400,800" stroke="url(#gradient1)" strokeWidth="2" fill="none">
+            <animate attributeName="d" dur="20s" repeatCount="indefinite"
+              values="M 0,400 Q 200,200 400,400 T 400,800;
+                      M 0,400 Q 200,600 400,400 T 400,800;
+                      M 0,400 Q 200,200 400,400 T 400,800" />
+          </path>
+          <defs>
+            <linearGradient id="gradient1" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#FF6B35" />
+              <stop offset="100%" stopColor="#D4AF37" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
 
       <div className="relative max-w-7xl mx-auto px-4 py-12">
         {/* 奢华标题区域 */}
-        <div className="text-center mb-16 perfume-accent">
-          <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/80 backdrop-blur-sm rounded-full mb-6 shadow-luxury-sm border border-elegant-sand/30">
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/90 backdrop-blur-sm rounded-full mb-6 shadow-luxury-sm border border-elegant-sand/30">
             <Sparkles className="text-hermes-orange" size={20} />
             <span className="text-sm font-medium text-elegant-charcoal tracking-wider uppercase">AI创意画廊</span>
           </div>
@@ -157,7 +178,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
         </div>
 
         {/* 优雅的筛选栏 */}
-        <div className="flex items-center justify-between mb-10 bg-white/60 backdrop-blur-sm rounded-2xl p-4 shadow-luxury-sm border border-elegant-sand/20">
+        <div className="flex items-center justify-between mb-10 bg-white rounded-2xl p-5 shadow-luxury-sm border border-elegant-sand/20">
           <div className="flex items-center gap-3 text-sm text-elegant-charcoal font-medium">
             <div className="w-8 h-8 bg-gradient-sunset rounded-full flex items-center justify-center">
               <ImageIcon size={16} className="text-white" />
