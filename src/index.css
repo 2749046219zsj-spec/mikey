@@ -332,16 +332,17 @@
   transform: scaleX(1);
 }
 
-/* 图片画廊样式 */
+/* 图片画廊样式 - 瀑布流 */
 .gallery-item {
   position: relative;
   border-radius: 1.25rem;
   overflow: hidden;
-  aspect-ratio: 1;
   background: var(--pure-white);
   cursor: pointer;
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+  display: inline-block;
+  width: 100%;
 }
 
 .gallery-item::before {

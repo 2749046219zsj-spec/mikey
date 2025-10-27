@@ -226,11 +226,11 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 luxury-scrollbar">
+          <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-8 space-y-8">
             {images.map((image, index) => (
               <div
                 key={image.id}
-                className="animate-fade-in-up"
+                className="break-inside-avoid mb-8 animate-fade-in-up"
                 style={{ animationDelay: `${(index % 12) * 50}ms` }}
               >
                 <GalleryImageCard

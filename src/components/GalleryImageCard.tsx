@@ -94,14 +94,14 @@ export const GalleryImageCard: React.FC<GalleryImageCardProps> = ({
   return (
     <div
       onClick={onClick}
-      className="gallery-item group"
+      className="gallery-item group w-full"
     >
-      {/* 图片容器 */}
-      <div className="relative aspect-square overflow-hidden bg-elegant-sand">
+      {/* 图片容器 - 保持原始比例 */}
+      <div className="relative overflow-hidden bg-white">
         <ImageWithFallback
           src={image.image_url}
           alt={image.prompt || '画廊图片'}
-          className="w-full h-full object-cover"
+          className="w-full h-auto object-contain"
           maxRetries={3}
         />
 
