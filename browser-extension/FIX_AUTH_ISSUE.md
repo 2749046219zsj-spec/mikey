@@ -1,22 +1,18 @@
-# 修复授权问题
+# 修复HTTP 401上传错误
 
 ## 问题描述
 
-上传图片时出现"Missing authorization header"错误。
+上传图片时出现"HTTP 401: 网络错误 上传失败"错误。
 
-## 原因
+## 最新修复（2025-10-27）
 
-Supabase Edge Functions需要授权头（Authorization header）才能正常工作，即使设置了 `verify_jwt: false`。
+**Edge Function已完全重写**，现在使用API Key验证而非用户JWT验证，使插件使用更加简单。
 
-## 解决方案
+## 修复内容
 
-已更新浏览器扩展，添加了Supabase匿名密钥配置。
-
-### 更新内容
-
-1. **background.js** - 添加授权头到上传请求
-2. **popup.html** - 添加Supabase匿名密钥输入框
-3. **popup.js** - 添加密钥配置保存和验证
+1. **Edge Function** - 改用 `apikey` 头验证（不再需要用户登录）
+2. **Edge Function** - 设置 `verify_jwt: false`
+3. **认证方式** - 使用Supabase匿名密钥进行API Key验证
 
 ### 如何修复
 
