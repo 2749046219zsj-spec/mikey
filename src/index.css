@@ -1,19 +1,81 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Cormorant+Garamond:wght@300;400;500;600&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ========================================
+   轻奢香水瓶美学 - 设计系统
+   ======================================== */
+
+:root {
+  /* 主色调 - 爱马仕橙色系 */
+  --hermes-orange: #FF6B35;
+  --hermes-orange-light: #FF8C5A;
+  --hermes-orange-dark: #E55A2B;
+  --hermes-coral: #FF9B7A;
+
+  /* 辅助色 - 奢华金色系 */
+  --luxury-gold: #D4AF37;
+  --champagne-gold: #F0E5D8;
+  --rose-gold: #B76E79;
+
+  /* 中性色 - 精致灰白系 */
+  --pure-white: #FFFFFF;
+  --cream-white: #FAF8F5;
+  --warm-beige: #F5E6D3;
+  --soft-sand: #E8DCC8;
+  --elegant-gray: #A39E93;
+  --charcoal: #2C2C2C;
+  --deep-black: #1A1A1A;
+
+  /* 强调色 */
+  --accent-amber: #FFBF69;
+  --accent-terracotta: #CB7B5C;
+
+  /* 阴影系统 */
+  --shadow-sm: 0 2px 8px rgba(255, 107, 53, 0.08);
+  --shadow-md: 0 4px 16px rgba(255, 107, 53, 0.12);
+  --shadow-lg: 0 8px 32px rgba(255, 107, 53, 0.16);
+  --shadow-xl: 0 12px 48px rgba(255, 107, 53, 0.20);
+  --shadow-luxury: 0 20px 60px rgba(212, 175, 55, 0.15);
+
+  /* 渐变 */
+  --gradient-sunset: linear-gradient(135deg, #FF6B35 0%, #FF9B7A 50%, #FFBF69 100%);
+  --gradient-gold: linear-gradient(135deg, #D4AF37 0%, #F0E5D8 100%);
+  --gradient-elegant: linear-gradient(180deg, #FAF8F5 0%, #E8DCC8 100%);
+  --gradient-overlay: linear-gradient(180deg, rgba(26, 26, 26, 0) 0%, rgba(26, 26, 26, 0.7) 100%);
+}
 
 @layer base {
   * {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
-  
+
   body {
     line-height: 1.6;
+    background-color: var(--cream-white);
+    color: var(--charcoal);
+    overflow-x: hidden;
   }
-  
+
+  /* 标题字体 - 优雅衬线体 */
   h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', serif;
     line-height: 1.2;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  /* 精致无衬线体用于正文 */
+  p, span, div {
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.01em;
+  }
+
+  /* 装饰性文字 */
+  .font-decorative {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 400;
   }
 }
 
@@ -170,4 +232,312 @@
 
 .chat-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #d1d5db;
+}
+
+/* ========================================
+   轻奢香水瓶风格 - 自定义组件
+   ======================================== */
+
+/* 优雅的按钮样式 */
+.btn-luxury {
+  background: var(--gradient-sunset);
+  color: var(--pure-white);
+  padding: 0.875rem 2rem;
+  border-radius: 2rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+  box-shadow: var(--shadow-md);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-luxury::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.6s;
+}
+
+.btn-luxury:hover::before {
+  left: 100%;
+}
+
+.btn-luxury:hover {
+  box-shadow: var(--shadow-xl);
+  transform: translateY(-2px);
+}
+
+.btn-luxury:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-md);
+}
+
+/* 次要按钮 */
+.btn-secondary {
+  background: var(--pure-white);
+  color: var(--hermes-orange);
+  border: 2px solid var(--hermes-orange);
+  padding: 0.875rem 2rem;
+  border-radius: 2rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background: var(--hermes-orange);
+  color: var(--pure-white);
+  box-shadow: var(--shadow-md);
+}
+
+/* 优雅卡片 */
+.card-luxury {
+  background: var(--pure-white);
+  border-radius: 1.5rem;
+  padding: 2rem;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.card-luxury::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--gradient-sunset);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-luxury:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px);
+}
+
+.card-luxury:hover::before {
+  transform: scaleX(1);
+}
+
+/* 图片画廊样式 */
+.gallery-item {
+  position: relative;
+  border-radius: 1rem;
+  overflow: hidden;
+  aspect-ratio: 1;
+  background: var(--soft-sand);
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gallery-item::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--gradient-overlay);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.gallery-item:hover {
+  box-shadow: var(--shadow-luxury);
+  transform: scale(1.03);
+}
+
+.gallery-item:hover::after {
+  opacity: 1;
+}
+
+.gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gallery-item:hover img {
+  transform: scale(1.1);
+}
+
+/* 金色装饰线 */
+.divider-gold {
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--luxury-gold) 50%,
+    transparent 100%
+  );
+  margin: 2rem 0;
+}
+
+/* 轻奢滚动条 */
+.luxury-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.luxury-scrollbar::-webkit-scrollbar-track {
+  background: var(--warm-beige);
+  border-radius: 4px;
+}
+
+.luxury-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--gradient-sunset);
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.luxury-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--hermes-orange-dark);
+}
+
+/* 优雅输入框 */
+.input-luxury {
+  background: var(--pure-white);
+  border: 2px solid var(--soft-sand);
+  border-radius: 1rem;
+  padding: 1rem 1.5rem;
+  font-size: 1rem;
+  color: var(--charcoal);
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.input-luxury:focus {
+  border-color: var(--hermes-orange);
+  box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.1);
+}
+
+.input-luxury::placeholder {
+  color: var(--elegant-gray);
+  font-weight: 300;
+}
+
+/* 加载动画 */
+.loader-luxury {
+  width: 60px;
+  height: 60px;
+  border: 4px solid var(--warm-beige);
+  border-top-color: var(--hermes-orange);
+  border-radius: 50%;
+  animation: luxury-spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+}
+
+@keyframes luxury-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* 香水瓶装饰元素 */
+.perfume-accent {
+  position: relative;
+}
+
+.perfume-accent::before {
+  content: '';
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle, var(--hermes-coral) 0%, transparent 70%);
+  opacity: 0.15;
+  border-radius: 50%;
+  filter: blur(30px);
+  animation: float-gentle 6s ease-in-out infinite;
+}
+
+@keyframes float-gentle {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+  }
+  50% {
+    transform: translateY(-20px) translateX(10px);
+  }
+}
+
+/* 奢华文本渐变 */
+.text-luxury-gradient {
+  background: var(--gradient-sunset);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 优雅过渡效果 */
+.transition-luxury {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 模态框背景 */
+.modal-backdrop-luxury {
+  background: rgba(26, 26, 26, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* 徽章样式 */
+.badge-luxury {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 1rem;
+  background: var(--gradient-gold);
+  color: var(--charcoal);
+  border-radius: 2rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  box-shadow: var(--shadow-sm);
+}
+
+/* 头部导航栏 */
+.navbar-luxury {
+  background: rgba(250, 248, 245, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 107, 53, 0.1);
+  box-shadow: var(--shadow-sm);
+}
+
+/* 页脚样式 */
+.footer-luxury {
+  background: linear-gradient(180deg, var(--cream-white) 0%, var(--warm-beige) 100%);
+  border-top: 1px solid var(--soft-sand);
+}
+
+/* 图片懒加载占位 */
+.image-placeholder {
+  background: linear-gradient(
+    110deg,
+    var(--warm-beige) 8%,
+    var(--soft-sand) 18%,
+    var(--warm-beige) 33%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s linear infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }

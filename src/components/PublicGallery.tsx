@@ -133,95 +133,113 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-orange-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-100 to-pink-100 rounded-full mb-4">
-            <Sparkles className="text-orange-500" size={20} />
-            <span className="text-sm font-medium text-gray-700">AI创意画廊</span>
+    <div className="min-h-screen bg-gradient-elegant">
+      {/* 优雅的顶部装饰 */}
+      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-sunset opacity-5 pointer-events-none" />
+
+      <div className="relative max-w-7xl mx-auto px-4 py-12">
+        {/* 奢华标题区域 */}
+        <div className="text-center mb-16 perfume-accent">
+          <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/80 backdrop-blur-sm rounded-full mb-6 shadow-luxury-sm border border-elegant-sand/30">
+            <Sparkles className="text-hermes-orange" size={20} />
+            <span className="text-sm font-medium text-elegant-charcoal tracking-wider uppercase">AI创意画廊</span>
           </div>
 
-          <h1 className="text-4xl font-bold text-gray-900 mb-3">
-            探索无限创意
+          <h1 className="text-5xl md:text-6xl font-serif font-semibold text-elegant-black mb-4 tracking-tight">
+            探索<span className="text-luxury-gradient">无限</span>创意
           </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-lg text-elegant-gray max-w-2xl mx-auto leading-relaxed font-light">
             发现社区用户分享的精彩AI生成作品，获取灵感，点赞你喜欢的创作
           </p>
+
+          {/* 金色装饰线 */}
+          <div className="divider-gold max-w-md mx-auto mt-8" />
         </div>
 
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <ImageIcon size={16} />
-            <span>{images.length} 张作品</span>
+        {/* 优雅的筛选栏 */}
+        <div className="flex items-center justify-between mb-10 bg-white/60 backdrop-blur-sm rounded-2xl p-4 shadow-luxury-sm border border-elegant-sand/20">
+          <div className="flex items-center gap-3 text-sm text-elegant-charcoal font-medium">
+            <div className="w-8 h-8 bg-gradient-sunset rounded-full flex items-center justify-center">
+              <ImageIcon size={16} className="text-white" />
+            </div>
+            <span className="font-decorative text-base">{images.length} 件作品</span>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <button
               onClick={() => setSortBy('latest')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-medium text-sm tracking-wide transition-luxury ${
                 sortBy === 'latest'
-                  ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white shadow-lg shadow-orange-200'
-                  : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                  ? 'bg-gradient-sunset text-white shadow-luxury-md'
+                  : 'bg-white text-elegant-charcoal hover:bg-elegant-cream border-2 border-elegant-sand'
               }`}
             >
               <Clock size={16} />
-              <span className="font-medium">最新</span>
+              <span>最新</span>
             </button>
             <button
               onClick={() => setSortBy('popular')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-medium text-sm tracking-wide transition-luxury ${
                 sortBy === 'popular'
-                  ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white shadow-lg shadow-orange-200'
-                  : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                  ? 'bg-gradient-sunset text-white shadow-luxury-md'
+                  : 'bg-white text-elegant-charcoal hover:bg-elegant-cream border-2 border-elegant-sand'
               }`}
             >
               <TrendingUp size={16} />
-              <span className="font-medium">热门</span>
+              <span>热门</span>
             </button>
           </div>
         </div>
 
+        {/* 空状态 - 优雅展示 */}
         {images.length === 0 && !isLoading ? (
-          <div className="text-center py-20">
-            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <ImageIcon size={32} className="text-gray-400" />
+          <div className="text-center py-32">
+            <div className="w-24 h-24 bg-gradient-gold rounded-full flex items-center justify-center mx-auto mb-6 shadow-luxury">
+              <ImageIcon size={40} className="text-luxury-gold" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            <h3 className="text-2xl font-serif font-semibold text-elegant-black mb-3">
               画廊暂时还是空的
             </h3>
-            <p className="text-gray-600">
+            <p className="text-elegant-gray font-light">
               成为第一个分享作品的用户吧！
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {images.map((image) => (
-              <GalleryImageCard
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 luxury-scrollbar">
+            {images.map((image, index) => (
+              <div
                 key={image.id}
-                image={image}
-                currentUserId={user?.id}
-                onLikeToggle={handleLikeToggle}
-                onDelete={handleDelete}
-                onClick={() => setSelectedImage(image)}
-              />
+                className="animate-fade-in-up"
+                style={{ animationDelay: `${(index % 12) * 50}ms` }}
+              >
+                <GalleryImageCard
+                  image={image}
+                  currentUserId={user?.id}
+                  onLikeToggle={handleLikeToggle}
+                  onDelete={handleDelete}
+                  onClick={() => setSelectedImage(image)}
+                />
+              </div>
             ))}
           </div>
         )}
 
+        {/* 奢华加载动画 */}
         {isLoading && (
-          <div className="flex justify-center items-center py-12">
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin" />
-              <p className="text-sm text-gray-600">加载中...</p>
+          <div className="flex justify-center items-center py-16">
+            <div className="flex flex-col items-center gap-4">
+              <div className="loader-luxury" />
+              <p className="text-sm text-elegant-gray font-medium tracking-wide">精心加载中...</p>
             </div>
           </div>
         )}
 
+        {/* 底部提示 */}
         {!isLoading && !hasMore && images.length > 0 && (
-          <div className="text-center py-12">
-            <div className="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 rounded-full">
-              <Sparkles size={16} className="text-gray-500" />
-              <span className="text-sm text-gray-600">已经到底啦</span>
+          <div className="text-center py-16">
+            <div className="inline-flex items-center gap-3 px-8 py-4 bg-white/80 backdrop-blur-sm rounded-full shadow-luxury-sm border border-elegant-sand/30">
+              <Sparkles size={18} className="text-luxury-gold" />
+              <span className="text-sm text-elegant-charcoal font-medium tracking-wide">已展示所有精彩作品</span>
             </div>
           </div>
         )}
