@@ -133,9 +133,9 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
   };
 
   return (
-    <div className="min-h-screen bg-elegant-cream relative overflow-hidden">
+    <div className="min-h-screen bg-elegant-cream relative">
       {/* 优雅动态背景装饰 */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         {/* 浮动的橙色光晕 */}
         <div className="absolute top-20 -left-20 w-96 h-96 bg-hermes-coral opacity-[0.03] rounded-full blur-3xl animate-float-gentle" />
         <div className="absolute top-60 right-20 w-80 h-80 bg-luxury-gold opacity-[0.04] rounded-full blur-3xl animate-float-gentle" style={{ animationDelay: '2s' }} />
@@ -158,7 +158,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
         </svg>
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 py-12">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 py-12 pb-24">
         {/* 奢华标题区域 */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/90 backdrop-blur-sm rounded-full mb-6 shadow-luxury-sm border border-elegant-sand/30">
@@ -226,11 +226,11 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
             </p>
           </div>
         ) : (
-          <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-8 space-y-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {images.map((image, index) => (
               <div
                 key={image.id}
-                className="break-inside-avoid mb-8 animate-fade-in-up"
+                className="animate-fade-in-up"
                 style={{ animationDelay: `${(index % 12) * 50}ms` }}
               >
                 <GalleryImageCard
