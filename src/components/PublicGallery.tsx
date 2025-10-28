@@ -172,9 +172,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
           <p className="text-lg text-elegant-gray max-w-2xl mx-auto leading-relaxed font-light">
             发现社区用户分享的精彩AI生成作品，获取灵感，点赞你喜欢的创作
           </p>
-
-          {/* 金色装饰线 */}
-          <div className="divider-gold max-w-md mx-auto mt-8" />
         </div>
 
         {/* 优雅的筛选栏 */}
