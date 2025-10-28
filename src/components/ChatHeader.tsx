@@ -176,6 +176,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
             selectedModel={selectedModel}
             onModelChange={onModelChange}
             disabled={isLoading}
+            currentMode={currentMode}
           />
         </div>
 

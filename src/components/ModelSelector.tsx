@@ -5,6 +5,7 @@ interface ModelSelectorProps {
   selectedModel: string;
   onModelChange: (model: string) => void;
   disabled?: boolean;
+  currentMode?: 'normal' | 'professional';
 }
 
 const models = [
@@ -24,14 +25,20 @@ const models = [
   }
 ];
 
-export const ModelSelector: React.FC<ModelSelectorProps> = ({ 
-  selectedModel, 
-  onModelChange, 
-  disabled = false 
+export const ModelSelector: React.FC<ModelSelectorProps> = ({
+  selectedModel,
+  onModelChange,
+  disabled = false,
+  currentMode = 'normal'
 }) => {
+  // 在专业模式下过滤掉 Seedream 4.0
+  const availableModels = currentMode === 'professional'
+    ? models.filter(m => m.id !== 'Seedream-4.0')
+    : models;
+
   return (
     <div className="flex gap-2 p-2 bg-gray-50 rounded-lg">
-      {models.map((model) => {
+      {availableModels.map((model) => {
         const Icon = model.icon;
         const isSelected = selectedModel === model.id;
         
