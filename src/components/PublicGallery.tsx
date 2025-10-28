@@ -202,53 +202,53 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 max-w-7xl mx-auto px-8">
             {/* 闪电速度 */}
             <div className="group flex flex-col items-center text-center">
-              <div className="w-24 h-24 bg-gradient-to-br from-blue-400 to-blue-600 rounded-[2rem] flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300 shadow-xl">
-                <Zap size={40} className="text-white" />
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-[1.25rem] flex items-center justify-center mb-5 group-hover:scale-110 transition-all duration-300 shadow-lg">
+                <Zap size={28} className="text-white" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">
+              <h3 className="text-lg font-bold text-gray-900 mb-3">
                 闪电速度
               </h3>
               <p className="text-sm text-gray-500 leading-relaxed">
-                几秒钟内生成高质量图像，无需等待
+                即时生成高质量图像，告别漫长等待，灵感瞬间呈现
               </p>
             </div>
 
-            {/* 创意无限 */}
+            {/* 一键创作 */}
             <div className="group flex flex-col items-center text-center">
-              <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-green-600 rounded-[2rem] flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300 shadow-xl">
-                <Lightbulb size={40} className="text-white" />
+              <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-[1.25rem] flex items-center justify-center mb-5 group-hover:scale-110 transition-all duration-300 shadow-lg">
+                <Lightbulb size={28} className="text-white" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">
-                创意无限
+              <h3 className="text-lg font-bold text-gray-900 mb-3">
+                一键创作
               </h3>
               <p className="text-sm text-gray-500 leading-relaxed">
-                从风景到人物，从抽象到科幻，应有尽有
+                无需复杂提示词，上传参考图片即可生成，小白也能轻松上手
               </p>
             </div>
 
-            {/* 简单易用 */}
+            {/* 场景丰富 */}
             <div className="group flex flex-col items-center text-center">
-              <div className="w-24 h-24 bg-gradient-to-br from-purple-400 to-purple-600 rounded-[2rem] flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300 shadow-xl">
-                <Layers size={40} className="text-white" />
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-purple-600 rounded-[1.25rem] flex items-center justify-center mb-5 group-hover:scale-110 transition-all duration-300 shadow-lg">
+                <Layers size={28} className="text-white" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">
-                简单易用
+              <h3 className="text-lg font-bold text-gray-900 mb-3">
+                场景丰富
               </h3>
               <p className="text-sm text-gray-500 leading-relaxed">
-                几百个提示词，直观的界面设计，点击直用
+                覆盖产品设计与漫画图文，多种创作模板随心切换，满足全场景需求
               </p>
             </div>
 
-            {/* 视频工作流 */}
+            {/* 智能工作流 */}
             <div className="group flex flex-col items-center text-center">
-              <div className="w-24 h-24 bg-gradient-to-br from-orange-400 to-orange-600 rounded-[2rem] flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300 shadow-xl">
-                <Workflow size={40} className="text-white" />
+              <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-600 rounded-[1.25rem] flex items-center justify-center mb-5 group-hover:scale-110 transition-all duration-300 shadow-lg">
+                <Workflow size={28} className="text-white" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">
-                视频工作流
+              <h3 className="text-lg font-bold text-gray-900 mb-3">
+                智能工作流
               </h3>
               <p className="text-sm text-gray-500 leading-relaxed">
-                连续场景编排，轻松制作AI短剧视频
+                批量处理快速导出，从创意到成品一站搞定，大幅提升设计效率
               </p>
             </div>
           </div>
