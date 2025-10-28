@@ -201,53 +201,53 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* 闪电速度 */}
-            <div className="group bg-white rounded-2xl p-6 shadow-luxury-sm hover:shadow-luxury-md transition-all duration-300 border border-elegant-sand/20 hover:border-hermes-orange/30">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                <Zap size={24} className="text-white" />
+            <div className="group bg-white/60 backdrop-blur-md rounded-2xl p-6 hover:bg-white/70 transition-all duration-300 border border-white/40 hover:border-blue-400/50 hover:shadow-[0_8px_32px_rgba(59,130,246,0.25)]">
+              <div className="w-14 h-14 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
+                <Zap size={26} className="text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-elegant-black mb-2">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 闪电速度
               </h3>
-              <p className="text-sm text-elegant-gray leading-relaxed">
+              <p className="text-sm text-gray-700 leading-relaxed">
                 即时生成高质量图像，告别漫长等待，灵感瞬间呈现
               </p>
             </div>
 
             {/* 一键创作 */}
-            <div className="group bg-white rounded-2xl p-6 shadow-luxury-sm hover:shadow-luxury-md transition-all duration-300 border border-elegant-sand/20 hover:border-hermes-orange/30">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                <Lightbulb size={24} className="text-white" />
+            <div className="group bg-white/60 backdrop-blur-md rounded-2xl p-6 hover:bg-white/70 transition-all duration-300 border border-white/40 hover:border-green-400/50 hover:shadow-[0_8px_32px_rgba(34,197,94,0.25)]">
+              <div className="w-14 h-14 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
+                <Lightbulb size={26} className="text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-elegant-black mb-2">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 一键创作
               </h3>
-              <p className="text-sm text-elegant-gray leading-relaxed">
+              <p className="text-sm text-gray-700 leading-relaxed">
                 无需复杂提示词，上传参考图片即可生成，小白也能轻松上手
               </p>
             </div>
 
             {/* 场景丰富 */}
-            <div className="group bg-white rounded-2xl p-6 shadow-luxury-sm hover:shadow-luxury-md transition-all duration-300 border border-elegant-sand/20 hover:border-hermes-orange/30">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                <Layers size={24} className="text-white" />
+            <div className="group bg-white/60 backdrop-blur-md rounded-2xl p-6 hover:bg-white/70 transition-all duration-300 border border-white/40 hover:border-purple-400/50 hover:shadow-[0_8px_32px_rgba(168,85,247,0.25)]">
+              <div className="w-14 h-14 bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
+                <Layers size={26} className="text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-elegant-black mb-2">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 场景丰富
               </h3>
-              <p className="text-sm text-elegant-gray leading-relaxed">
+              <p className="text-sm text-gray-700 leading-relaxed">
                 覆盖产品设计与漫画图文，多种创作模板随心切换，满足全场景需求
               </p>
             </div>
 
             {/* 智能工作流 */}
-            <div className="group bg-white rounded-2xl p-6 shadow-luxury-sm hover:shadow-luxury-md transition-all duration-300 border border-elegant-sand/20 hover:border-hermes-orange/30">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                <Workflow size={24} className="text-white" />
+            <div className="group bg-white/60 backdrop-blur-md rounded-2xl p-6 hover:bg-white/70 transition-all duration-300 border border-white/40 hover:border-orange-400/50 hover:shadow-[0_8px_32px_rgba(251,146,60,0.25)]">
+              <div className="w-14 h-14 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
+                <Workflow size={26} className="text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-elegant-black mb-2">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 智能工作流
               </h3>
-              <p className="text-sm text-elegant-gray leading-relaxed">
+              <p className="text-sm text-gray-700 leading-relaxed">
                 批量处理快速导出，从创意到成品一站搞定，大幅提升设计效率
               </p>
             </div>
