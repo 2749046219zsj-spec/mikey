@@ -395,58 +395,21 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
     <ErrorBoundary>
       {showGallery ? (
         <div className="min-h-screen bg-elegant-cream flex flex-col">
-          <div className="border-b border-gray-200 bg-white sticky top-0 z-20 shadow-sm">
-            <div className="max-w-7xl mx-auto px-6 py-4">
-              <div className="flex items-center justify-between h-16">
-                {/* Logo区域 */}
+          <div className="border-b border-elegant-sand/30 bg-white/90 backdrop-blur-sm sticky top-0 z-20 shadow-luxury-sm">
+            <div className="max-w-7xl mx-auto px-4 py-4">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-pink-500 rounded-lg flex items-center justify-center">
-                    <ImageIcon size={18} className="text-white" />
+                  <div className="w-10 h-10 bg-gradient-sunset rounded-full flex items-center justify-center shadow-luxury-sm">
+                    <ImageIcon size={20} className="text-white" />
                   </div>
-                  <span className="text-xl font-semibold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">
-                    画镜AI
-                  </span>
+                  <h1 className="text-2xl font-serif font-semibold text-elegant-black">AI 创意画廊</h1>
                 </div>
-
-                {/* 中间导航链接 */}
-                <div className="flex items-center gap-1">
-                  <button className="px-4 py-2 rounded-lg text-sm font-medium text-orange-500 bg-orange-50 transition-all duration-200">
-                    首页
-                  </button>
-                  <button className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200">
-                    提示词库
-                  </button>
-                  <button className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200">
-                    生成图片
-                  </button>
-                  <button className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200">
-                    批量生成
-                  </button>
-                  <button className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200">
-                    漫画生成
-                  </button>
-                  <button className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200">
-                    我的作品
-                  </button>
-                  <button className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200">
-                    关于
-                  </button>
-                </div>
-
-                {/* 右侧操作区 */}
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={handleStartCreating}
-                    className="px-5 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg text-sm font-medium hover:from-orange-600 hover:to-orange-700 transition-all duration-200 shadow-sm"
-                  >
-                    开始创作
-                  </button>
-                  {user && (
-                    <div className="flex items-center gap-2 pl-3 border-l border-gray-200 text-sm text-gray-600">
-                      <span>剩余 {user.permissions.remaining_draws} 次</span>
-                    </div>
-                  )}
-                </div>
+                <button
+                  onClick={handleStartCreating}
+                  className="px-6 py-2.5 bg-gradient-sunset text-white rounded-full hover:shadow-luxury-md transition-all duration-300 font-medium tracking-wide"
+                >
+                  开始创作
+                </button>
               </div>
             </div>
           </div>
