@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Message, ChatState } from '../types/chat';
 import { GeminiApiService } from '../services/geminiApi';
+import { SeedreamApiService } from '../services/seedreamApi';
 import { usePromptQueue } from './usePromptQueue';
 
 type BeforeSendCallback = () => Promise<boolean>;
@@ -15,6 +16,7 @@ export const useChat = (beforeSendCallback?: BeforeSendCallback) => {
   const [retryCallback, setRetryCallback] = useState<(() => void) | null>(null);
 
   const geminiService = new GeminiApiService();
+  const seedreamService = new SeedreamApiService();
   const { queue, referenceImages, isProcessing, isStopped, currentIndex, totalCount, addPrompts, processNext, stopQueue, clearQueue, setProcessing } = usePromptQueue();
 
   // 解析提示词：提取 ** ** 内的内容
@@ -76,13 +78,15 @@ export const useChat = (beforeSendCallback?: BeforeSendCallback) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      // 不传递对话历史，每次请求都是独立的
-      const conversationHistory: any[] = [];
+      let response: string;
 
-      // Send to Gemini API with 'normal' mode for system prompt
-      const response = await geminiService.sendMessage(text, images, state.selectedModel, conversationHistory, 'normal');
+      if (state.selectedModel === 'Seedream-4.0') {
+        response = await seedreamService.sendMessage(text, images, []);
+      } else {
+        const conversationHistory: any[] = [];
+        response = await geminiService.sendMessage(text, images, state.selectedModel, conversationHistory, 'normal');
+      }
 
-      // Add AI response
       addMessage({
         type: 'ai',
         content: response,
