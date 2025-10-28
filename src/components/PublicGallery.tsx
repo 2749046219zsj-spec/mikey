@@ -166,31 +166,22 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
         </svg>
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 py-12 pb-24">
-        {/* 奢华标题区域 */}
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/90 backdrop-blur-sm rounded-full mb-6 shadow-luxury-sm border border-elegant-sand/30">
-            <Sparkles className="text-hermes-orange" size={20} />
-            <span className="text-sm font-medium text-elegant-charcoal tracking-wider uppercase">AI创意画廊</span>
-          </div>
-
-          <h1 className="text-5xl md:text-6xl font-serif font-semibold text-elegant-black mb-4 tracking-tight">
-            探索<span className="text-luxury-gradient">无限</span>创意
-          </h1>
-          <p className="text-lg text-elegant-gray max-w-2xl mx-auto leading-relaxed font-light">
-            发现社区用户分享的精彩AI生成作品，获取灵感，点赞你喜欢的创作
-          </p>
-        </div>
-
-        {/* 优雅的筛选栏 */}
+      <div className="relative z-10 max-w-7xl mx-auto px-4 py-8 pb-24">
+        {/* 一行式页头 */}
         <div className="flex items-center justify-between mb-10 bg-white rounded-2xl p-5 shadow-luxury-sm border border-elegant-sand/20">
-          <div className="flex items-center gap-3 text-sm text-elegant-charcoal font-medium">
-            <div className="w-8 h-8 bg-gradient-sunset rounded-full flex items-center justify-center">
-              <ImageIcon size={16} className="text-white" />
+          {/* 左侧：标签和作品数 */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-50 to-pink-50 rounded-full border border-elegant-sand/30">
+              <Sparkles className="text-hermes-orange" size={18} />
+              <span className="text-sm font-medium text-elegant-charcoal tracking-wide">AI创意画廊</span>
             </div>
-            <span className="font-decorative text-base">{totalCount} 件作品</span>
+            <div className="flex items-center gap-2 text-elegant-charcoal">
+              <ImageIcon size={18} className="text-hermes-orange" />
+              <span className="font-medium text-base">{totalCount} 件作品</span>
+            </div>
           </div>
 
+          {/* 右侧：排序按钮 */}
           <div className="flex gap-3">
             <button
               onClick={() => setSortBy('latest')}
