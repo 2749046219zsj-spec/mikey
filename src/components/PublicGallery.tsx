@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, TrendingUp, Clock, Image as ImageIcon } from 'lucide-react';
+import { Sparkles, TrendingUp, Clock, Image as ImageIcon, Zap, Lightbulb, Layers, Workflow } from 'lucide-react';
 import { GalleryImage, GallerySortBy } from '../types/gallery';
 import { GalleryService } from '../services/galleryService';
 import { GalleryImageCard } from './GalleryImageCard';
@@ -167,6 +167,72 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 py-12 pb-24">
+        {/* 功能介绍模块 */}
+        <div className="mb-20">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-serif font-semibold text-elegant-black mb-3">
+              为什么选择画镜AI？
+            </h2>
+            <p className="text-base text-elegant-gray font-light">
+              简单、快速、高质量的AI图像和视频生成体验
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* 闪电速度 */}
+            <div className="group bg-white rounded-2xl p-6 shadow-luxury-sm hover:shadow-luxury-md transition-all duration-300 border border-elegant-sand/20 hover:border-hermes-orange/30">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <Zap size={24} className="text-white" />
+              </div>
+              <h3 className="text-lg font-semibold text-elegant-black mb-2">
+                闪电速度
+              </h3>
+              <p className="text-sm text-elegant-gray leading-relaxed">
+                即时生成高质量图像，告别漫长等待，灵感瞬间呈现
+              </p>
+            </div>
+
+            {/* 一键创作 */}
+            <div className="group bg-white rounded-2xl p-6 shadow-luxury-sm hover:shadow-luxury-md transition-all duration-300 border border-elegant-sand/20 hover:border-hermes-orange/30">
+              <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <Lightbulb size={24} className="text-white" />
+              </div>
+              <h3 className="text-lg font-semibold text-elegant-black mb-2">
+                一键创作
+              </h3>
+              <p className="text-sm text-elegant-gray leading-relaxed">
+                无需复杂提示词，上传参考图片即可生成，小白也能轻松上手
+              </p>
+            </div>
+
+            {/* 场景丰富 */}
+            <div className="group bg-white rounded-2xl p-6 shadow-luxury-sm hover:shadow-luxury-md transition-all duration-300 border border-elegant-sand/20 hover:border-hermes-orange/30">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <Layers size={24} className="text-white" />
+              </div>
+              <h3 className="text-lg font-semibold text-elegant-black mb-2">
+                场景丰富
+              </h3>
+              <p className="text-sm text-elegant-gray leading-relaxed">
+                覆盖产品设计与漫画图文，多种创作模板随心切换，满足全场景需求
+              </p>
+            </div>
+
+            {/* 智能工作流 */}
+            <div className="group bg-white rounded-2xl p-6 shadow-luxury-sm hover:shadow-luxury-md transition-all duration-300 border border-elegant-sand/20 hover:border-hermes-orange/30">
+              <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <Workflow size={24} className="text-white" />
+              </div>
+              <h3 className="text-lg font-semibold text-elegant-black mb-2">
+                智能工作流
+              </h3>
+              <p className="text-sm text-elegant-gray leading-relaxed">
+                批量处理快速导出，从创意到成品一站搞定，大幅提升设计效率
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* 奢华标题区域 */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/90 backdrop-blur-sm rounded-full mb-6 shadow-luxury-sm border border-elegant-sand/30">
