@@ -155,25 +155,37 @@ export class SeedreamApiService {
     images: File[] = [],
     conversationHistory: any[] = []
   ): Promise<string> {
-    const imageUrls: string[] = [];
-
-    for (const file of images) {
-      const base64 = await this.fileToBase64(file);
-      imageUrls.push(base64);
+    if (!text || text.trim().length === 0) {
+      throw new Error('请输入图像生成的描述词');
     }
 
-    const generatedImages = await this.generateImage({
-      prompt: text,
-      imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
-      size: '2K',
-      maxImages: 1
-    });
+    let enhancedPrompt = text.trim();
 
-    if (generatedImages.length === 0) {
-      throw new Error('No image was generated');
+    if (enhancedPrompt.length < 10) {
+      enhancedPrompt = `生成一张关于"${enhancedPrompt}"的高质量图片，细节丰富，光线自然，构图优美`;
     }
 
-    return `![Generated Image](${generatedImages[0]})`;
+    console.log('Seedream generating with prompt:', enhancedPrompt);
+
+    try {
+      const generatedImages = await this.generateImage({
+        prompt: enhancedPrompt,
+        imageUrls: undefined,
+        size: '2K',
+        maxImages: 1
+      });
+
+      if (generatedImages.length === 0) {
+        throw new Error('未能生成图像，请尝试更详细的描述');
+      }
+
+      console.log('Successfully generated image:', generatedImages[0]);
+      return `![Generated Image](${generatedImages[0]})`;
+    } catch (error) {
+      console.error('Seedream generation error:', error);
+      const errorMsg = error instanceof Error ? error.message : '图像生成失败';
+      throw new Error(`Seedream 生成失败: ${errorMsg}。提示：Seedream 是图像生成模型，请描述您想要生成的图像。`);
+    }
   }
 
   private async fileToBase64(file: File): Promise<string> {
