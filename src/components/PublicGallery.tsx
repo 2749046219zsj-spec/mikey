@@ -189,66 +189,66 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 py-12 pb-24">
         {/* 功能介绍模块 */}
-        <div className="mb-20">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-serif font-semibold text-elegant-black mb-3">
-              为什么选择AI创意助手？
+        <div className="mb-24">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              为什么选择画镜AI?
             </h2>
-            <p className="text-base text-elegant-gray font-light">
+            <p className="text-base text-gray-600">
               简单、快速、高质量的AI图像和视频生成体验
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 max-w-6xl mx-auto">
             {/* 闪电速度 */}
-            <div className="group bg-white/60 backdrop-blur-md rounded-2xl p-6 hover:bg-white/70 transition-all duration-300 border border-white/40 hover:border-blue-400/50 hover:shadow-[0_8px_32px_rgba(59,130,246,0.25)]">
-              <div className="w-14 h-14 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
-                <Zap size={26} className="text-white" />
+            <div className="group flex flex-col items-center text-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-blue-600 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300 shadow-lg">
+                <Zap size={36} className="text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-bold text-gray-900 mb-3">
                 闪电速度
               </h3>
-              <p className="text-sm text-gray-700 leading-relaxed">
-                即时生成高质量图像，告别漫长等待，灵感瞬间呈现
+              <p className="text-sm text-gray-600 leading-relaxed">
+                几秒钟内生成高质量图像，无需等待
               </p>
             </div>
 
-            {/* 一键创作 */}
-            <div className="group bg-white/60 backdrop-blur-md rounded-2xl p-6 hover:bg-white/70 transition-all duration-300 border border-white/40 hover:border-green-400/50 hover:shadow-[0_8px_32px_rgba(34,197,94,0.25)]">
-              <div className="w-14 h-14 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
-                <Lightbulb size={26} className="text-white" />
+            {/* 创意无限 */}
+            <div className="group flex flex-col items-center text-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300 shadow-lg">
+                <Lightbulb size={36} className="text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                一键创作
+              <h3 className="text-lg font-bold text-gray-900 mb-3">
+                创意无限
               </h3>
-              <p className="text-sm text-gray-700 leading-relaxed">
-                无需复杂提示词，上传参考图片即可生成，小白也能轻松上手
+              <p className="text-sm text-gray-600 leading-relaxed">
+                从风景到人物，从抽象到科幻，应有尽有
               </p>
             </div>
 
-            {/* 场景丰富 */}
-            <div className="group bg-white/60 backdrop-blur-md rounded-2xl p-6 hover:bg-white/70 transition-all duration-300 border border-white/40 hover:border-purple-400/50 hover:shadow-[0_8px_32px_rgba(168,85,247,0.25)]">
-              <div className="w-14 h-14 bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
-                <Layers size={26} className="text-white" />
+            {/* 简单易用 */}
+            <div className="group flex flex-col items-center text-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-purple-400 to-purple-600 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300 shadow-lg">
+                <Layers size={36} className="text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                场景丰富
+              <h3 className="text-lg font-bold text-gray-900 mb-3">
+                简单易用
               </h3>
-              <p className="text-sm text-gray-700 leading-relaxed">
-                覆盖产品设计与漫画图文，多种创作模板随心切换，满足全场景需求
+              <p className="text-sm text-gray-600 leading-relaxed">
+                几百个提示词，直观的界面设计，点击直用
               </p>
             </div>
 
-            {/* 智能工作流 */}
-            <div className="group bg-white/60 backdrop-blur-md rounded-2xl p-6 hover:bg-white/70 transition-all duration-300 border border-white/40 hover:border-orange-400/50 hover:shadow-[0_8px_32px_rgba(251,146,60,0.25)]">
-              <div className="w-14 h-14 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
-                <Workflow size={26} className="text-white" />
+            {/* 视频工作流 */}
+            <div className="group flex flex-col items-center text-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300 shadow-lg">
+                <Workflow size={36} className="text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                智能工作流
+              <h3 className="text-lg font-bold text-gray-900 mb-3">
+                视频工作流
               </h3>
-              <p className="text-sm text-gray-700 leading-relaxed">
-                批量处理快速导出，从创意到成品一站搞定，大幅提升设计效率
+              <p className="text-sm text-gray-600 leading-relaxed">
+                连续场景编排，轻松制作AI短剧视频
               </p>
             </div>
           </div>
