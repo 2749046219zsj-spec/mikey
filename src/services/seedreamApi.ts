@@ -10,12 +10,16 @@ interface SeedreamGenerationParams {
 }
 
 interface SeedreamStreamData {
-  status?: string;
-  data?: {
-    url?: string;
-    b64_json?: string;
-  }[];
-  error?: string;
+  type?: string;
+  url?: string;
+  image_index?: number;
+  error?: {
+    message: string;
+    code?: string;
+  };
+  usage?: {
+    generated_images: number;
+  };
 }
 
 export class SeedreamApiService {
@@ -98,22 +102,23 @@ export class SeedreamApiService {
 
             try {
               const data: SeedreamStreamData = JSON.parse(jsonStr);
+              console.log('Parsed stream data:', data);
 
               if (data.error) {
                 console.error('Seedream API error:', data.error);
-                throw new Error(data.error);
+                throw new Error(data.error.message || 'Unknown error');
               }
 
-              if (data.data && Array.isArray(data.data)) {
-                for (const item of data.data) {
-                  if (item.url) {
-                    imageUrls.push(item.url);
-                    console.log('Received image URL:', item.url);
-                  }
-                }
+              if (data.type === 'image_generation.partial_succeeded' && data.url) {
+                imageUrls.push(data.url);
+                console.log('Received image URL:', data.url);
+              }
+
+              if (data.type === 'image_generation.completed') {
+                console.log('Generation completed, total images:', data.usage?.generated_images);
               }
             } catch (parseError) {
-              console.warn('Failed to parse stream data:', jsonStr);
+              console.warn('Failed to parse stream data:', jsonStr, parseError);
             }
           }
         }
@@ -124,15 +129,13 @@ export class SeedreamApiService {
         if (jsonStr !== '[DONE]') {
           try {
             const data: SeedreamStreamData = JSON.parse(jsonStr);
-            if (data.data && Array.isArray(data.data)) {
-              for (const item of data.data) {
-                if (item.url) {
-                  imageUrls.push(item.url);
-                }
-              }
+            console.log('Parsed final buffer data:', data);
+
+            if (data.type === 'image_generation.partial_succeeded' && data.url) {
+              imageUrls.push(data.url);
             }
           } catch (parseError) {
-            console.warn('Failed to parse final buffer:', jsonStr);
+            console.warn('Failed to parse final buffer:', jsonStr, parseError);
           }
         }
       }
