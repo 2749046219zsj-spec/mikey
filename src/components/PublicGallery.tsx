@@ -171,7 +171,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
         <div className="mb-20">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-serif font-semibold text-elegant-black mb-3">
-              为什么选择画镜AI？
+              为什么选择闪电AI？
             </h2>
             <p className="text-base text-elegant-gray font-light">
               简单、快速、高质量的AI图像和视频生成体验
