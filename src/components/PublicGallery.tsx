@@ -192,7 +192,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
         <div className="mb-32">
           <div className="text-center mb-20">
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-5">
-              为什么选择画镜AI?
+              为什么选择AI创意助手?
             </h2>
             <p className="text-sm md:text-base text-gray-500">
               简单、快速、高质量的AI图像和视频生成体验
