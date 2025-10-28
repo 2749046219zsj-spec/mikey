@@ -47,10 +47,10 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   };
 
   return (
-    <div className="border-b border-gray-200 bg-white/90 backdrop-blur-sm sticky top-0 z-10">
+    <div className="border-b border-gray-200 bg-white sticky top-0 z-10 shadow-sm">
       <div className="max-w-4xl mx-auto px-4 py-4">
-        {/* 模式切换标签 */}
-        <div className="flex items-center gap-2 mb-4">
+        {/* 模式切换标签 - 参考图2样式 */}
+        <div className="flex items-center gap-2 mb-4 bg-gray-800 rounded-lg p-1.5 inline-flex">
           {onShowGallery && (
             <button
               onClick={onShowGallery}
@@ -62,22 +62,22 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
           )}
           <button
             onClick={() => onModeChange('normal')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+            className={`flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition-all duration-200 text-sm ${
               currentMode === 'normal'
-                ? 'bg-gradient-to-r from-purple-500 to-blue-600 text-white shadow-md'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'bg-orange-500 text-white shadow-md'
+                : 'bg-transparent text-gray-400 hover:text-white'
             }`}
           >
             <Sparkles size={18} />
-            普通模式
+            浏览模式
           </button>
           {canUseProfessionalMode && (
             <button
               onClick={() => onModeChange('professional')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+              className={`flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition-all duration-200 text-sm ${
                 currentMode === 'professional'
-                  ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-md'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-orange-500 text-white shadow-md'
+                  : 'bg-transparent text-gray-400 hover:text-white'
               }`}
             >
               <Wrench size={18} />

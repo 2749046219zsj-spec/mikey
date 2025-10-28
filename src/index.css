@@ -495,6 +495,139 @@
   box-shadow: var(--shadow-sm);
 }
 
+/* ========================================
+   统一导航栏设计 - 基于参考图
+   ======================================== */
+
+/* 主导航栏样式 */
+.navbar-unified {
+  background: #FFFFFF;
+  border-bottom: 1px solid #E5E7EB;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  height: 64px;
+}
+
+/* 导航栏Logo */
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.navbar-logo-icon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8C5A 50%, #FF9B7A 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navbar-logo-text {
+  font-size: 20px;
+  font-weight: 600;
+  background: linear-gradient(90deg, #FF6B35 0%, #FF8C5A 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 导航链接样式 */
+.navbar-link {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6B7280;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.navbar-link:hover {
+  color: #111827;
+  background-color: #F9FAFB;
+}
+
+.navbar-link.active {
+  color: #FF6B35;
+  background-color: #FFF4ED;
+}
+
+/* 模式切换标签 - 参考图2样式 */
+.mode-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #1F2937;
+  border-radius: 8px;
+  padding: 6px;
+}
+
+.mode-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #9CA3AF;
+  background: transparent;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+.mode-tab:hover {
+  color: #FFFFFF;
+}
+
+.mode-tab.active {
+  background: #FF6B35;
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.25);
+}
+
+/* 按钮样式 */
+.btn-navbar-primary {
+  padding: 8px 20px;
+  background: linear-gradient(90deg, #FF6B35 0%, #FF8C5A 100%);
+  color: #FFFFFF;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(255, 107, 53, 0.2);
+}
+
+.btn-navbar-primary:hover {
+  background: linear-gradient(90deg, #E55A2B 0%, #FF6B35 100%);
+  box-shadow: 0 2px 6px rgba(255, 107, 53, 0.3);
+}
+
+.btn-navbar-secondary {
+  padding: 8px 20px;
+  background: linear-gradient(90deg, #EF4444 0%, #DC2626 100%);
+  color: #FFFFFF;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(239, 68, 68, 0.2);
+}
+
+.btn-navbar-secondary:hover {
+  background: linear-gradient(90deg, #DC2626 0%, #B91C1C 100%);
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);
+}
+
 /* 头部导航栏 */
 .navbar-luxury {
   background: rgba(250, 248, 245, 0.95);
