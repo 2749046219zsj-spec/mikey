@@ -82,13 +82,32 @@ export const useChat = (beforeSendCallback?: BeforeSendCallback, seedreamConfig?
       let response: string;
 
       if (state.selectedModel === 'Seedream-4.0') {
-        const customSize = seedreamConfig?.useCustomSize
-          ? `${seedreamConfig.customWidth}x${seedreamConfig.customHeight}`
-          : undefined;
+        // Calculate actual size based on aspect ratio if not using custom size
+        let actualSize: string;
+
+        if (seedreamConfig?.useCustomSize) {
+          actualSize = `${seedreamConfig.customWidth}x${seedreamConfig.customHeight}`;
+        } else {
+          // Map aspect ratios to actual pixel dimensions based on resolution
+          const aspectRatioSizes: Record<string, { width: number; height: number }> = {
+            '1:1': { width: 2048, height: 2048 },
+            '3:4': { width: 1728, height: 2304 },
+            '4:3': { width: 2304, height: 1728 },
+            '16:9': { width: 2560, height: 1440 },
+            '9:16': { width: 1440, height: 2560 },
+            '2:3': { width: 1728, height: 2592 },
+            '3:2': { width: 2592, height: 1728 },
+            '21:9': { width: 2560, height: 1097 }
+          };
+
+          const ratio = seedreamConfig?.aspectRatio || '1:1';
+          const dimensions = aspectRatioSizes[ratio] || { width: 2048, height: 2048 };
+          actualSize = `${dimensions.width}x${dimensions.height}`;
+        }
 
         const seedreamParams = {
           size: seedreamConfig?.resolution,
-          customSize: customSize,
+          customSize: actualSize,
           maxImages: seedreamConfig?.sequentialMode !== 'off' ? seedreamConfig.imageCount : 1,
           sequentialMode: seedreamConfig?.sequentialMode !== 'off' ? seedreamConfig.sequentialMode : undefined
         };
