@@ -16,7 +16,7 @@ import { useWidgetChat } from './hooks/useWidgetChat';
 import { useAuth } from './contexts/AuthContext';
 import { userService } from './services/userService';
 import { useImageSelector } from './hooks/useImageSelector';
-import { Image as ImageIcon, X } from 'lucide-react';
+import { Image as ImageIcon, Sparkles, Wrench } from 'lucide-react';
 import { useReferenceImageStore } from './stores/referenceImageStore';
 
 interface AppContentProps {
@@ -395,21 +395,54 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
     <ErrorBoundary>
       {showGallery ? (
         <div className="min-h-screen bg-elegant-cream flex flex-col">
-          <div className="border-b border-elegant-sand/30 bg-white/90 backdrop-blur-sm sticky top-0 z-20 shadow-luxury-sm">
-            <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="border-b border-gray-200 bg-white/90 backdrop-blur-sm sticky top-0 z-20">
+            <div className="max-w-7xl mx-auto px-4 py-3">
+              {/* 统一的导航栏 */}
               <div className="flex items-center justify-between">
+                {/* 左侧：Logo 和标题 */}
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-sunset rounded-full flex items-center justify-center shadow-luxury-sm">
+                  <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-600 rounded-full flex items-center justify-center shadow-sm">
                     <ImageIcon size={20} className="text-white" />
                   </div>
-                  <h1 className="text-2xl font-serif font-semibold text-elegant-black">AI 创意画廊</h1>
+                  <h1 className="text-lg font-semibold text-gray-800">AI 创意助手</h1>
                 </div>
-                <button
-                  onClick={handleStartCreating}
-                  className="px-6 py-2.5 bg-gradient-sunset text-white rounded-full hover:shadow-luxury-md transition-all duration-300 font-medium tracking-wide"
-                >
-                  开始创作
-                </button>
+
+                {/* 右侧：操作按钮 */}
+                <div className="flex items-center gap-2">
+                  {/* 浏览画廊 - 当前在画廊页面 */}
+                  <button
+                    className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white text-sm rounded-lg shadow-sm font-medium cursor-default"
+                  >
+                    <ImageIcon size={16} />
+                    浏览画廊
+                  </button>
+
+                  {/* 普通模式按钮 */}
+                  <button
+                    onClick={() => {
+                      handleStartCreating();
+                      setCurrentMode('normal');
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg font-medium transition-all duration-200 bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  >
+                    <Sparkles size={16} />
+                    普通模式
+                  </button>
+
+                  {/* 专业模式按钮 */}
+                  {canUseChat && (
+                    <button
+                      onClick={() => {
+                        handleStartCreating();
+                        setCurrentMode('professional');
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg font-medium transition-all duration-200 bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    >
+                      <Wrench size={16} />
+                      专业模式
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
