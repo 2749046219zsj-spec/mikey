@@ -14,6 +14,7 @@ interface PublicGalleryProps {
 export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration }) => {
   const { user } = useAuth();
   const [images, setImages] = useState<GalleryImage[]>([]);
+  const [totalCount, setTotalCount] = useState<number>(0);
   const [sortBy, setSortBy] = useState<GallerySortBy>('latest');
   const [isLoading, setIsLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
@@ -54,9 +55,15 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
     }
   };
 
+  const loadTotalCount = async () => {
+    const count = await GalleryService.getTotalCount();
+    setTotalCount(count);
+  };
+
   useEffect(() => {
     setHasMore(true);
     loadImages(true);
+    loadTotalCount();
   }, [sortBy, user?.id]);
 
   const handleScroll = () => {
@@ -91,6 +98,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
 
   const handleDelete = (imageId: string) => {
     setImages((prev) => prev.filter((img) => img.id !== imageId));
+    setTotalCount((prev) => Math.max(0, prev - 1));
   };
 
   const handleRemake = async (image: GalleryImage) => {
@@ -180,7 +188,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
             <div className="w-8 h-8 bg-gradient-sunset rounded-full flex items-center justify-center">
               <ImageIcon size={16} className="text-white" />
             </div>
-            <span className="font-decorative text-base">{images.length} 件作品</span>
+            <span className="font-decorative text-base">{totalCount} 件作品</span>
           </div>
 
           <div className="flex gap-3">

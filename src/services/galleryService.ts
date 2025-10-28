@@ -234,6 +234,21 @@ export class GalleryService {
       return null;
     }
   }
+
+  static async getTotalCount(): Promise<number> {
+    try {
+      const { count, error } = await supabase
+        .from('public_gallery')
+        .select('*', { count: 'exact', head: true });
+
+      if (error) throw error;
+
+      return count || 0;
+    } catch (error) {
+      console.error('Failed to get total count:', error);
+      return 0;
+    }
+  }
 }
 
 export const galleryService = {
@@ -245,4 +260,5 @@ export const galleryService = {
   checkIfInGallery: GalleryService.checkIfInGallery,
   logGalleryUsage: GalleryService.logGalleryUsage,
   getImageById: GalleryService.getGalleryImageById,
+  getTotalCount: GalleryService.getTotalCount,
 };
