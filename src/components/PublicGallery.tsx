@@ -142,27 +142,48 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
 
   return (
     <div className="relative flex-1">
-      {/* 优雅动态背景装饰 */}
+      {/* 炫酷动态背景 */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        {/* 浮动的橙色光晕 */}
-        <div className="absolute top-20 -left-20 w-96 h-96 bg-hermes-coral opacity-[0.03] rounded-full blur-3xl animate-float-gentle" />
-        <div className="absolute top-60 right-20 w-80 h-80 bg-luxury-gold opacity-[0.04] rounded-full blur-3xl animate-float-gentle" style={{ animationDelay: '2s' }} />
-        <div className="absolute bottom-40 left-1/3 w-72 h-72 bg-hermes-orange opacity-[0.02] rounded-full blur-3xl animate-float-gentle" style={{ animationDelay: '4s' }} />
+        {/* 渐变网格背景 */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-orange-50 opacity-50" />
 
-        {/* 优雅的线条装饰 */}
-        <svg className="absolute top-0 right-0 w-1/3 h-full opacity-[0.02]" viewBox="0 0 400 800">
-          <path d="M 0,400 Q 200,200 400,400 T 400,800" stroke="url(#gallery-gradient1)" strokeWidth="2" fill="none">
-            <animate attributeName="d" dur="20s" repeatCount="indefinite"
-              values="M 0,400 Q 200,200 400,400 T 400,800;
-                      M 0,400 Q 200,600 400,400 T 400,800;
-                      M 0,400 Q 200,200 400,400 T 400,800" />
-          </path>
+        {/* 动态渐变光球 */}
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-gradient-to-br from-blue-400/20 via-purple-400/20 to-pink-400/20 rounded-full blur-3xl animate-pulse-slow" />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-gradient-to-tl from-orange-400/20 via-red-400/20 to-yellow-400/20 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-gradient-to-r from-cyan-400/15 via-blue-400/15 to-purple-400/15 rounded-full blur-3xl animate-spin-slow" />
+
+        {/* 动态光线效果 */}
+        <div className="absolute top-0 left-0 w-full h-full">
+          <div className="absolute top-20 left-20 w-1 h-40 bg-gradient-to-b from-blue-400/40 to-transparent animate-float-up" />
+          <div className="absolute top-40 right-32 w-1 h-32 bg-gradient-to-b from-purple-400/40 to-transparent animate-float-up" style={{ animationDelay: '1s' }} />
+          <div className="absolute bottom-32 left-1/3 w-1 h-36 bg-gradient-to-b from-orange-400/40 to-transparent animate-float-up" style={{ animationDelay: '2s' }} />
+          <div className="absolute top-1/3 right-20 w-1 h-28 bg-gradient-to-b from-pink-400/40 to-transparent animate-float-up" style={{ animationDelay: '1.5s' }} />
+        </div>
+
+        {/* 粒子效果 */}
+        <div className="absolute inset-0">
+          {[...Array(20)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-2 h-2 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full opacity-20 animate-float-particle"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 5}s`,
+                animationDuration: `${10 + Math.random() * 10}s`
+              }}
+            />
+          ))}
+        </div>
+
+        {/* 网格线条效果 */}
+        <svg className="absolute inset-0 w-full h-full opacity-[0.03]" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <linearGradient id="gallery-gradient1" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#FF6B35" />
-              <stop offset="100%" stopColor="#D4AF37" />
-            </linearGradient>
+            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="1" className="text-blue-500" />
+            </pattern>
           </defs>
+          <rect width="100%" height="100%" fill="url(#grid)" />
         </svg>
       </div>
 
