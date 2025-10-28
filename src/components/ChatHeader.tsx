@@ -170,20 +170,25 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
           </div>
         </div>
 
-        {/* 模型选择器和 Seedream 设置 */}
-        <div className="flex items-center gap-3">
+        {/* 模型选择器 */}
+        <div>
           <ModelSelector
             selectedModel={selectedModel}
             onModelChange={onModelChange}
             disabled={isLoading}
           />
-          {isSeedreamModel && seedreamConfig && onSeedreamConfigChange && (
+        </div>
+
+        {/* Seedream 设置 - 仅在普通模式下显示 */}
+        {currentMode === 'normal' && isSeedreamModel && seedreamConfig && onSeedreamConfigChange && (
+          <div className="mt-3 flex items-center gap-2">
+            <span className="text-sm text-gray-600 font-medium">生成设置：</span>
             <SeedreamSettings
               config={seedreamConfig}
               onChange={onSeedreamConfigChange}
             />
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
