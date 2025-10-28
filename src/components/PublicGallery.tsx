@@ -189,65 +189,65 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 py-12 pb-24">
         {/* 功能介绍模块 */}
-        <div className="mb-24">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+        <div className="mb-32">
+          <div className="text-center mb-20">
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-5">
               为什么选择画镜AI?
             </h2>
-            <p className="text-base text-gray-600">
+            <p className="text-sm md:text-base text-gray-500">
               简单、快速、高质量的AI图像和视频生成体验
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 max-w-7xl mx-auto px-8">
             {/* 闪电速度 */}
             <div className="group flex flex-col items-center text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-blue-600 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300 shadow-lg">
-                <Zap size={36} className="text-white" />
+              <div className="w-24 h-24 bg-gradient-to-br from-blue-400 to-blue-600 rounded-[2rem] flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300 shadow-xl">
+                <Zap size={40} className="text-white" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-3">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">
                 闪电速度
               </h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
+              <p className="text-sm text-gray-500 leading-relaxed">
                 几秒钟内生成高质量图像，无需等待
               </p>
             </div>
 
             {/* 创意无限 */}
             <div className="group flex flex-col items-center text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300 shadow-lg">
-                <Lightbulb size={36} className="text-white" />
+              <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-green-600 rounded-[2rem] flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300 shadow-xl">
+                <Lightbulb size={40} className="text-white" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-3">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">
                 创意无限
               </h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
+              <p className="text-sm text-gray-500 leading-relaxed">
                 从风景到人物，从抽象到科幻，应有尽有
               </p>
             </div>
 
             {/* 简单易用 */}
             <div className="group flex flex-col items-center text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-purple-400 to-purple-600 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300 shadow-lg">
-                <Layers size={36} className="text-white" />
+              <div className="w-24 h-24 bg-gradient-to-br from-purple-400 to-purple-600 rounded-[2rem] flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300 shadow-xl">
+                <Layers size={40} className="text-white" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-3">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">
                 简单易用
               </h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
+              <p className="text-sm text-gray-500 leading-relaxed">
                 几百个提示词，直观的界面设计，点击直用
               </p>
             </div>
 
             {/* 视频工作流 */}
             <div className="group flex flex-col items-center text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300 shadow-lg">
-                <Workflow size={36} className="text-white" />
+              <div className="w-24 h-24 bg-gradient-to-br from-orange-400 to-orange-600 rounded-[2rem] flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300 shadow-xl">
+                <Workflow size={40} className="text-white" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-3">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">
                 视频工作流
               </h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
+              <p className="text-sm text-gray-500 leading-relaxed">
                 连续场景编排，轻松制作AI短剧视频
               </p>
             </div>
