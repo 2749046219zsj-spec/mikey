@@ -116,29 +116,12 @@ function App() {
   };
 
   return (
-    <div>
-      {user && (
-        <div className="absolute top-4 right-4 z-50 flex items-center gap-4 bg-white rounded-lg shadow-lg px-4 py-2">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">剩余绘图次数:</span>
-            <span className="text-lg font-bold text-blue-600">
-              {user.permissions.remaining_draws}
-            </span>
-          </div>
-          <button
-            onClick={() => setViewMode('dashboard')}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
-          >
-            我的账户
-          </button>
-        </div>
-      )}
-      <AppContent
-        onShowAuth={handleShowAuth}
-        shouldEnterCreation={shouldEnterCreation}
-        onCreationEntered={() => setShouldEnterCreation(false)}
-      />
-    </div>
+    <AppContent
+      onShowAuth={handleShowAuth}
+      shouldEnterCreation={shouldEnterCreation}
+      onCreationEntered={() => setShouldEnterCreation(false)}
+      onShowDashboard={() => setViewMode('dashboard')}
+    />
   );
 }
 

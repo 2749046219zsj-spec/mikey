@@ -1,6 +1,7 @@
 import React from 'react';
 import { Bot, Trash2, StopCircle, XCircle, Sparkles, Wrench, Image as ImageIcon } from 'lucide-react';
 import { ModelSelector } from './ModelSelector';
+import { useAuth } from '../contexts/AuthContext';
 
 export type AppMode = 'normal' | 'professional';
 
@@ -21,6 +22,7 @@ interface ChatHeaderProps {
   onModeChange: (mode: AppMode) => void;
   canUseProfessionalMode: boolean;
   onShowGallery?: () => void;
+  onShowDashboard?: () => void;
 }
 
 export const ChatHeader: React.FC<ChatHeaderProps> = ({
@@ -35,8 +37,11 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   currentMode,
   onModeChange,
   canUseProfessionalMode,
-  onShowGallery
+  onShowGallery,
+  onShowDashboard
 }) => {
+  const { user } = useAuth();
+
   const getModelDisplayName = (modelId: string) => {
     switch (modelId) {
       case 'Gemini-2.5-Flash-Image':
@@ -137,6 +142,24 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
                 <Trash2 size={16} />
                 清空
               </button>
+            )}
+
+            {/* 剩余次数和账户按钮 */}
+            {user && (
+              <>
+                <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
+                  <span className="text-sm text-gray-600">剩余绘图次数:</span>
+                  <span className="text-sm font-bold text-blue-600">
+                    {user.permissions.remaining_draws}
+                  </span>
+                </div>
+                <button
+                  onClick={onShowDashboard}
+                  className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg font-medium transition-colors"
+                >
+                  我的账户
+                </button>
+              </>
             )}
           </div>
         </div>

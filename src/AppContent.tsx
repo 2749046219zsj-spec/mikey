@@ -23,9 +23,10 @@ interface AppContentProps {
   onShowAuth?: (mode: 'login' | 'register') => void;
   shouldEnterCreation?: boolean;
   onCreationEntered?: () => void;
+  onShowDashboard?: () => void;
 }
 
-export default function AppContent({ onShowAuth, shouldEnterCreation, onCreationEntered }: AppContentProps) {
+export default function AppContent({ onShowAuth, shouldEnterCreation, onCreationEntered, onShowDashboard }: AppContentProps) {
   const { user, refreshUserData } = useAuth();
   const [editContent, setEditContent] = useState<{ text: string; images: File[] } | null>(null);
   const [showContactModal, setShowContactModal] = useState(false);
@@ -442,6 +443,24 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
                       专业模式
                     </button>
                   )}
+
+                  {/* 剩余次数和账户按钮 */}
+                  {user && (
+                    <>
+                      <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
+                        <span className="text-sm text-gray-600">剩余绘图次数:</span>
+                        <span className="text-sm font-bold text-blue-600">
+                          {user.permissions.remaining_draws}
+                        </span>
+                      </div>
+                      <button
+                        onClick={onShowDashboard}
+                        className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg font-medium transition-colors"
+                      >
+                        我的账户
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -470,6 +489,7 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
             onModeChange={setCurrentMode}
             canUseProfessionalMode={canUseChat}
             onShowGallery={() => setShowGallery(true)}
+            onShowDashboard={onShowDashboard}
           />
 
         <ChatContainer
