@@ -133,7 +133,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
   };
 
   return (
-    <div className="min-h-screen bg-elegant-cream relative">
+    <div className="relative flex-1">
       {/* 优雅动态背景装饰 */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         {/* 浮动的橙色光晕 */}
@@ -143,14 +143,14 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
 
         {/* 优雅的线条装饰 */}
         <svg className="absolute top-0 right-0 w-1/3 h-full opacity-[0.02]" viewBox="0 0 400 800">
-          <path d="M 0,400 Q 200,200 400,400 T 400,800" stroke="url(#gradient1)" strokeWidth="2" fill="none">
+          <path d="M 0,400 Q 200,200 400,400 T 400,800" stroke="url(#gallery-gradient1)" strokeWidth="2" fill="none">
             <animate attributeName="d" dur="20s" repeatCount="indefinite"
               values="M 0,400 Q 200,200 400,400 T 400,800;
                       M 0,400 Q 200,600 400,400 T 400,800;
                       M 0,400 Q 200,200 400,400 T 400,800" />
           </path>
           <defs>
-            <linearGradient id="gradient1" x1="0%" y1="0%" x2="0%" y2="100%">
+            <linearGradient id="gallery-gradient1" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#FF6B35" />
               <stop offset="100%" stopColor="#D4AF37" />
             </linearGradient>

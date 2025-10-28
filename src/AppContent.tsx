@@ -394,19 +394,19 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
   return (
     <ErrorBoundary>
       {showGallery ? (
-        <div className="h-screen bg-slate-50 flex flex-col overflow-y-auto">
-          <div className="border-b border-gray-200 bg-white/90 backdrop-blur-sm sticky top-0 z-10">
+        <div className="min-h-screen bg-elegant-cream flex flex-col">
+          <div className="border-b border-elegant-sand/30 bg-white/90 backdrop-blur-sm sticky top-0 z-20 shadow-luxury-sm">
             <div className="max-w-7xl mx-auto px-4 py-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-pink-500 rounded-full flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-sunset rounded-full flex items-center justify-center shadow-luxury-sm">
                     <ImageIcon size={20} className="text-white" />
                   </div>
-                  <h1 className="text-2xl font-bold text-gray-900">AI 创意画廊</h1>
+                  <h1 className="text-2xl font-serif font-semibold text-elegant-black">AI 创意画廊</h1>
                 </div>
                 <button
                   onClick={handleStartCreating}
-                  className="px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-600 text-white rounded-lg hover:from-purple-600 hover:to-blue-700 transition-all duration-200 shadow-md font-medium"
+                  className="px-6 py-2.5 bg-gradient-sunset text-white rounded-full hover:shadow-luxury-md transition-all duration-300 font-medium tracking-wide"
                 >
                   开始创作
                 </button>
