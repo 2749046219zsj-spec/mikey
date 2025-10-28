@@ -6,7 +6,9 @@ interface SeedreamGenerationParams {
   prompt: string;
   imageUrls?: string[];
   size?: '1K' | '2K' | '4K';
+  customSize?: string;
   maxImages?: number;
+  sequentialMode?: 'auto' | 'storybook' | 'comic';
 }
 
 interface SeedreamStreamData {
@@ -27,15 +29,15 @@ export class SeedreamApiService {
     try {
       const requestBody: any = {
         prompt: params.prompt,
-        size: params.size || '2K',
+        size: params.customSize || params.size || '2K',
       };
 
       if (params.imageUrls && params.imageUrls.length > 0) {
         requestBody.image = params.imageUrls;
       }
 
-      if (params.maxImages && params.maxImages > 1) {
-        requestBody.sequential_image_generation = 'auto';
+      if (params.sequentialMode && params.maxImages && params.maxImages > 1) {
+        requestBody.sequential_image_generation = params.sequentialMode;
         requestBody.sequential_image_generation_options = {
           max_images: params.maxImages
         };
@@ -45,8 +47,9 @@ export class SeedreamApiService {
         promptLength: params.prompt.length,
         hasImages: !!params.imageUrls,
         imageCount: params.imageUrls?.length || 0,
-        size: params.size,
-        maxImages: params.maxImages
+        size: params.customSize || params.size,
+        maxImages: params.maxImages,
+        sequentialMode: params.sequentialMode
       });
 
       const response = await fetch(API_URL, {
@@ -156,7 +159,8 @@ export class SeedreamApiService {
   async sendMessage(
     text: string,
     images: File[] = [],
-    conversationHistory: any[] = []
+    conversationHistory: any[] = [],
+    customParams?: Partial<SeedreamGenerationParams>
   ): Promise<string> {
     if (!text || text.trim().length === 0) {
       throw new Error('请输入图像生成的描述词');
@@ -174,16 +178,25 @@ export class SeedreamApiService {
       const generatedImages = await this.generateImage({
         prompt: enhancedPrompt,
         imageUrls: undefined,
-        size: '2K',
-        maxImages: 1
+        size: customParams?.size || '2K',
+        customSize: customParams?.customSize,
+        maxImages: customParams?.maxImages || 1,
+        sequentialMode: customParams?.sequentialMode
       });
 
       if (generatedImages.length === 0) {
         throw new Error('未能生成图像，请尝试更详细的描述');
       }
 
-      console.log('Successfully generated image:', generatedImages[0]);
-      return `![Generated Image](${generatedImages[0]})`;
+      console.log('Successfully generated images:', generatedImages.length);
+
+      if (generatedImages.length === 1) {
+        return `![Generated Image](${generatedImages[0]})`;
+      } else {
+        return generatedImages.map((url, index) =>
+          `![Generated Image ${index + 1}](${url})`
+        ).join('\n\n');
+      }
     } catch (error) {
       console.error('Seedream generation error:', error);
       const errorMsg = error instanceof Error ? error.message : '图像生成失败';

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Bot, Trash2, StopCircle, XCircle, Sparkles, Wrench, Image as ImageIcon } from 'lucide-react';
 import { ModelSelector } from './ModelSelector';
+import { SeedreamSettings, SeedreamConfig } from './SeedreamSettings';
 import { useAuth } from '../contexts/AuthContext';
 
 export type AppMode = 'normal' | 'professional';
@@ -23,6 +24,8 @@ interface ChatHeaderProps {
   canUseProfessionalMode: boolean;
   onShowGallery?: () => void;
   onShowDashboard?: () => void;
+  seedreamConfig?: SeedreamConfig;
+  onSeedreamConfigChange?: (config: SeedreamConfig) => void;
 }
 
 export const ChatHeader: React.FC<ChatHeaderProps> = ({
@@ -38,9 +41,12 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   onModeChange,
   canUseProfessionalMode,
   onShowGallery,
-  onShowDashboard
+  onShowDashboard,
+  seedreamConfig,
+  onSeedreamConfigChange
 }) => {
   const { user } = useAuth();
+  const isSeedreamModel = selectedModel === 'Seedream-4.0';
 
   const getModelDisplayName = (modelId: string) => {
     switch (modelId) {
@@ -164,13 +170,19 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
           </div>
         </div>
 
-        {/* 模型选择器 */}
-        <div>
+        {/* 模型选择器和 Seedream 设置 */}
+        <div className="flex items-center gap-3">
           <ModelSelector
             selectedModel={selectedModel}
             onModelChange={onModelChange}
             disabled={isLoading}
           />
+          {isSeedreamModel && seedreamConfig && onSeedreamConfigChange && (
+            <SeedreamSettings
+              config={seedreamConfig}
+              onChange={onSeedreamConfigChange}
+            />
+          )}
         </div>
       </div>
     </div>

@@ -3,10 +3,11 @@ import { Message, ChatState } from '../types/chat';
 import { GeminiApiService } from '../services/geminiApi';
 import { SeedreamApiService } from '../services/seedreamApi';
 import { usePromptQueue } from './usePromptQueue';
+import { SeedreamConfig } from '../components/SeedreamSettings';
 
 type BeforeSendCallback = () => Promise<boolean>;
 
-export const useChat = (beforeSendCallback?: BeforeSendCallback) => {
+export const useChat = (beforeSendCallback?: BeforeSendCallback, seedreamConfig?: SeedreamConfig) => {
   const [state, setState] = useState<ChatState>({
     messages: [],
     isLoading: false,
@@ -81,7 +82,18 @@ export const useChat = (beforeSendCallback?: BeforeSendCallback) => {
       let response: string;
 
       if (state.selectedModel === 'Seedream-4.0') {
-        response = await seedreamService.sendMessage(text, images, []);
+        const customSize = seedreamConfig?.useCustomSize
+          ? `${seedreamConfig.customWidth}x${seedreamConfig.customHeight}`
+          : undefined;
+
+        const seedreamParams = {
+          size: seedreamConfig?.resolution,
+          customSize: customSize,
+          maxImages: seedreamConfig?.sequentialMode !== 'off' ? seedreamConfig.imageCount : 1,
+          sequentialMode: seedreamConfig?.sequentialMode !== 'off' ? seedreamConfig.sequentialMode : undefined
+        };
+
+        response = await seedreamService.sendMessage(text, images, [], seedreamParams);
       } else {
         const conversationHistory: any[] = [];
         response = await geminiService.sendMessage(text, images, state.selectedModel, conversationHistory, 'normal');

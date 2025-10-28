@@ -11,6 +11,7 @@ import { ContactModal } from './components/ContactModal';
 import ReferenceImageLibrary from './components/ReferenceImageLibrary';
 import { PublicGallery } from './components/PublicGallery';
 import { LoginPromptModal } from './components/LoginPromptModal';
+import { SeedreamConfig, getDefaultSeedreamConfig } from './components/SeedreamSettings';
 import { useChat } from './hooks/useChat';
 import { useWidgetChat } from './hooks/useWidgetChat';
 import { useAuth } from './contexts/AuthContext';
@@ -52,6 +53,7 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
   const [showPromptUpload, setShowPromptUpload] = useState(false);
   const [uploadedPrompts, setUploadedPrompts] = useState('');
   const [sentMessageIds, setSentMessageIds] = useState<Set<string>>(new Set());
+  const [seedreamConfig, setSeedreamConfig] = useState<SeedreamConfig>(getDefaultSeedreamConfig());
 
   const checkAndDecrementDraws = React.useCallback(async () => {
     if (!user) return false;
@@ -84,7 +86,7 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
     setSelectedModel,
     stopQueue,
     clearQueue,
-  } = useChat(checkAndDecrementDraws);
+  } = useChat(checkAndDecrementDraws, seedreamConfig);
 
   const {
     messages: assistantMessages,
@@ -490,6 +492,8 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
             canUseProfessionalMode={canUseChat}
             onShowGallery={() => setShowGallery(true)}
             onShowDashboard={onShowDashboard}
+            seedreamConfig={seedreamConfig}
+            onSeedreamConfigChange={setSeedreamConfig}
           />
 
         <ChatContainer
