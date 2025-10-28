@@ -1,7 +1,8 @@
 import { ApiResponse } from '../types/chat';
 
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const API_URL = 'https://api.poe.com/v1/chat/completions';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const API_URL = `${SUPABASE_URL}/functions/v1/gemini-proxy`;
 
 export class GeminiApiService {
   private async convertImageToBase64(file: File): Promise<string> {
@@ -132,7 +133,8 @@ export class GeminiApiService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${API_KEY}`
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'apikey': SUPABASE_ANON_KEY
         },
         body: JSON.stringify(requestBody)
       });
