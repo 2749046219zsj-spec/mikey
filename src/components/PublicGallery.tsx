@@ -195,7 +195,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
               为什么选择AI创意助手?
             </h2>
             <p className="text-sm md:text-base text-gray-500">
-              简单、快速、高质量的AI图像和视频生成体验
+              简单、快速、高质量的AI图像生成体验
             </p>
           </div>
 
