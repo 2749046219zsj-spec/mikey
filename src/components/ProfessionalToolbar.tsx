@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, Images } from 'lucide-react';
+import { FileText, Images, Wrench, ExternalLink } from 'lucide-react';
 import { StylePresetDropdown } from './StylePresetDropdown';
 import { CraftSelector } from './CraftSelector';
 import { ProductSelector } from './ProductSelector';
@@ -17,6 +17,15 @@ interface ProfessionalToolbarProps {
   selectedReferenceCount: number;
 }
 
+const tools = [
+  {
+    id: 'sku-manager',
+    name: '货号管理',
+    url: 'https://automated-image-sku-d3hn.bolt.host/',
+    description: '自动化图片货号管理工具'
+  }
+];
+
 export const ProfessionalToolbar: React.FC<ProfessionalToolbarProps> = ({
   onStyleSelect,
   onCraftsConfirm,
@@ -28,6 +37,8 @@ export const ProfessionalToolbar: React.FC<ProfessionalToolbarProps> = ({
   onStyleCountChange,
   selectedReferenceCount
 }) => {
+  const [showToolbox, setShowToolbox] = useState(false);
+
   return (
     <div className="border-t border-gray-200 bg-gradient-to-r from-orange-50 to-red-50 py-3">
       <div className="max-w-4xl mx-auto px-4">
@@ -79,6 +90,51 @@ export const ProfessionalToolbar: React.FC<ProfessionalToolbarProps> = ({
               </span>
             )}
           </button>
+
+          <div className="relative">
+            <button
+              onClick={() => setShowToolbox(!showToolbox)}
+              className="px-3 py-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg text-xs font-medium hover:shadow-md transition-all flex items-center gap-1.5"
+            >
+              <Wrench size={14} />
+              工具箱
+            </button>
+
+            {showToolbox && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setShowToolbox(false)}
+                />
+                <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden">
+                  <div className="bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-2">
+                    <h3 className="text-sm font-semibold text-white">专业工具箱</h3>
+                  </div>
+                  <div className="p-2">
+                    {tools.map((tool) => (
+                      <a
+                        key={tool.id}
+                        href={tool.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-between gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors group"
+                      >
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-gray-900 group-hover:text-amber-600 transition-colors">
+                            {tool.name}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-0.5">
+                            {tool.description}
+                          </div>
+                        </div>
+                        <ExternalLink size={16} className="text-gray-400 group-hover:text-amber-600 transition-colors" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>
