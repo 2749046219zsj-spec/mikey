@@ -18,7 +18,7 @@ import { useWidgetChat } from './hooks/useWidgetChat';
 import { useAuth } from './contexts/AuthContext';
 import { userService } from './services/userService';
 import { useImageSelector } from './hooks/useImageSelector';
-import { Image as ImageIcon, Sparkles, Wrench, Package } from 'lucide-react';
+import { Image as ImageIcon, Sparkles, Wrench } from 'lucide-react';
 import { useReferenceImageStore } from './stores/referenceImageStore';
 
 interface AppContentProps {
@@ -34,7 +34,6 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
   const [showContactModal, setShowContactModal] = useState(false);
   const [showReferenceLibrary, setShowReferenceLibrary] = useState(false);
   const [showGallery, setShowGallery] = useState(true);
-  const [showCatalog, setShowCatalog] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [currentMode, setCurrentMode] = useState<AppMode>('normal');
   const [hasOpenedReferenceLibrary, setHasOpenedReferenceLibrary] = useState(false);
@@ -398,9 +397,7 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
 
   return (
     <ErrorBoundary>
-      {showCatalog ? (
-        <ProductCatalog />
-      ) : showGallery ? (
+      {showGallery ? (
         <div className="min-h-screen bg-elegant-cream flex flex-col">
           <div className="border-b border-gray-200 bg-white/90 backdrop-blur-sm sticky top-0 z-20">
             <div className="max-w-7xl mx-auto px-4 py-3">
@@ -416,15 +413,6 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
 
                 {/* 右侧：操作按钮 */}
                 <div className="flex items-center gap-2">
-                  {/* 产品目录按钮 */}
-                  <button
-                    onClick={() => setShowCatalog(true)}
-                    className="flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg font-medium transition-all duration-200 bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  >
-                    <Package size={16} />
-                    产品目录
-                  </button>
-
                   {/* 浏览画廊 - 当前在画廊页面 */}
                   <button
                     className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white text-sm rounded-lg shadow-sm font-medium cursor-default"

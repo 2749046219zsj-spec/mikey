@@ -6,6 +6,10 @@ import { GalleryImageCard } from './GalleryImageCard';
 import { GalleryDetailModal } from './GalleryDetailModal';
 import { FloatingAIPanel } from './FloatingAIPanel';
 import { useAuth } from '../contexts/AuthContext';
+import { catalogService } from '../services/catalogService';
+import type { ProductCategory, CatalogProductWithCategory } from '../types/catalog';
+import { ProductCard } from './catalog/ProductCard';
+import { ProductDetailModal } from './catalog/ProductDetailModal';
 
 interface PublicGalleryProps {
   onSubmitGeneration?: (prompt: string, images: File[]) => void;
@@ -23,6 +27,12 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
   const [showFloatingPanel, setShowFloatingPanel] = useState(false);
   const [floatingPrompt, setFloatingPrompt] = useState<string>('');
   const [floatingImages, setFloatingImages] = useState<File[]>([]);
+
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [catalogProducts, setCatalogProducts] = useState<CatalogProductWithCategory[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<CatalogProductWithCategory | null>(null);
+  const [catalogLoading, setCatalogLoading] = useState(false);
 
   const loadImages = async (reset: boolean = false) => {
     if (!hasMore && !reset) return;
@@ -61,10 +71,77 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
   };
 
   useEffect(() => {
-    setHasMore(true);
-    loadImages(true);
-    loadTotalCount();
-  }, [sortBy, user?.id]);
+    loadCategories();
+  }, []);
+
+  useEffect(() => {
+    if (selectedCategory) {
+      loadCatalogProducts();
+    } else {
+      setHasMore(true);
+      loadImages(true);
+      loadTotalCount();
+    }
+  }, [selectedCategory, sortBy, user?.id]);
+
+  const loadCategories = async () => {
+    try {
+      const data = await catalogService.getCategories();
+      setCategories(data);
+    } catch (error) {
+      console.error('Failed to load categories:', error);
+    }
+  };
+
+  const loadCatalogProducts = async () => {
+    if (!selectedCategory) return;
+    try {
+      setCatalogLoading(true);
+      const products = await catalogService.getProductsByCategory(selectedCategory, user?.id);
+      setCatalogProducts(products);
+    } catch (error) {
+      console.error('Failed to load catalog products:', error);
+    } finally {
+      setCatalogLoading(false);
+    }
+  };
+
+  const handleCategorySelect = (categoryId: string) => {
+    if (selectedCategory === categoryId) {
+      setSelectedCategory(null);
+      setCatalogProducts([]);
+    } else {
+      setSelectedCategory(categoryId);
+    }
+  };
+
+  const handleProductLikeToggle = async (productId: string) => {
+    if (!user) {
+      alert('请先登录');
+      return;
+    }
+
+    try {
+      const liked = await catalogService.toggleLike(productId, user.id);
+      const product = catalogProducts.find((p) => p.id === productId);
+      if (product) {
+        const newLikesCount = liked ? product.likes_count + 1 : product.likes_count - 1;
+        setCatalogProducts(
+          catalogProducts.map((p) =>
+            p.id === productId ? { ...p, user_liked: liked, likes_count: newLikesCount } : p
+          )
+        );
+      }
+    } catch (err) {
+      console.error('Failed to toggle like:', err);
+    }
+  };
+
+  const handleProductCommentCountChange = (productId: string, count: number) => {
+    setCatalogProducts(
+      catalogProducts.map((p) => (p.id === productId ? { ...p, comments_count: count } : p))
+    );
+  };
 
   const handleScroll = () => {
     if (isLoading || !hasMore) return;
@@ -269,76 +346,138 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
           </p>
         </div>
 
-        {/* 优雅的筛选栏 */}
-        <div className="flex items-center justify-between mb-10 bg-white rounded-2xl p-5 shadow-luxury-sm border border-elegant-sand/20">
-          <div className="flex items-center gap-3 text-sm text-elegant-charcoal font-medium">
-            <div className="w-8 h-8 bg-gradient-sunset rounded-full flex items-center justify-center">
-              <ImageIcon size={16} className="text-white" />
-            </div>
-            <span className="font-decorative text-base">{totalCount} 件作品</span>
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              onClick={() => setSortBy('latest')}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-medium text-sm tracking-wide transition-luxury ${
-                sortBy === 'latest'
-                  ? 'bg-gradient-sunset text-white shadow-luxury-md'
-                  : 'bg-white text-elegant-charcoal hover:bg-elegant-cream border-2 border-elegant-sand'
-              }`}
-            >
-              <Clock size={16} />
-              <span>最新</span>
-            </button>
-            <button
-              onClick={() => setSortBy('popular')}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-medium text-sm tracking-wide transition-luxury ${
-                sortBy === 'popular'
-                  ? 'bg-gradient-sunset text-white shadow-luxury-md'
-                  : 'bg-white text-elegant-charcoal hover:bg-elegant-cream border-2 border-elegant-sand'
-              }`}
-            >
-              <TrendingUp size={16} />
-              <span>热门</span>
-            </button>
-          </div>
-        </div>
-
-        {/* 空状态 - 优雅展示 */}
-        {images.length === 0 && !isLoading ? (
-          <div className="text-center py-32">
-            <div className="w-24 h-24 bg-gradient-gold rounded-full flex items-center justify-center mx-auto mb-6 shadow-luxury">
-              <ImageIcon size={40} className="text-luxury-gold" />
-            </div>
-            <h3 className="text-2xl font-serif font-semibold text-elegant-black mb-3">
-              画廊暂时还是空的
-            </h3>
-            <p className="text-elegant-gray font-light">
-              成为第一个分享作品的用户吧！
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {images.map((image, index) => (
-              <div
-                key={image.id}
-                className="animate-fade-in-up"
-                style={{ animationDelay: `${(index % 12) * 50}ms` }}
+        {/* 产品分类标签 */}
+        {categories.length > 0 && (
+          <div className="flex flex-wrap items-center justify-center gap-3 mb-12">
+            {categories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => handleCategorySelect(category.id)}
+                className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
+                  selectedCategory === category.id
+                    ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white shadow-lg scale-105'
+                    : 'bg-white/90 backdrop-blur-sm text-gray-700 hover:bg-white hover:shadow-md border border-gray-200'
+                }`}
               >
-                <GalleryImageCard
-                  image={image}
-                  currentUserId={user?.id}
-                  onLikeToggle={handleLikeToggle}
-                  onDelete={handleDelete}
-                  onClick={() => setSelectedImage(image)}
-                />
-              </div>
+                {category.display_name}
+              </button>
             ))}
           </div>
         )}
 
+        {/* 优雅的筛选栏 */}
+        {!selectedCategory && (
+          <div className="flex items-center justify-between mb-10 bg-white rounded-2xl p-5 shadow-luxury-sm border border-elegant-sand/20">
+            <div className="flex items-center gap-3 text-sm text-elegant-charcoal font-medium">
+              <div className="w-8 h-8 bg-gradient-sunset rounded-full flex items-center justify-center">
+                <ImageIcon size={16} className="text-white" />
+              </div>
+              <span className="font-decorative text-base">{totalCount} 件作品</span>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setSortBy('latest')}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-medium text-sm tracking-wide transition-luxury ${
+                  sortBy === 'latest'
+                    ? 'bg-gradient-sunset text-white shadow-luxury-md'
+                    : 'bg-white text-elegant-charcoal hover:bg-elegant-cream border-2 border-elegant-sand'
+                }`}
+              >
+                <Clock size={16} />
+                <span>最新</span>
+              </button>
+              <button
+                onClick={() => setSortBy('popular')}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-medium text-sm tracking-wide transition-luxury ${
+                  sortBy === 'popular'
+                    ? 'bg-gradient-sunset text-white shadow-luxury-md'
+                    : 'bg-white text-elegant-charcoal hover:bg-elegant-cream border-2 border-elegant-sand'
+                }`}
+              >
+                <TrendingUp size={16} />
+                <span>热门</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 产品目录展示 */}
+        {selectedCategory ? (
+          catalogLoading ? (
+            <div className="flex justify-center items-center py-16">
+              <div className="flex flex-col items-center gap-4">
+                <div className="loader-luxury" />
+                <p className="text-sm text-elegant-gray font-medium tracking-wide">精心加载中...</p>
+              </div>
+            </div>
+          ) : catalogProducts.length === 0 ? (
+            <div className="text-center py-32">
+              <div className="w-24 h-24 bg-gradient-gold rounded-full flex items-center justify-center mx-auto mb-6 shadow-luxury">
+                <ImageIcon size={40} className="text-luxury-gold" />
+              </div>
+              <h3 className="text-2xl font-serif font-semibold text-elegant-black mb-3">
+                该分类暂无产品
+              </h3>
+              <p className="text-elegant-gray font-light">
+                敬请期待更多精彩内容！
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              {catalogProducts.map((product, index) => (
+                <div
+                  key={product.id}
+                  className="animate-fade-in-up"
+                  style={{ animationDelay: `${(index % 12) * 50}ms` }}
+                >
+                  <ProductCard
+                    product={product}
+                    onViewDetail={setSelectedProduct}
+                    onToggleLike={handleProductLikeToggle}
+                    canLike={!!user}
+                  />
+                </div>
+              ))}
+            </div>
+          )
+        ) : (
+          /* 画廊图片展示 */
+          images.length === 0 && !isLoading ? (
+            <div className="text-center py-32">
+              <div className="w-24 h-24 bg-gradient-gold rounded-full flex items-center justify-center mx-auto mb-6 shadow-luxury">
+                <ImageIcon size={40} className="text-luxury-gold" />
+              </div>
+              <h3 className="text-2xl font-serif font-semibold text-elegant-black mb-3">
+                画廊暂时还是空的
+              </h3>
+              <p className="text-elegant-gray font-light">
+                成为第一个分享作品的用户吧！
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              {images.map((image, index) => (
+                <div
+                  key={image.id}
+                  className="animate-fade-in-up"
+                  style={{ animationDelay: `${(index % 12) * 50}ms` }}
+                >
+                  <GalleryImageCard
+                    image={image}
+                    currentUserId={user?.id}
+                    onLikeToggle={handleLikeToggle}
+                    onDelete={handleDelete}
+                    onClick={() => setSelectedImage(image)}
+                  />
+                </div>
+              ))}
+            </div>
+          )
+        )}
+
         {/* 奢华加载动画 */}
-        {isLoading && (
+        {!selectedCategory && isLoading && (
           <div className="flex justify-center items-center py-16">
             <div className="flex flex-col items-center gap-4">
               <div className="loader-luxury" />
@@ -348,7 +487,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
         )}
 
         {/* 底部提示 */}
-        {!isLoading && !hasMore && images.length > 0 && (
+        {!selectedCategory && !isLoading && !hasMore && images.length > 0 && (
           <div className="text-center py-16">
             <div className="inline-flex items-center gap-3 px-8 py-4 bg-white/80 backdrop-blur-sm rounded-full shadow-luxury-sm border border-elegant-sand/30">
               <Sparkles size={18} className="text-luxury-gold" />
@@ -365,6 +504,16 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
           onClose={() => setSelectedImage(null)}
           onRemake={handleRemake}
           onUseAsReference={handleUseAsReference}
+        />
+      )}
+
+      {selectedProduct && (
+        <ProductDetailModal
+          product={selectedProduct}
+          userId={user?.id}
+          onClose={() => setSelectedProduct(null)}
+          onToggleLike={handleProductLikeToggle}
+          onCommentCountChange={handleProductCommentCountChange}
         />
       )}
 
