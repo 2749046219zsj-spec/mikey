@@ -110,6 +110,7 @@ export default function UserManagementPanel({ users, onUsersChange }: UserManage
               <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">客服助手</th>
               <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">访问级别</th>
               <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">公共库编辑</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">产品目录</th>
               <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">操作</th>
             </tr>
           </thead>
@@ -281,6 +282,41 @@ export default function UserManagementPanel({ users, onUsersChange }: UserManage
                             }`}
                           >
                             {permissions.can_edit_public_database ? '允许' : '禁止'}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-6 py-4">
+                    {permissions && (
+                      <div>
+                        {isEditing ? (
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={
+                                editData.can_manage_catalog ??
+                                permissions.can_manage_catalog
+                              }
+                              onChange={(e) =>
+                                setEditData({
+                                  ...editData,
+                                  can_manage_catalog: e.target.checked,
+                                })
+                              }
+                              className="w-4 h-4 text-blue-600 rounded"
+                            />
+                            <span className="text-sm">允许</span>
+                          </label>
+                        ) : (
+                          <span
+                            className={`px-3 py-1 rounded-full text-sm font-medium ${
+                              permissions.can_manage_catalog
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-gray-100 text-gray-600'
+                            }`}
+                          >
+                            {permissions.can_manage_catalog ? '允许' : '禁止'}
                           </span>
                         )}
                       </div>
