@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Image, MessageCircle, LogOut, User, Shield, ArrowLeft, Edit, Check, X, Database, Package } from 'lucide-react';
 import { userService } from '../../services/userService';
 import PublicReferenceManagement from '../admin/PublicReferenceManagement';
-import { ProductCatalog } from '../catalog/ProductCatalog';
+import { ProductCatalogManager } from '../catalog/ProductCatalogManager';
 
 interface UserDashboardProps {
   onLogout: () => void;
@@ -79,7 +79,7 @@ export default function UserDashboard({ onLogout, onNavigateToAdmin, onBack }: U
               </div>
             </div>
           </div>
-          <ProductCatalog />
+          <ProductCatalogManager />
         </div>
       </div>
     );
