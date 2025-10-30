@@ -10,7 +10,6 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { ContactModal } from './components/ContactModal';
 import ReferenceImageLibrary from './components/ReferenceImageLibrary';
 import { PublicGallery } from './components/PublicGallery';
-import { ProductCatalog } from './components/ProductCatalog';
 import { LoginPromptModal } from './components/LoginPromptModal';
 import { SeedreamConfig, getDefaultSeedreamConfig } from './components/SeedreamSettings';
 import { useChat } from './hooks/useChat';
@@ -469,7 +468,6 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
             </div>
           </div>
           <PublicGallery onSubmitGeneration={handleGallerySubmit} />
-          <ProductCatalog onSubmitGeneration={handleGallerySubmit} />
           <ImageModal />
           <LoginPromptModal
             isOpen={showLoginPrompt}
