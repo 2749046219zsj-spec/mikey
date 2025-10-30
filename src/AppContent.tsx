@@ -468,8 +468,8 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
               </div>
             </div>
           </div>
-          <ProductCatalog onSubmitGeneration={handleGallerySubmit} />
           <PublicGallery onSubmitGeneration={handleGallerySubmit} />
+          <ProductCatalog onSubmitGeneration={handleGallerySubmit} />
           <ImageModal />
           <LoginPromptModal
             isOpen={showLoginPrompt}
