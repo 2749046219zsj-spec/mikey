@@ -16,6 +16,7 @@ export interface UserPermissions {
   chat_assistant_enabled: boolean;
   app_access_level: 'basic' | 'full';
   can_edit_public_database: boolean;
+  can_manage_catalog: boolean;
   updated_at: string;
 }
 

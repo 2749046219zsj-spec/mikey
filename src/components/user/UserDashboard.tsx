@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { Image, MessageCircle, LogOut, User, Shield, ArrowLeft, Edit, Check, X, Database } from 'lucide-react';
+import { Image, MessageCircle, LogOut, User, Shield, ArrowLeft, Edit, Check, X, Database, Package } from 'lucide-react';
 import { userService } from '../../services/userService';
 import PublicReferenceManagement from '../admin/PublicReferenceManagement';
+import { ProductCatalog } from '../catalog/ProductCatalog';
 
 interface UserDashboardProps {
   onLogout: () => void;
@@ -17,6 +18,7 @@ export default function UserDashboard({ onLogout, onNavigateToAdmin, onBack }: U
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState('');
   const [showPublicReferenceManagement, setShowPublicReferenceManagement] = useState(false);
+  const [showProductCatalog, setShowProductCatalog] = useState(false);
 
   if (!user) return null;
 
@@ -48,6 +50,36 @@ export default function UserDashboard({ onLogout, onNavigateToAdmin, onBack }: U
             </div>
           </div>
           <PublicReferenceManagement />
+        </div>
+      </div>
+    );
+  }
+
+  if (showProductCatalog) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setShowProductCatalog(false)}
+                  className="flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                  title="返回用户中心"
+                >
+                  <ArrowLeft className="w-5 h-5 text-gray-700" />
+                </button>
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center">
+                  <Package className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">产品目录</h2>
+                  <p className="text-gray-600 text-sm">浏览和管理产品目录</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <ProductCatalog />
         </div>
       </div>
     );
@@ -166,6 +198,15 @@ export default function UserDashboard({ onLogout, onNavigateToAdmin, onBack }: U
               </div>
             </div>
             <div className="flex items-center gap-3">
+              {permissions.can_manage_catalog && (
+                <button
+                  onClick={() => setShowProductCatalog(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-lg transition-colors shadow-md"
+                >
+                  <Package className="w-5 h-5" />
+                  产品目录
+                </button>
+              )}
               {permissions.can_edit_public_database && (
                 <button
                   onClick={() => setShowPublicReferenceManagement(true)}
@@ -289,6 +330,18 @@ export default function UserDashboard({ onLogout, onNavigateToAdmin, onBack }: U
                 {permissions.can_edit_public_database ? '允许' : '禁止'}
               </span>
             </div>
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <span className="font-medium text-gray-900">产品目录管理</span>
+              <span
+                className={`px-4 py-2 rounded-lg font-medium ${
+                  permissions.can_manage_catalog
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-gray-100 text-gray-600'
+                }`}
+              >
+                {permissions.can_manage_catalog ? '允许' : '禁止'}
+              </span>
+            </div>
             <div className="p-4 bg-blue-50 rounded-lg">
               <p className="text-sm text-gray-700">
                 {permissions.app_access_level === 'full'
@@ -298,6 +351,11 @@ export default function UserDashboard({ onLogout, onNavigateToAdmin, onBack }: U
               {permissions.can_edit_public_database && (
                 <p className="text-sm text-gray-700 mt-2">
                   您拥有公共图库编辑权限，可以上传和管理公共参考图片
+                </p>
+              )}
+              {permissions.can_manage_catalog && (
+                <p className="text-sm text-gray-700 mt-2">
+                  您拥有产品目录管理权限，可以浏览和管理产品目录
                 </p>
               )}
             </div>
