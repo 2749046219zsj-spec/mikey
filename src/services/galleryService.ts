@@ -94,7 +94,8 @@ export class GalleryService {
     sortBy: GallerySortBy = 'latest',
     limit: number = 50,
     offset: number = 0,
-    currentUserId?: string
+    currentUserId?: string,
+    searchQuery?: string
   ): Promise<GalleryImage[]> {
     try {
       let query = supabase
@@ -104,6 +105,10 @@ export class GalleryService {
 
       if (productType) {
         query = query.eq('product_type', productType);
+      }
+
+      if (searchQuery && searchQuery.trim()) {
+        query = query.or(`prompt.ilike.%${searchQuery}%,username.ilike.%${searchQuery}%`);
       }
 
       if (sortBy === 'popular') {

@@ -5,6 +5,7 @@ import { GalleryService } from '../services/galleryService';
 import { GalleryImageCard } from './GalleryImageCard';
 import { GalleryDetailModal } from './GalleryDetailModal';
 import { FloatingAIPanel } from './FloatingAIPanel';
+import { UnifiedCategoryNav } from './UnifiedCategoryNav';
 import { useAuth } from '../contexts/AuthContext';
 
 interface PublicGalleryProps {
@@ -16,6 +17,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [totalCount, setTotalCount] = useState<number>(0);
   const [sortBy, setSortBy] = useState<GallerySortBy>('latest');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
@@ -30,11 +33,13 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
     setIsLoading(true);
     try {
       const newPage = reset ? 0 : page;
-      const newImages = await GalleryService.getGalleryImages(
+      const newImages = await GalleryService.getGalleryImagesByProductType(
+        selectedCategory || undefined,
         sortBy,
         20,
         newPage * 20,
-        user?.id
+        user?.id,
+        searchQuery
       );
 
       if (newImages.length < 20) {
@@ -64,7 +69,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
     setHasMore(true);
     loadImages(true);
     loadTotalCount();
-  }, [sortBy, user?.id]);
+  }, [sortBy, selectedCategory, searchQuery, user?.id]);
 
   const handleScroll = () => {
     if (isLoading || !hasMore) return;
@@ -268,6 +273,14 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
             发现社区用户分享的精彩AI生成作品，获取灵感，点赞你喜欢的创作
           </p>
         </div>
+
+        {/* 统一的分类导航 */}
+        <UnifiedCategoryNav
+          selectedCategoryName={selectedCategory}
+          onSelectCategory={setSelectedCategory}
+          showSearch={true}
+          onSearchChange={setSearchQuery}
+        />
 
         {/* 优雅的筛选栏 */}
         <div className="flex items-center justify-between mb-10 bg-white rounded-2xl p-5 shadow-luxury-sm border border-elegant-sand/20">
