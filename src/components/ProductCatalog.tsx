@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Package } from 'lucide-react';
-import { UnifiedCategoryNav } from './UnifiedCategoryNav';
 import { ProductCatalogGrid } from './ProductCatalogGrid';
 import { ProductDetailModal } from './ProductDetailModal';
 import { CatalogProduct, productCatalogService } from '../services/productCatalogService';
@@ -35,27 +34,6 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({ onSubmitGenerati
   return (
     <div className="w-full min-h-screen bg-gradient-to-br from-blue-50/30 via-purple-50/30 to-orange-50/30">
       <div className="max-w-7xl mx-auto px-4 py-12">
-        {/* 标题区域 */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/90 backdrop-blur-sm rounded-full mb-6 shadow-luxury-sm border border-elegant-sand/30">
-            <Package className="text-hermes-orange" size={20} />
-            <span className="text-sm font-medium text-elegant-charcoal tracking-wider uppercase">产品目录</span>
-          </div>
-
-          <h1 className="text-4xl md:text-5xl font-serif font-semibold text-elegant-black mb-4 tracking-tight">
-            探索<span className="text-luxury-gradient">精美</span>产品系列
-          </h1>
-          <p className="text-lg text-elegant-gray max-w-2xl mx-auto leading-relaxed font-light">
-            浏览我们精心策划的产品目录，每一件都是艺术与工艺的完美结合
-          </p>
-        </div>
-
-        {/* 分类导航 */}
-        <UnifiedCategoryNav
-          selectedCategoryName={selectedCategoryName}
-          onSelectCategory={setSelectedCategoryName}
-        />
-
         {/* 产品网格 */}
         {selectedCategoryId ? (
           <ProductCatalogGrid
