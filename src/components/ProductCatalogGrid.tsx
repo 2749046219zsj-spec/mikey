@@ -1,25 +1,48 @@
 import React, { useEffect, useState } from 'react';
 import { Heart, MessageCircle } from 'lucide-react';
-import { CatalogProduct, productCatalogService } from '../services/productCatalogService';
+import { CatalogProduct, productCatalogService, ProductCategory } from '../services/productCatalogService';
 import { ImageWithFallback } from './ImageWithFallback';
+import { GalleryCatalogGrid } from './GalleryCatalogGrid';
 
 interface ProductCatalogGridProps {
   categoryId: string;
   onProductClick: (product: CatalogProduct) => void;
+  onSubmitGeneration?: (prompt: string, images: File[]) => void;
 }
 
 export const ProductCatalogGrid: React.FC<ProductCatalogGridProps> = ({
   categoryId,
   onProductClick,
+  onSubmitGeneration,
 }) => {
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAICreativeCategory, setIsAICreativeCategory] = useState(false);
+  const [subCategories, setSubCategories] = useState<ProductCategory[]>([]);
+  const [selectedSubCategory, setSelectedSubCategory] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (categoryId) {
+      checkIfAICreativeCategory();
       loadProducts();
     }
   }, [categoryId]);
+
+  const checkIfAICreativeCategory = async () => {
+    try {
+      const categories = await productCatalogService.getCategories();
+      const category = categories.find(c => c.id === categoryId);
+      const isAICategory = category?.name === 'ai-creative-works';
+      setIsAICreativeCategory(isAICategory);
+
+      if (isAICategory) {
+        const otherCategories = categories.filter(c => c.name !== 'ai-creative-works');
+        setSubCategories(otherCategories);
+      }
+    } catch (error) {
+      console.error('Error checking category:', error);
+    }
+  };
 
   const loadProducts = async () => {
     setLoading(true);
@@ -32,6 +55,49 @@ export const ProductCatalogGrid: React.FC<ProductCatalogGridProps> = ({
       setLoading(false);
     }
   };
+
+  if (isAICreativeCategory) {
+    return (
+      <div>
+        <div className="w-full overflow-x-auto mb-6">
+          <div className="flex gap-3 justify-center py-4 px-4 min-w-max">
+            <button
+              onClick={() => setSelectedSubCategory(undefined)}
+              className={`
+                px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-200
+                ${!selectedSubCategory
+                  ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-200'
+                  : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                }
+              `}
+            >
+              全部作品
+            </button>
+            {subCategories.map((subCategory) => (
+              <button
+                key={subCategory.id}
+                onClick={() => setSelectedSubCategory(subCategory.name)}
+                className={`
+                  px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-200
+                  ${selectedSubCategory === subCategory.name
+                    ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-200'
+                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                  }
+                `}
+              >
+                {subCategory.display_name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <GalleryCatalogGrid
+          productType={selectedSubCategory}
+          onSubmitGeneration={onSubmitGeneration}
+        />
+      </div>
+    );
+  }
 
   if (loading) {
     return (

@@ -4,7 +4,11 @@ import { ProductCatalogGrid } from './ProductCatalogGrid';
 import { ProductDetailModal } from './ProductDetailModal';
 import { CatalogProduct } from '../services/productCatalogService';
 
-export const ProductCatalog: React.FC = () => {
+interface ProductCatalogProps {
+  onSubmitGeneration?: (prompt: string, images: File[]) => void;
+}
+
+export const ProductCatalog: React.FC<ProductCatalogProps> = ({ onSubmitGeneration }) => {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<CatalogProduct | null>(null);
 
@@ -25,6 +29,7 @@ export const ProductCatalog: React.FC = () => {
           <ProductCatalogGrid
             categoryId={selectedCategoryId}
             onProductClick={setSelectedProduct}
+            onSubmitGeneration={onSubmitGeneration}
           />
         )}
 

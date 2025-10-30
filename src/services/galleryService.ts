@@ -89,6 +89,59 @@ export class GalleryService {
     }
   }
 
+  static async getGalleryImagesByProductType(
+    productType: string | undefined,
+    sortBy: GallerySortBy = 'latest',
+    limit: number = 50,
+    offset: number = 0,
+    currentUserId?: string
+  ): Promise<GalleryImage[]> {
+    try {
+      let query = supabase
+        .from('public_gallery')
+        .select('*')
+        .range(offset, offset + limit - 1);
+
+      if (productType) {
+        query = query.eq('product_type', productType);
+      }
+
+      if (sortBy === 'popular') {
+        query = query.order('likes_count', { ascending: false });
+      } else {
+        query = query.order('created_at', { ascending: false });
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      if (!data) return [];
+
+      if (currentUserId) {
+        const imageIds = data.map((img) => img.id);
+        if (imageIds.length > 0) {
+          const { data: likes } = await supabase
+            .from('gallery_likes')
+            .select('gallery_id')
+            .eq('user_id', currentUserId)
+            .in('gallery_id', imageIds);
+
+          const likedIds = new Set(likes?.map((like) => like.gallery_id) || []);
+
+          return data.map((img) => ({
+            ...img,
+            is_liked: likedIds.has(img.id),
+          }));
+        }
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Failed to fetch gallery images by product type:', error);
+      return [];
+    }
+  }
+
   static async toggleLike(
     galleryId: string,
     userId: string
@@ -254,6 +307,7 @@ export class GalleryService {
 export const galleryService = {
   uploadToGallery: GalleryService.uploadToGallery,
   getGalleryImages: GalleryService.getGalleryImages,
+  getGalleryImagesByProductType: GalleryService.getGalleryImagesByProductType,
   toggleLike: GalleryService.toggleLike,
   deleteGalleryImage: GalleryService.deleteGalleryImage,
   getUserGalleryImages: GalleryService.getUserGalleryImages,
