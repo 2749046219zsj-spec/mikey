@@ -107,12 +107,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
   };
 
   const handleCategorySelect = (categoryId: string) => {
-    if (selectedCategory === categoryId) {
-      setSelectedCategory(null);
-      setCatalogProducts([]);
-    } else {
-      setSelectedCategory(categoryId);
-    }
+    setSelectedCategory(categoryId);
   };
 
   const handleProductLikeToggle = async (productId: string) => {
@@ -349,6 +344,19 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
         {/* 产品分类标签 */}
         {categories.length > 0 && (
           <div className="flex flex-wrap items-center justify-center gap-3 mb-12">
+            <button
+              onClick={() => {
+                setSelectedCategory(null);
+                setCatalogProducts([]);
+              }}
+              className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
+                selectedCategory === null
+                  ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white shadow-lg scale-105'
+                  : 'bg-white/90 backdrop-blur-sm text-gray-700 hover:bg-white hover:shadow-md border border-gray-200'
+              }`}
+            >
+              AI创意画廊
+            </button>
             {categories.map((category) => (
               <button
                 key={category.id}
