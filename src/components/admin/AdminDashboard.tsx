@@ -7,14 +7,13 @@ import UsageStatistics from './UsageStatistics';
 import { ProductManagement } from './ProductManagement';
 import { PromptTemplateManagement } from './PromptTemplateManagement';
 import PublicReferenceManagement from './PublicReferenceManagement';
-import { CatalogProductManagement } from './CatalogProductManagement';
 
 interface AdminDashboardProps {
   onBack: () => void;
 }
 
 export default function AdminDashboard({ onBack }: AdminDashboardProps) {
-  const [activeTab, setActiveTab] = useState<'users' | 'stats' | 'products' | 'prompts' | 'references' | 'catalog'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'stats' | 'products' | 'prompts' | 'references'>('users');
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -112,17 +111,6 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
               <Database className="w-5 h-5" />
               公共参考图
             </button>
-            <button
-              onClick={() => setActiveTab('catalog')}
-              className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${
-                activeTab === 'catalog'
-                  ? 'bg-purple-600 text-white shadow-lg'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              <Package className="w-5 h-5" />
-              产品目录
-            </button>
           </div>
         </div>
 
@@ -150,11 +138,6 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
             {activeTab === 'references' && (
               <div className="bg-white rounded-2xl shadow-xl p-6">
                 <PublicReferenceManagement />
-              </div>
-            )}
-            {activeTab === 'catalog' && (
-              <div className="bg-white rounded-2xl shadow-xl p-6">
-                <CatalogProductManagement />
               </div>
             )}
           </>
