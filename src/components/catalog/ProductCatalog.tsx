@@ -163,9 +163,9 @@ export const ProductCatalog: React.FC = () => {
             loading={loading}
             onViewDetail={handleViewDetail}
             onToggleLike={handleToggleLike}
-            onDeleteProduct={user?.is_admin ? handleDeleteProduct : undefined}
+            onDeleteProduct={user?.is_admin === true ? handleDeleteProduct : undefined}
             canLike={!!user}
-            isAdmin={user?.is_admin}
+            isAdmin={user?.is_admin === true}
           />
         )}
       </div>
@@ -174,10 +174,10 @@ export const ProductCatalog: React.FC = () => {
         <ProductDetailModal
           product={currentProduct}
           userId={user?.id}
-          isAdmin={user?.is_admin}
+          isAdmin={user?.is_admin === true}
           onClose={() => setCurrentProduct(null)}
           onToggleLike={handleToggleLike}
-          onDeleteProduct={user?.is_admin ? handleDeleteProduct : undefined}
+          onDeleteProduct={user?.is_admin === true ? handleDeleteProduct : undefined}
           onCommentCountChange={handleCommentCountChange}
         />
       )}

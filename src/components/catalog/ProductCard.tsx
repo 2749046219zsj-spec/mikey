@@ -21,13 +21,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   canLike,
   isAdmin = false,
 }) => {
+  const showDeleteButton = isAdmin && onDeleteProduct;
+
   return (
     <div
       className="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100"
       onClick={() => onViewDetail(product)}
     >
       <div className="relative aspect-square overflow-hidden bg-gray-100">
-        {isAdmin && onDeleteProduct && (
+        <ImageWithFallback
+          src={product.image_url}
+          alt={product.name}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+        />
+
+        {showDeleteButton && (
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -35,18 +43,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 onDeleteProduct(product.id);
               }
             }}
-            className="absolute top-3 right-3 z-10 p-2 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-colors"
+            className="absolute top-3 right-3 z-20 p-2.5 bg-red-500 text-white rounded-full shadow-xl hover:bg-red-600 hover:scale-110 transition-all duration-200 opacity-90 hover:opacity-100"
             title="删除产品"
           >
             <Trash2 size={18} />
           </button>
         )}
-
-        <ImageWithFallback
-          src={product.image_url}
-          alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-        />
 
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <div className="absolute bottom-0 left-0 right-0 p-4">
