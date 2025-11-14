@@ -23,6 +23,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   const showDeleteButton = isAdmin && onDeleteProduct;
 
+  console.log('ProductCard:', {
+    productId: product.id,
+    productName: product.name,
+    isAdmin,
+    hasDeleteFunction: !!onDeleteProduct,
+    showDeleteButton,
+  });
+
   return (
     <div
       className="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100"
@@ -43,10 +51,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 onDeleteProduct(product.id);
               }
             }}
-            className="absolute top-3 right-3 z-20 p-2.5 bg-red-500 text-white rounded-full shadow-xl hover:bg-red-600 hover:scale-110 transition-all duration-200 opacity-90 hover:opacity-100"
+            className="absolute top-3 right-3 z-50 p-3 bg-red-500 text-white rounded-full shadow-2xl hover:bg-red-600 hover:scale-125 transition-all duration-200 border-2 border-white"
             title="删除产品"
           >
-            <Trash2 size={18} />
+            <Trash2 size={20} strokeWidth={2.5} />
           </button>
         )}
 
