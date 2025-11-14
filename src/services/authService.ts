@@ -78,10 +78,18 @@ export const authService = {
 
     if (!profile || !permissions) return null;
 
-    return {
+    const userWithPermissions = {
       ...profile,
       permissions,
     };
+
+    console.log('getUserWithPermissions:', {
+      userId,
+      is_admin: profile.is_admin,
+      userWithPermissions,
+    });
+
+    return userWithPermissions;
   },
 
   async resetPassword(email: string) {

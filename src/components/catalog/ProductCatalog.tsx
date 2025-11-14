@@ -11,6 +11,9 @@ import type { CatalogProductWithCategory } from '../../types/catalog';
 
 export const ProductCatalog: React.FC = () => {
   const { user } = useAuth();
+
+  console.log('ProductCatalog - user:', user, 'isAdmin:', user?.is_admin);
+
   const {
     categories,
     selectedCategoryId,
