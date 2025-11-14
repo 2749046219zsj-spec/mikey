@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageCircle, Eye } from 'lucide-react';
+import { MessageCircle, Eye, Trash2 } from 'lucide-react';
 import type { CatalogProductWithCategory } from '../../types/catalog';
 import { LikeButton } from './LikeButton';
 import { ImageWithFallback } from '../ImageWithFallback';
@@ -8,14 +8,18 @@ interface ProductCardProps {
   product: CatalogProductWithCategory;
   onViewDetail: (product: CatalogProductWithCategory) => void;
   onToggleLike: (productId: string) => Promise<void>;
+  onDeleteProduct?: (productId: string) => Promise<void>;
   canLike: boolean;
+  isAdmin?: boolean;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
   onViewDetail,
   onToggleLike,
+  onDeleteProduct,
   canLike,
+  isAdmin = false,
 }) => {
   return (
     <div
@@ -23,6 +27,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       onClick={() => onViewDetail(product)}
     >
       <div className="relative aspect-square overflow-hidden bg-gray-100">
+        {isAdmin && onDeleteProduct && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (confirm('确定要删除这个产品吗？此操作不可恢复！')) {
+                onDeleteProduct(product.id);
+              }
+            }}
+            className="absolute top-3 right-3 z-10 p-2 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-colors"
+            title="删除产品"
+          >
+            <Trash2 size={18} />
+          </button>
+        )}
+
         <ImageWithFallback
           src={product.image_url}
           alt={product.name}

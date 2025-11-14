@@ -8,7 +8,9 @@ interface ProductGridProps {
   loading: boolean;
   onViewDetail: (product: CatalogProductWithCategory) => void;
   onToggleLike: (productId: string) => Promise<void>;
+  onDeleteProduct?: (productId: string) => Promise<void>;
   canLike: boolean;
+  isAdmin?: boolean;
 }
 
 export const ProductGrid: React.FC<ProductGridProps> = ({
@@ -16,7 +18,9 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
   loading,
   onViewDetail,
   onToggleLike,
+  onDeleteProduct,
   canLike,
+  isAdmin = false,
 }) => {
   if (loading) {
     return (
@@ -56,7 +60,9 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
           product={product}
           onViewDetail={onViewDetail}
           onToggleLike={onToggleLike}
+          onDeleteProduct={onDeleteProduct}
           canLike={canLike}
+          isAdmin={isAdmin}
         />
       ))}
     </div>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { useCatalogStore } from '../../stores/catalogStore';
 import { catalogService } from '../../services/catalogService';
+import { catalogImageService } from '../../services/catalogImageService';
 import { useAuth } from '../../contexts/AuthContext';
 import { CategoryTabs } from './CategoryTabs';
 import { ProductGrid } from './ProductGrid';
@@ -106,6 +107,31 @@ export const ProductCatalog: React.FC = () => {
     updateProductCommentCount(productId, count);
   };
 
+  const handleDeleteProduct = async (productId: string) => {
+    try {
+      const product = products.find((p) => p.id === productId);
+      if (!product) return;
+
+      if (product.image_url && product.image_url.includes('catalog-product-images')) {
+        try {
+          await catalogImageService.deleteProductImage(product.image_url);
+        } catch (error) {
+          console.warn('Failed to delete product image:', error);
+        }
+      }
+
+      await catalogService.deleteProduct(productId);
+      setProducts(products.filter((p) => p.id !== productId));
+
+      if (currentProduct?.id === productId) {
+        setCurrentProduct(null);
+      }
+    } catch (err) {
+      console.error('Failed to delete product:', err);
+      alert('删除失败，请重试');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="bg-white shadow-sm border-b border-gray-200">
@@ -137,7 +163,9 @@ export const ProductCatalog: React.FC = () => {
             loading={loading}
             onViewDetail={handleViewDetail}
             onToggleLike={handleToggleLike}
+            onDeleteProduct={user?.is_admin ? handleDeleteProduct : undefined}
             canLike={!!user}
+            isAdmin={user?.is_admin}
           />
         )}
       </div>
@@ -146,8 +174,10 @@ export const ProductCatalog: React.FC = () => {
         <ProductDetailModal
           product={currentProduct}
           userId={user?.id}
+          isAdmin={user?.is_admin}
           onClose={() => setCurrentProduct(null)}
           onToggleLike={handleToggleLike}
+          onDeleteProduct={user?.is_admin ? handleDeleteProduct : undefined}
           onCommentCountChange={handleCommentCountChange}
         />
       )}

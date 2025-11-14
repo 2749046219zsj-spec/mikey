@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Heart, MessageCircle, Package, Lightbulb, BookOpen, FileText } from 'lucide-react';
+import { X, Heart, MessageCircle, Package, Lightbulb, BookOpen, FileText, Trash2 } from 'lucide-react';
 import type { CatalogProductWithCategory } from '../../types/catalog';
 import { LikeButton } from './LikeButton';
 import { CommentSection } from './CommentSection';
@@ -8,29 +8,51 @@ import { ImageWithFallback } from '../ImageWithFallback';
 interface ProductDetailModalProps {
   product: CatalogProductWithCategory;
   userId?: string;
+  isAdmin?: boolean;
   onClose: () => void;
   onToggleLike: (productId: string) => Promise<void>;
+  onDeleteProduct?: (productId: string) => Promise<void>;
   onCommentCountChange: (productId: string, count: number) => void;
 }
 
 export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   product,
   userId,
+  isAdmin = false,
   onClose,
   onToggleLike,
+  onDeleteProduct,
   onCommentCountChange,
 }) => {
+  const handleDelete = async () => {
+    if (!onDeleteProduct) return;
+    if (confirm('确定要删除这个产品吗？此操作不可恢复！')) {
+      await onDeleteProduct(product.id);
+      onClose();
+    }
+  };
   const [activeTab, setActiveTab] = useState<'details' | 'comments'>('details');
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div className="relative w-full max-w-5xl max-h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-10 p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors shadow-lg"
-        >
-          <X size={24} className="text-gray-700" />
-        </button>
+        <div className="absolute top-4 right-4 z-10 flex items-center space-x-2">
+          {isAdmin && onDeleteProduct && (
+            <button
+              onClick={handleDelete}
+              className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
+              title="删除产品"
+            >
+              <Trash2 size={20} />
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className="p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors shadow-lg"
+          >
+            <X size={24} className="text-gray-700" />
+          </button>
+        </div>
 
         <div className="flex-1 overflow-y-auto">
           <div className="grid md:grid-cols-2 gap-0">
