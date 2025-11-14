@@ -138,11 +138,24 @@ export class GalleryService {
     userId: string
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await supabase
+      const { data: userProfile } = await supabase
+        .from('user_profiles')
+        .select('is_admin')
+        .eq('id', userId)
+        .maybeSingle();
+
+      const isAdmin = userProfile?.is_admin || false;
+
+      let deleteQuery = supabase
         .from('public_gallery')
         .delete()
-        .eq('id', galleryId)
-        .eq('user_id', userId);
+        .eq('id', galleryId);
+
+      if (!isAdmin) {
+        deleteQuery = deleteQuery.eq('user_id', userId);
+      }
+
+      const { error } = await deleteQuery;
 
       if (error) throw error;
 

@@ -474,6 +474,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ onSubmitGeneration
                   <GalleryImageCard
                     image={image}
                     currentUserId={user?.id}
+                    isAdmin={!!user?.is_admin}
                     onLikeToggle={handleLikeToggle}
                     onDelete={handleDelete}
                     onClick={() => setSelectedImage(image)}

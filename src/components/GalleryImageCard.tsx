@@ -7,6 +7,7 @@ import { GalleryService } from '../services/galleryService';
 interface GalleryImageCardProps {
   image: GalleryImage;
   currentUserId?: string;
+  isAdmin?: boolean;
   onLikeToggle?: (imageId: string, isLiked: boolean) => void;
   onDelete?: (imageId: string) => void;
   onClick?: () => void;
@@ -15,6 +16,7 @@ interface GalleryImageCardProps {
 export const GalleryImageCard: React.FC<GalleryImageCardProps> = ({
   image,
   currentUserId,
+  isAdmin = false,
   onLikeToggle,
   onDelete,
   onClick,
@@ -25,6 +27,7 @@ export const GalleryImageCard: React.FC<GalleryImageCardProps> = ({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const isOwner = currentUserId === image.user_id;
+  const canDelete = isOwner || isAdmin;
 
   const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -58,9 +61,13 @@ export const GalleryImageCard: React.FC<GalleryImageCardProps> = ({
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
 
-    if (!currentUserId || !isOwner || isDeleting) return;
+    if (!currentUserId || !canDelete || isDeleting) return;
 
-    if (!confirm('确定要删除这张图片吗？')) return;
+    const confirmMessage = isAdmin && !isOwner
+      ? '【管理员操作】确定要删除这张图片吗？此操作不可恢复！'
+      : '确定要删除这张图片吗？';
+
+    if (!confirm(confirmMessage)) return;
 
     setIsDeleting(true);
     try {
@@ -109,12 +116,16 @@ export const GalleryImageCard: React.FC<GalleryImageCardProps> = ({
         <div className="absolute inset-0 bg-gradient-overlay opacity-0 group-hover:opacity-100 transition-opacity duration-400" />
 
         {/* 删除按钮 - 优雅设计 */}
-        {isOwner && (
+        {canDelete && (
           <button
             onClick={handleDelete}
             disabled={isDeleting}
-            className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm hover:bg-hermes-orange text-elegant-charcoal hover:text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-luxury-md"
-            title="删除图片"
+            className={`absolute top-4 right-4 w-10 h-10 backdrop-blur-sm rounded-full flex items-center justify-center transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-luxury-md ${
+              isAdmin && !isOwner
+                ? 'bg-red-500/90 hover:bg-red-600 text-white opacity-100'
+                : 'bg-white/90 hover:bg-hermes-orange text-elegant-charcoal hover:text-white opacity-0 group-hover:opacity-100'
+            }`}
+            title={isAdmin && !isOwner ? '管理员删除' : '删除图片'}
           >
             {isDeleting ? (
               <div className="loader-luxury w-4 h-4" style={{ border: '2px solid', borderTopColor: 'transparent' }} />
