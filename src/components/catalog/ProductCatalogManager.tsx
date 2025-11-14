@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Save, X, Upload, GripVertical } from 'lucide-react';
 import { catalogService } from '../../services/catalogService';
+import { catalogImageService } from '../../services/catalogImageService';
 import type { ProductCategory, CatalogProduct } from '../../types/catalog';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -12,6 +13,7 @@ export const ProductCatalogManager: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Partial<CatalogProduct> | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     loadCategories();
@@ -113,6 +115,32 @@ export const ProductCatalogManager: React.FC = () => {
       );
     } catch (error) {
       console.error('Failed to toggle active status:', error);
+    }
+  };
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert('图片大小不能超过10MB');
+      return;
+    }
+
+    if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
+      alert('只支持 JPEG、PNG、WebP 和 GIF 格式的图片');
+      return;
+    }
+
+    try {
+      setUploadingImage(true);
+      const imageUrl = await catalogImageService.uploadProductImage(file, user.id);
+      setEditingProduct({ ...editingProduct, image_url: imageUrl });
+    } catch (error) {
+      console.error('Failed to upload image:', error);
+      alert('图片上传失败，请重试');
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -250,17 +278,45 @@ export const ProductCatalogManager: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  图片URL
+                  产品图片
                 </label>
-                <input
-                  type="text"
-                  value={editingProduct.image_url || ''}
-                  onChange={(e) =>
-                    setEditingProduct({ ...editingProduct, image_url: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="https://example.com/image.jpg"
-                />
+                <div className="space-y-3">
+                  {editingProduct.image_url && (
+                    <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-gray-100">
+                      <img
+                        src={editingProduct.image_url}
+                        alt="产品预览"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="flex space-x-2">
+                    <label
+                      className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer ${
+                        uploadingImage ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
+                    >
+                      <Upload size={18} />
+                      <span>{uploadingImage ? '上传中...' : '上传图片'}</span>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        onChange={handleImageUpload}
+                        disabled={uploadingImage}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                  <input
+                    type="text"
+                    value={editingProduct.image_url || ''}
+                    onChange={(e) =>
+                      setEditingProduct({ ...editingProduct, image_url: e.target.value })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    placeholder="或直接输入图片URL"
+                  />
+                </div>
               </div>
 
               <div>
