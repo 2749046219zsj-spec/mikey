@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, Users, Activity, ArrowLeft, Package, FileText, Database, CreditCard } from 'lucide-react';
+import { Shield, Users, Activity, ArrowLeft, Package, FileText, Database } from 'lucide-react';
 import { adminService } from '../../services/userService';
 import { UserProfile } from '../../types/user';
 import UserManagementPanel from './UserManagementPanel';
@@ -8,14 +8,13 @@ import { ProductManagement } from './ProductManagement';
 import { PromptTemplateManagement } from './PromptTemplateManagement';
 import PublicReferenceManagement from './PublicReferenceManagement';
 import { ProductCatalogManager } from '../catalog/ProductCatalogManager';
-import { RechargePackageManager } from '../payment/RechargePackageManager';
 
 interface AdminDashboardProps {
   onBack: () => void;
 }
 
 export default function AdminDashboard({ onBack }: AdminDashboardProps) {
-  const [activeTab, setActiveTab] = useState<'users' | 'stats' | 'products' | 'prompts' | 'references' | 'catalog' | 'payment'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'stats' | 'products' | 'prompts' | 'references' | 'catalog'>('users');
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -124,17 +123,6 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
               <Package className="w-5 h-5" />
               产品目录
             </button>
-            <button
-              onClick={() => setActiveTab('payment')}
-              className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${
-                activeTab === 'payment'
-                  ? 'bg-purple-600 text-white shadow-lg'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              <CreditCard className="w-5 h-5" />
-              支付管理
-            </button>
           </div>
         </div>
 
@@ -167,11 +155,6 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
             {activeTab === 'catalog' && (
               <div className="bg-white rounded-2xl shadow-xl p-6">
                 <ProductCatalogManager />
-              </div>
-            )}
-            {activeTab === 'payment' && (
-              <div className="bg-white rounded-2xl shadow-xl p-6">
-                <RechargePackageManager />
               </div>
             )}
           </>
