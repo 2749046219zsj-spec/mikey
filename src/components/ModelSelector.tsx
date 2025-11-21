@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bot, Zap, Sparkles } from 'lucide-react';
+import { Bot, Zap, Sparkles, Image } from 'lucide-react';
 
 interface ModelSelectorProps {
   selectedModel: string;
@@ -15,6 +15,13 @@ const models = [
     description: 'Fast image analysis',
     icon: Bot,
     color: 'from-purple-500 to-blue-600'
+  },
+  {
+    id: 'nano-banana-pro',
+    name: 'Nano Banana Pro',
+    description: 'Gemini 3 Pro Preview',
+    icon: Image,
+    color: 'from-blue-500 to-cyan-600'
   },
   {
     id: 'Seedream-4.0',
