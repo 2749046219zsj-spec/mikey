@@ -74,7 +74,14 @@ export class GeminiApiService {
     return '';
   }
 
-  async sendMessage(text: string, images: File[] = [], model: string = 'Gemini-2.5-Flash-Image', conversationHistory: any[] = [], mode: 'normal' | 'professional' = 'normal'): Promise<string> {
+  async sendMessage(
+    text: string,
+    images: File[] = [],
+    model: string = 'Gemini-2.5-Flash-Image',
+    conversationHistory: any[] = [],
+    mode: 'normal' | 'professional' = 'normal',
+    extraBody?: Record<string, any>
+  ): Promise<string> {
     try {
       const content = [];
 
@@ -124,10 +131,14 @@ export class GeminiApiService {
         userText: text
       });
 
-      const requestBody = {
+      const requestBody: any = {
         model: model,
         messages: messages
       };
+
+      if (extraBody) {
+        requestBody.extra_body = extraBody;
+      }
 
       const response = await fetch(API_URL, {
         method: 'POST',

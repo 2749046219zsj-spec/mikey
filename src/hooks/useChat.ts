@@ -4,10 +4,11 @@ import { GeminiApiService } from '../services/geminiApi';
 import { SeedreamApiService } from '../services/seedreamApi';
 import { usePromptQueue } from './usePromptQueue';
 import { SeedreamConfig } from '../components/SeedreamSettings';
+import { NanoBananaConfig } from '../components/NanoBananaSettings';
 
 type BeforeSendCallback = () => Promise<boolean>;
 
-export const useChat = (beforeSendCallback?: BeforeSendCallback, seedreamConfig?: SeedreamConfig) => {
+export const useChat = (beforeSendCallback?: BeforeSendCallback, seedreamConfig?: SeedreamConfig, nanoBananaConfig?: NanoBananaConfig) => {
   const [state, setState] = useState<ChatState>({
     messages: [],
     isLoading: false,
@@ -115,7 +116,19 @@ export const useChat = (beforeSendCallback?: BeforeSendCallback, seedreamConfig?
         response = await seedreamService.sendMessage(text, images, [], seedreamParams);
       } else {
         const conversationHistory: any[] = [];
-        response = await geminiService.sendMessage(text, images, state.selectedModel, conversationHistory, 'normal');
+
+        let extraBody: Record<string, any> | undefined;
+        if (state.selectedModel === 'nano-banana-pro' && nanoBananaConfig) {
+          extraBody = {};
+          if (nanoBananaConfig.aspectRatio) {
+            extraBody.aspect_ratio = nanoBananaConfig.aspectRatio;
+          }
+          if (nanoBananaConfig.webSearch !== undefined) {
+            extraBody.web_search = nanoBananaConfig.webSearch;
+          }
+        }
+
+        response = await geminiService.sendMessage(text, images, state.selectedModel, conversationHistory, 'normal', extraBody);
       }
 
       addMessage({
