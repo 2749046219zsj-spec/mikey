@@ -13,7 +13,7 @@ import { PublicGallery } from './components/PublicGallery';
 import { LoginPromptModal } from './components/LoginPromptModal';
 import { ProductCatalog } from './components/catalog/ProductCatalog';
 import { SeedreamConfig, getDefaultSeedreamConfig } from './components/SeedreamSettings';
-import { NanoBananaConfig, getDefaultNanoBananaConfig, NanoBananaSettings } from './components/NanoBananaSettings';
+import { NanoBananaConfig, getDefaultNanoBananaConfig } from './components/NanoBananaSettings';
 import { useChat } from './hooks/useChat';
 import { useWidgetChat } from './hooks/useWidgetChat';
 import { useAuth } from './contexts/AuthContext';
@@ -57,7 +57,6 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
   const [sentMessageIds, setSentMessageIds] = useState<Set<string>>(new Set());
   const [seedreamConfig, setSeedreamConfig] = useState<SeedreamConfig>(getDefaultSeedreamConfig());
   const [nanoBananaConfig, setNanoBananaConfig] = useState<NanoBananaConfig>(getDefaultNanoBananaConfig());
-  const [showNanoBananaSettings, setShowNanoBananaSettings] = useState(false);
 
   const checkAndDecrementDraws = React.useCallback(async () => {
     if (!user) return false;
@@ -498,6 +497,8 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
             onShowDashboard={onShowDashboard}
             seedreamConfig={seedreamConfig}
             onSeedreamConfigChange={setSeedreamConfig}
+            nanoBananaConfig={nanoBananaConfig}
+            onNanoBananaConfigChange={setNanoBananaConfig}
           />
 
         <ChatContainer
@@ -553,15 +554,6 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
               </div>
             )}
           </>
-        )}
-
-        {selectedModel === 'nano-banana-pro' && (
-          <NanoBananaSettings
-            config={nanoBananaConfig}
-            onChange={setNanoBananaConfig}
-            isOpen={showNanoBananaSettings}
-            onToggle={() => setShowNanoBananaSettings(!showNanoBananaSettings)}
-          />
         )}
 
         <ChatInput

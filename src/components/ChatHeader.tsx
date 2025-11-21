@@ -2,6 +2,7 @@ import React from 'react';
 import { Bot, Trash2, StopCircle, XCircle, Sparkles, Wrench, Image as ImageIcon } from 'lucide-react';
 import { ModelSelector } from './ModelSelector';
 import { SeedreamSettings, SeedreamConfig } from './SeedreamSettings';
+import { NanoBananaSettings, NanoBananaConfig } from './NanoBananaSettings';
 import { useAuth } from '../contexts/AuthContext';
 
 export type AppMode = 'normal' | 'professional';
@@ -26,6 +27,8 @@ interface ChatHeaderProps {
   onShowDashboard?: () => void;
   seedreamConfig?: SeedreamConfig;
   onSeedreamConfigChange?: (config: SeedreamConfig) => void;
+  nanoBananaConfig?: NanoBananaConfig;
+  onNanoBananaConfigChange?: (config: NanoBananaConfig) => void;
 }
 
 export const ChatHeader: React.FC<ChatHeaderProps> = ({
@@ -43,10 +46,13 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   onShowGallery,
   onShowDashboard,
   seedreamConfig,
-  onSeedreamConfigChange
+  onSeedreamConfigChange,
+  nanoBananaConfig,
+  onNanoBananaConfigChange
 }) => {
   const { user } = useAuth();
   const isSeedreamModel = selectedModel === 'Seedream-4.0';
+  const isNanoBananaModel = selectedModel === 'nano-banana-pro';
 
   const getModelDisplayName = (modelId: string) => {
     switch (modelId) {
@@ -187,6 +193,17 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
             <SeedreamSettings
               config={seedreamConfig}
               onChange={onSeedreamConfigChange}
+            />
+          </div>
+        )}
+
+        {/* Nano Banana Pro 设置 - 仅在普通模式下显示 */}
+        {currentMode === 'normal' && isNanoBananaModel && nanoBananaConfig && onNanoBananaConfigChange && (
+          <div className="mt-3 flex items-center gap-2">
+            <span className="text-sm text-gray-600 font-medium">模型设置：</span>
+            <NanoBananaSettings
+              config={nanoBananaConfig}
+              onChange={onNanoBananaConfigChange}
             />
           </div>
         )}
