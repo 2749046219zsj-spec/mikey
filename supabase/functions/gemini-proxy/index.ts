@@ -22,27 +22,8 @@ Deno.serve(async (req: Request) => {
 
   try {
     const apiKey = Deno.env.get('GEMINI_API_KEY');
-    
-    console.log('Environment check:', {
-      hasApiKey: !!apiKey,
-      apiKeyLength: apiKey?.length || 0,
-    });
-    
     if (!apiKey) {
-      console.error('GEMINI_API_KEY not found in environment');
-      return new Response(
-        JSON.stringify({ 
-          error: 'API key not configured. Please set GEMINI_API_KEY in Supabase secrets.',
-          details: 'Contact administrator to configure the API key'
-        }),
-        {
-          status: 500,
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      throw new Error('GEMINI_API_KEY environment variable is not set');
     }
 
     const { model, messages, extra_body }: GeminiProxyRequest = await req.json();
@@ -88,23 +69,19 @@ Deno.serve(async (req: Request) => {
       const errorText = await poeResponse.text();
       console.error('Poe API error:', {
         status: poeResponse.status,
-        statusText: poeResponse.statusText,
         error: errorText,
       });
 
       let errorMessage = `API error: ${poeResponse.status}`;
       try {
         const errorData = JSON.parse(errorText);
-        errorMessage = errorData.error?.message || errorData.message || errorMessage;
+        errorMessage = errorData.error?.message || errorMessage;
       } catch {
         errorMessage = `${errorMessage} - ${errorText}`;
       }
 
       return new Response(
-        JSON.stringify({ 
-          error: errorMessage,
-          status: poeResponse.status
-        }),
+        JSON.stringify({ error: errorMessage }),
         {
           status: poeResponse.status,
           headers: {
@@ -138,7 +115,6 @@ Deno.serve(async (req: Request) => {
     return new Response(
       JSON.stringify({
         error: error instanceof Error ? error.message : 'Internal server error',
-        stack: error instanceof Error ? error.stack : undefined,
       }),
       {
         status: 500,
