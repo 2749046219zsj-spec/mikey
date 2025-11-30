@@ -34,7 +34,9 @@ interface FrameData extends Scene {
 }
 
 export const AutoCinePanel: React.FC = () => {
-  const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+  const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const GEMINI_PROXY_URL = `${SUPABASE_URL}/functions/v1/gemini-proxy`;
 
   const [topic, setTopic] = useState("A和B在C里面玩耍，B突然打了A一下，A被打哭了，B溜走了剩下A自己哭泣");
   const [aspectRatio, setAspectRatio] = useState("16:9");
@@ -63,21 +65,31 @@ export const AutoCinePanel: React.FC = () => {
   };
 
   const callPoeGPT = async (messages: any[], model = "gpt-5", jsonMode = false) => {
-    if (!geminiApiKey) {
-      addLog("[Error] API Key 未配置，请检查环境变量");
-      return null;
-    }
     try {
-      const response = await fetch("https://api.poe.com/v1/chat/completions", {
+      const requestBody: any = {
+        model: model,
+        messages: messages,
+      };
+
+      if (jsonMode) {
+        requestBody.extra_body = { response_format: { type: "json_object" } };
+      }
+
+      const response = await fetch(GEMINI_PROXY_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${geminiApiKey}` },
-        body: JSON.stringify({
-          model: model,
-          messages: messages,
-          response_format: jsonMode ? { type: "json_object" } : undefined
-        })
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+          "apikey": SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify(requestBody)
       });
-      if (!response.ok) throw new Error(`Status ${response.status}`);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Status ${response.status}`);
+      }
+
       const data = await response.json();
       return data.choices[0].message.content;
     } catch (error) {
@@ -87,7 +99,6 @@ export const AutoCinePanel: React.FC = () => {
   };
 
   const callNanaBanana = async (prompt: string, refImageUrls: string[] = []) => {
-    if (!geminiApiKey) return null;
     try {
       const finalPrompt = `(Single cinematic shot:2.0), (one full scene), ${prompt} --ar ${aspectRatio} --v 6.0 --no grid, split screen, collage, multiple views, comic panels, borders, white frame`;
 
@@ -101,16 +112,24 @@ export const AutoCinePanel: React.FC = () => {
         messageContent = finalPrompt;
       }
 
-      const response = await fetch("https://api.poe.com/v1/chat/completions", {
+      const response = await fetch(GEMINI_PROXY_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${geminiApiKey}` },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+          "apikey": SUPABASE_ANON_KEY,
+        },
         body: JSON.stringify({
           model: "nano-banana-pro",
           messages: [{ role: "user", content: messageContent }]
         })
       });
 
-      if (!response.ok) throw new Error(`Status ${response.status}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Status ${response.status}`);
+      }
+
       const data = await response.json();
       const content = data.choices[0].message.content;
       const match = content.match(/!\[.*?\]\((.*?)\)/) || content.match(/https?:\/\/[^\s)]+/);
@@ -122,8 +141,6 @@ export const AutoCinePanel: React.FC = () => {
   };
 
   const callVideoGeneration = async (actionPrompt: string, startImageUrl: string) => {
-    if (!geminiApiKey) return null;
-
     let finalPrompt = actionPrompt;
     if (videoModel === "sora-2") {
       finalPrompt = `${actionPrompt} --resolution ${videoResolution} --duration ${videoDuration}`;
@@ -142,16 +159,24 @@ export const AutoCinePanel: React.FC = () => {
         messageContent = finalPrompt;
       }
 
-      const response = await fetch("https://api.poe.com/v1/chat/completions", {
+      const response = await fetch(GEMINI_PROXY_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${geminiApiKey}` },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+          "apikey": SUPABASE_ANON_KEY,
+        },
         body: JSON.stringify({
           model: videoModel,
           messages: [{ role: "user", content: messageContent }]
         })
       });
 
-      if (!response.ok) throw new Error(`Status ${response.status}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Status ${response.status}`);
+      }
+
       const data = await response.json();
       const content = data.choices[0].message.content;
 
@@ -167,7 +192,6 @@ export const AutoCinePanel: React.FC = () => {
   };
 
   const analyzeAssetImage = async (assetId: string, base64Image: string) => {
-    if (!geminiApiKey) return;
     setCustomAssets(prev => prev.map(a => a.id === assetId ? { ...a, isAnalyzing: true, desc: "AI 正在识别..." } : a));
     const prompt = `Analyze this image for a video asset library. Classify type: "character" OR "environment". Name it (2-3 words). Concise visual description (under 40 words). JSON: { "type": "...", "name": "...", "description": "..." }`;
     const messages = [{ role: "user", content: [{ type: "text", text: prompt }, { type: "image_url", image_url: { url: base64Image } }] }];
@@ -234,7 +258,7 @@ export const AutoCinePanel: React.FC = () => {
     if (scene.char_ids) scene.char_ids.forEach(cid => { if (characterAssets[cid]) refUrls.push(characterAssets[cid]); });
     customAssets.filter(a => a.type === 'scale_ref').forEach(a => refUrls.push(a.url));
 
-    let newUrl = geminiApiKey ? await callNanaBanana(scene.action_prompt, refUrls) : null;
+    let newUrl = await callNanaBanana(scene.action_prompt, refUrls);
     if (!newUrl) {
       newUrl = `https://placehold.co/600x338/574b90/FFF?text=Regenerated+${sceneId}`;
     } else {
@@ -320,7 +344,7 @@ export const AutoCinePanel: React.FC = () => {
           addLog(`🔗 [角色] 直接引用: ${char.name}`);
         } else {
           addLog(`🎨 [角色] AI 绘制: ${char.name}`);
-          let url = geminiApiKey ? await callNanaBanana(char.visual_prompt) : null;
+          let url = await callNanaBanana(char.visual_prompt);
           if (!url) url = `https://placehold.co/400x400/2d3436/FFF?text=${char.name}`;
           newCharAssets[char.id] = url;
         }
@@ -335,7 +359,7 @@ export const AutoCinePanel: React.FC = () => {
           addLog(`🔗 [场景] 直接引用: ${env.name}`);
         } else {
           addLog(`🎨 [场景] AI 绘制: ${env.name}`);
-          let url = geminiApiKey ? await callNanaBanana(env.visual_prompt) : null;
+          let url = await callNanaBanana(env.visual_prompt);
           if (!url) url = `https://placehold.co/600x338/101820/FFF?text=${env.name}`;
           newSceneAssets[env.id] = url;
         }
@@ -358,7 +382,7 @@ export const AutoCinePanel: React.FC = () => {
         customAssets.filter(a => a.type === 'scale_ref').forEach(a => refUrls.push(a.url));
         if (consistencyMode && prevFrameUrl) refUrls.unshift(prevFrameUrl);
 
-        let finalUrl = geminiApiKey ? await callNanaBanana(scene.action_prompt, refUrls) : null;
+        let finalUrl = await callNanaBanana(scene.action_prompt, refUrls);
         if (!finalUrl) finalUrl = `https://placehold.co/600x338/34495e/FFF?text=Scene+${scene.id}`;
 
         if (finalUrl && !finalUrl.includes("placehold")) prevFrameUrl = finalUrl;
@@ -372,7 +396,7 @@ export const AutoCinePanel: React.FC = () => {
       setCurrentStep(4);
       for (const frame of frames) {
         addLog(`🎥 生成视频 Scene ${frame.id} (${videoModel})...`);
-        const videoUrl = geminiApiKey ? await callVideoGeneration(frame.action_prompt, frame.url) : null;
+        const videoUrl = await callVideoGeneration(frame.action_prompt, frame.url);
         setVideoResults(prev => ({ ...prev, [frame.id]: videoUrl || '' }));
       }
       addLog("全流程任务结束 (含视频)。");
@@ -397,11 +421,8 @@ export const AutoCinePanel: React.FC = () => {
               </div>
               <div className="p-3 bg-slate-950/50 rounded border border-slate-700">
                 <p className="text-xs text-slate-400">
-                  API Key 已从环境变量加载
-                  {geminiApiKey ?
-                    <span className="ml-2 text-green-400">✓ 已配置</span> :
-                    <span className="ml-2 text-red-400">✗ 未配置</span>
-                  }
+                  API 通过服务器代理调用
+                  <span className="ml-2 text-green-400">✓ 已就绪</span>
                 </p>
               </div>
 
