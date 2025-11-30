@@ -384,7 +384,7 @@ export const AutoCinePanel: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 font-sans flex-1 overflow-y-auto">
+    <div className="bg-slate-950 text-slate-200 font-sans">
       <main className="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-4 space-y-6">
           {showConfig && (

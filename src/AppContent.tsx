@@ -402,9 +402,9 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
 
   return (
     <ErrorBoundary>
-      <div className={showAutoCine ? 'block' : 'hidden'}>
-        <div className="min-h-screen bg-slate-950 flex flex-col">
-          <div className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-20">
+      <div className={`fixed inset-0 z-50 ${showAutoCine ? 'block' : 'hidden'}`}>
+        <div className="h-screen bg-slate-950 flex flex-col overflow-hidden">
+          <div className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm shrink-0">
             <div className="max-w-7xl mx-auto px-4 py-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -445,7 +445,9 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
               </div>
             </div>
           </div>
-          <AutoCinePanel />
+          <div className="flex-1 overflow-y-auto">
+            <AutoCinePanel />
+          </div>
         </div>
       </div>
 
