@@ -12,6 +12,8 @@ import ReferenceImageLibrary from './components/ReferenceImageLibrary';
 import { PublicGallery } from './components/PublicGallery';
 import { LoginPromptModal } from './components/LoginPromptModal';
 import { ProductCatalog } from './components/catalog/ProductCatalog';
+import { AutoCineButton } from './components/AutoCineButton';
+import { AutoCinePanel } from './components/AutoCinePanel';
 import { SeedreamConfig, getDefaultSeedreamConfig } from './components/SeedreamSettings';
 import { NanoBananaConfig, getDefaultNanoBananaConfig } from './components/NanoBananaSettings';
 import { useChat } from './hooks/useChat';
@@ -19,7 +21,7 @@ import { useWidgetChat } from './hooks/useWidgetChat';
 import { useAuth } from './contexts/AuthContext';
 import { userService } from './services/userService';
 import { useImageSelector } from './hooks/useImageSelector';
-import { Image as ImageIcon, Sparkles, Wrench } from 'lucide-react';
+import { Image as ImageIcon, Sparkles, Wrench, Film } from 'lucide-react';
 import { useReferenceImageStore } from './stores/referenceImageStore';
 
 interface AppContentProps {
@@ -36,6 +38,7 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
   const [showReferenceLibrary, setShowReferenceLibrary] = useState(false);
   const [showGallery, setShowGallery] = useState(true);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [showAutoCine, setShowAutoCine] = useState(false);
   const [currentMode, setCurrentMode] = useState<AppMode>('normal');
   const [hasOpenedReferenceLibrary, setHasOpenedReferenceLibrary] = useState(false);
   const { addImageToUnified, selectedImages: referenceImages, openAdvancedSelector, removeImageFromUnified } = useImageSelector();
@@ -399,7 +402,53 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
 
   return (
     <ErrorBoundary>
-      {showGallery ? (
+      {showAutoCine ? (
+        <div className="min-h-screen bg-slate-950 flex flex-col">
+          <div className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-20">
+            <div className="max-w-7xl mx-auto px-4 py-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full flex items-center justify-center shadow-sm">
+                    <Film size={20} className="text-white" />
+                  </div>
+                  <h1 className="text-lg font-semibold text-slate-200">AutoCine - AI 视频分镜生成</h1>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setShowGallery(true);
+                      setShowAutoCine(false);
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg font-medium transition-all duration-200 bg-slate-800 text-slate-300 hover:bg-slate-700"
+                  >
+                    <ImageIcon size={16} />
+                    返回画廊
+                  </button>
+
+                  {user && (
+                    <>
+                      <div className="flex items-center gap-2 px-3 py-2 bg-slate-800 rounded-lg border border-slate-700">
+                        <span className="text-sm text-slate-400">剩余绘图次数:</span>
+                        <span className="text-sm font-bold text-blue-400">
+                          {user.permissions.remaining_draws}
+                        </span>
+                      </div>
+                      <button
+                        onClick={onShowDashboard}
+                        className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg font-medium transition-colors"
+                      >
+                        我的账户
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+          <AutoCinePanel />
+        </div>
+      ) : showGallery ? (
         <div className="min-h-screen bg-elegant-cream flex flex-col">
           <div className="border-b border-gray-200 bg-white/90 backdrop-blur-sm sticky top-0 z-20">
             <div className="max-w-7xl mx-auto px-4 py-3">
@@ -423,11 +472,21 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
                     浏览画廊
                   </button>
 
+                  {/* AutoCine 按钮 */}
+                  <AutoCineButton
+                    onClick={() => {
+                      setShowGallery(false);
+                      setShowAutoCine(true);
+                    }}
+                    isActive={false}
+                  />
+
                   {/* 普通模式按钮 */}
                   <button
                     onClick={() => {
                       handleStartCreating();
                       setCurrentMode('normal');
+                      setShowAutoCine(false);
                     }}
                     className="flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg font-medium transition-all duration-200 bg-gray-100 text-gray-600 hover:bg-gray-200"
                   >
@@ -441,6 +500,7 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
                       onClick={() => {
                         handleStartCreating();
                         setCurrentMode('professional');
+                        setShowAutoCine(false);
                       }}
                       className="flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg font-medium transition-all duration-200 bg-gray-100 text-gray-600 hover:bg-gray-200"
                     >
