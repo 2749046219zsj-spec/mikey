@@ -417,13 +417,12 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => {
-                      setShowGallery(true);
                       setShowAutoCine(false);
                     }}
                     className="flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg font-medium transition-all duration-200 bg-slate-800 text-slate-300 hover:bg-slate-700"
                   >
                     <ImageIcon size={16} />
-                    返回画廊
+                    返回
                   </button>
 
                   {user && (
@@ -475,7 +474,6 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
                   {/* AutoCine 按钮 */}
                   <AutoCineButton
                     onClick={() => {
-                      setShowGallery(false);
                       setShowAutoCine(true);
                     }}
                     isActive={false}
@@ -555,6 +553,7 @@ export default function AppContent({ onShowAuth, shouldEnterCreation, onCreation
             canUseProfessionalMode={canUseChat}
             onShowGallery={() => setShowGallery(true)}
             onShowDashboard={onShowDashboard}
+            onShowAutoCine={() => setShowAutoCine(true)}
             seedreamConfig={seedreamConfig}
             onSeedreamConfigChange={setSeedreamConfig}
             nanoBananaConfig={nanoBananaConfig}

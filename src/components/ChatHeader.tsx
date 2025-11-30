@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bot, Trash2, StopCircle, XCircle, Sparkles, Wrench, Image as ImageIcon } from 'lucide-react';
+import { Bot, Trash2, StopCircle, XCircle, Sparkles, Wrench, Image as ImageIcon, Film } from 'lucide-react';
 import { ModelSelector } from './ModelSelector';
 import { SeedreamSettings, SeedreamConfig } from './SeedreamSettings';
 import { NanoBananaSettings, NanoBananaConfig } from './NanoBananaSettings';
@@ -25,6 +25,7 @@ interface ChatHeaderProps {
   canUseProfessionalMode: boolean;
   onShowGallery?: () => void;
   onShowDashboard?: () => void;
+  onShowAutoCine?: () => void;
   seedreamConfig?: SeedreamConfig;
   onSeedreamConfigChange?: (config: SeedreamConfig) => void;
   nanoBananaConfig?: NanoBananaConfig;
@@ -45,6 +46,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   canUseProfessionalMode,
   onShowGallery,
   onShowDashboard,
+  onShowAutoCine,
   seedreamConfig,
   onSeedreamConfigChange,
   nanoBananaConfig,
@@ -93,6 +95,17 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
               >
                 <ImageIcon size={16} />
                 浏览画廊
+              </button>
+            )}
+
+            {/* AutoCine 按钮 */}
+            {onShowAutoCine && (
+              <button
+                onClick={onShowAutoCine}
+                className="flex items-center gap-1.5 px-3 py-2 bg-gray-100 text-gray-600 hover:bg-gray-200 text-sm rounded-lg transition-all duration-200 font-medium"
+              >
+                <Film size={16} />
+                AutoCine
               </button>
             )}
 
