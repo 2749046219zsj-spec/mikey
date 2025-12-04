@@ -9,6 +9,7 @@ const corsHeaders = {
 interface GeminiProxyRequest {
   model: string;
   messages: any[];
+  response_format?: { type: string };
   extra_body?: Record<string, any>;
 }
 
@@ -26,7 +27,7 @@ Deno.serve(async (req: Request) => {
       throw new Error('GEMINI_API_KEY environment variable is not set');
     }
 
-    const { model, messages, extra_body }: GeminiProxyRequest = await req.json();
+    const { model, messages, response_format, extra_body }: GeminiProxyRequest = await req.json();
 
     if (!model || !messages) {
       return new Response(
@@ -44,6 +45,7 @@ Deno.serve(async (req: Request) => {
     console.log('Proxying request to Poe API:', {
       model,
       messageCount: messages.length,
+      hasResponseFormat: !!response_format,
       hasExtraBody: !!extra_body,
     });
 
@@ -51,6 +53,10 @@ Deno.serve(async (req: Request) => {
       model,
       messages,
     };
+
+    if (response_format) {
+      requestBody.response_format = response_format;
+    }
 
     if (extra_body) {
       requestBody.extra_body = extra_body;

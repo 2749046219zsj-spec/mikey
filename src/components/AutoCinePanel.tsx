@@ -72,7 +72,7 @@ export const AutoCinePanel: React.FC = () => {
       };
 
       if (jsonMode) {
-        requestBody.extra_body = { response_format: { type: "json_object" } };
+        requestBody.response_format = { type: "json_object" };
       }
 
       const response = await fetch(GEMINI_PROXY_URL, {
