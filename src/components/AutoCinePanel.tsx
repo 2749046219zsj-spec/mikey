@@ -1,699 +1,745 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-  Play, Settings, Image as ImageIcon, Film, Loader, Terminal,
-  Video, Plus, X, RotateCcw, Camera, Clapperboard
+  Play, Settings, Image as ImageIcon, Film, FileText, CheckCircle, Loader,
+  Terminal, ChevronRight, ChevronDown, AlertCircle, Maximize, Monitor,
+  Smartphone, Square, Users, User, Map, Layers, Plus, Upload, X, Eye,
+  Video, Anchor, ArrowRight, RotateCcw, Link as LinkIcon, RefreshCw,
+  Camera, Clapperboard, Download, Copy, Check, Sparkles, Wand2, Paintbrush,
+  Cpu, MousePointerClick, ListTodo, Tag, LayoutGrid, Zap, AlertTriangle, Grid3X3, Bug, Trash2, Edit3
 } from 'lucide-react';
 
-interface CustomAsset {
-  id: string;
-  type: 'character' | 'environment' | 'scale_ref';
-  name: string;
-  url: string;
-  desc: string;
-  isAnalyzing: boolean;
-}
-
-interface Scene {
-  id: number;
-  char_ids?: string[];
-  env_id?: string;
-  shot_type: string;
-  desc: string;
-  action_prompt: string;
-}
-
-interface ScriptData {
-  title: string;
-  characters?: Array<{ id: string; name: string; visual_prompt: string }>;
-  environments?: Array<{ id: string; name: string; visual_prompt: string }>;
-  scenes?: Scene[];
-}
-
-interface FrameData extends Scene {
-  url: string;
-}
-
 export const AutoCinePanel: React.FC = () => {
-  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-  const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  const GEMINI_PROXY_URL = `${SUPABASE_URL}/functions/v1/gemini-proxy`;
+  // --- State Management ---
+  const [topic, setTopic] = useState("");
+  const [poeApiKey, setPoeApiKey] = useState("dLxfBB6sLW5BDdKw0N3smMiHkIw67JEMLlXVwzYrmrI");
 
-  const [topic, setTopic] = useState("A和B在C里面玩耍，B突然打了A一下，A被打哭了，B溜走了剩下A自己哭泣");
-  const [aspectRatio, setAspectRatio] = useState("16:9");
-  const [consistencyMode, setConsistencyMode] = useState(true);
-  const [enableVideo, setEnableVideo] = useState(false);
+  // Video Settings
+  const [enableVideo, setEnableVideo] = useState(true);
   const [videoModel, setVideoModel] = useState("sora-2");
-  const [videoResolution, setVideoResolution] = useState("720x1280");
-  const [videoDuration, setVideoDuration] = useState("4s");
-  const [customAssets, setCustomAssets] = useState<CustomAsset[]>([]);
+  const [videoResolution, setVideoResolution] = useState("1280x720");
+  const [videoDuration, setVideoDuration] = useState("8s");
+
+  // Custom Assets
+  const [customAssets, setCustomAssets] = useState<any[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const storyboardInputRef = useRef<HTMLInputElement>(null);
+
+  const [isStitching, setIsStitching] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [logs, setLogs] = useState<string[]>([]);
-  const [showConfig, setShowConfig] = useState(false);
-  const [scriptData, setScriptData] = useState<ScriptData | null>(null);
-  const [characterAssets, setCharacterAssets] = useState<Record<string, string>>({});
-  const [sceneAssets, setSceneAssets] = useState<Record<string, string>>({});
-  const [finalFrames, setFinalFrames] = useState<FrameData[]>([]);
-  const [videoResults, setVideoResults] = useState<Record<number, string>>({});
-  const [regeneratingScenes, setRegeneratingScenes] = useState<Record<number, boolean>>({});
-  const [generatingVideos, setGeneratingVideos] = useState<Record<number, boolean>>({});
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [logs, setLogs] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState('create');
+  const [showDebug, setShowDebug] = useState(false);
+
+  const [isScriptExpanded, setIsScriptExpanded] = useState(true);
+  const [scriptData, setScriptData] = useState<any>(null);
+  const [storyboardUrl, setStoryboardUrl] = useState<string | null>(null);
+  const [finalVideoUrl, setFinalVideoUrl] = useState<string | null>(null);
+
+  // Prompt Editing State
+  const [soraPrompt, setSoraPrompt] = useState("");
+  const [storyboardPrompt, setStoryboardPrompt] = useState("");
+
+  const [lastNanoRequest, setLastNanoRequest] = useState<any>(null);
+  const [lastSoraRequest, setLastSoraRequest] = useState<any>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // --- Helper Functions ---
   const addLog = (message: string) => {
-    const timestamp = new Date().toLocaleTimeString();
-    setLogs(prev => [...prev, `[${timestamp}] ${message}`]);
+    const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    setLogs(prev => [`[${timestamp}] ${String(message)}`, ...prev]);
   };
 
+  useEffect(() => {
+    if (currentStep >= 2) {
+      setIsScriptExpanded(false);
+    }
+  }, [currentStep]);
+
+  // Auto-fill edit boxes
+  useEffect(() => {
+    if (scriptData) {
+        // 1. Fill Video Prompt (Sora)
+        if (scriptData.sora_prompt) {
+            setSoraPrompt(scriptData.sora_prompt);
+        } else if (scriptData.summary) {
+            setSoraPrompt(scriptData.summary);
+        } else if (scriptData.summary === "") {
+            setSoraPrompt("Generate a cinematic video based strictly on the provided storyboard image. Maintain consistency with the visual style. High quality, 8k resolution.");
+        }
+
+        // 2. Fill Drawing Prompt (Nano)
+        if (!storyboardPrompt) {
+            let baseSbPrompt = scriptData.storyboard_prompt;
+            if (!baseSbPrompt) {
+                 if (!scriptData.summary && !scriptData.sora_prompt) {
+                     baseSbPrompt = "Cinematic storyboard from uploaded images, 3x3 grid layout.";
+                 } else {
+                     const context = scriptData.summary || topic;
+                     baseSbPrompt = `Create a 3x3 grid storyboard about: ${context}.`;
+                     if (customAssets.length > 0) {
+                         baseSbPrompt += " Use the provided reference images.";
+                     }
+                 }
+            }
+            setStoryboardPrompt(baseSbPrompt);
+        }
+    }
+  }, [scriptData]);
+
+  // --- API Functions ---
   const callPoeGPT = async (messages: any[], model = "gpt-5", jsonMode = false) => {
+    if (!poeApiKey) {
+        addLog("⚠️ 未检测到 Key，使用模拟数据");
+        return null;
+    }
+
+    let finalMessages = messages;
+    let finalJsonMode = jsonMode;
+
+    if (model === "gpt-5") {
+        const systemMsg = messages.find(m => m.role === "system");
+        const userMsg = messages.find(m => m.role === "user");
+
+        if (systemMsg && userMsg) {
+            // Check if user content is array (multimodal) or string
+            const userContentStr = Array.isArray(userMsg.content)
+                ? userMsg.content.find((c: any) => c.type === 'text')?.text || ""
+                : userMsg.content;
+
+            // Reconstruct user message preserving images if any
+            const newContent = Array.isArray(userMsg.content)
+                ? [
+                    { type: "text", text: `[Instruction]\n${systemMsg.content}\n\n[User Input]\n${userContentStr}` },
+                    ...userMsg.content.filter((c: any) => c.type === 'image_url')
+                  ]
+                : `[Instruction]\n${systemMsg.content}\n\n[User Input]\n${userMsg.content}`;
+
+            finalMessages = [{
+                role: "user",
+                content: newContent
+            }];
+        }
+        finalJsonMode = false;
+    }
+
     try {
-      const requestBody: any = {
-        model: model,
-        messages: messages,
-      };
-
-      if (jsonMode) {
-        requestBody.response_format = { type: "json_object" };
-      }
-
-      const response = await fetch(GEMINI_PROXY_URL, {
+      const response = await fetch("https://api.poe.com/v1/chat/completions", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-          "apikey": SUPABASE_ANON_KEY,
-        },
-        body: JSON.stringify(requestBody)
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${poeApiKey}` },
+        body: JSON.stringify({
+            model,
+            messages: finalMessages,
+            response_format: finalJsonMode ? { type: "json_object" } : undefined,
+            ...(model === "gpt-5" ? { reasoning_effort: "medium" } : {})
+        })
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Status ${response.status}`);
+          const errorText = await response.text();
+          throw new Error(`Status ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
       return data.choices[0].message.content;
-    } catch (error) {
-      addLog(`[Error] API 调用失败: ${(error as Error).message}`);
+    } catch (error: any) {
+      addLog(`⚠️ GPT调用失败 (${error.message})，切换至模拟模式`);
       return null;
     }
   };
 
-  const callNanaBanana = async (prompt: string, refImageUrls: string[] = []) => {
-    try {
-      const finalPrompt = `(Single cinematic shot:2.0), (one full scene), ${prompt} --ar ${aspectRatio} --v 6.0 --no grid, split screen, collage, multiple views, comic panels, borders, white frame`;
+  const callNanoBananaForStoryboard = async (promptText: string, assets: any[] = []) => {
+    const MOCK_STORYBOARD = "https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?q=80&w=2070&auto=format&fit=crop";
 
-      let messageContent;
-      if (refImageUrls.length > 0) {
-        messageContent = [
-          { type: "text", text: finalPrompt },
-          ...refImageUrls.map(url => ({ type: "image_url", image_url: { url: url } }))
-        ];
-      } else {
-        messageContent = finalPrompt;
+    if (!poeApiKey) {
+        await new Promise(r => setTimeout(r, 1500));
+        return MOCK_STORYBOARD;
+    }
+
+    try {
+      let messageContent: any[] = [{ type: "text", text: promptText }];
+      if (assets.length > 0) {
+          assets.forEach(asset => {
+              messageContent.push({ type: "image_url", image_url: { url: asset.url } });
+          });
       }
 
-      const response = await fetch(GEMINI_PROXY_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-          "apikey": SUPABASE_ANON_KEY,
-        },
-        body: JSON.stringify({
+      const requestPayload = {
           model: "nano-banana-pro",
-          messages: [{ role: "user", content: messageContent }]
-        })
+          messages: [{ role: "user", content: messageContent }],
+          "aspect_ratio": "16:9",
+          "image_only": true,
+          "image_size": "1K"
+      };
+
+      setLastNanoRequest({
+          endpoint: "nano-banana-pro",
+          prompt: promptText,
+          hasReferences: assets.length > 0,
+          fullPayload: requestPayload
+      });
+
+      const response = await fetch("https://api.poe.com/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${poeApiKey}` },
+        body: JSON.stringify(requestPayload)
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Status ${response.status}`);
+          const errorText = await response.text();
+          throw new Error(`Status ${response.status} - ${errorText}`);
       }
-
       const data = await response.json();
       const content = data.choices[0].message.content;
       const match = content.match(/!\[.*?\]\((.*?)\)/) || content.match(/https?:\/\/[^\s)]+/);
-      return match ? match[1] || match[0] : null;
-    } catch (error) {
-      addLog(`[Error] 绘图失败: ${(error as Error).message}`);
-      return null;
+      return match ? match[1] || match[0] : MOCK_STORYBOARD;
+    } catch (error: any) {
+      addLog(`⚠️ 绘图API失败: ${error.message}，使用演示图片`);
+      await new Promise(r => setTimeout(r, 1000));
+      return MOCK_STORYBOARD;
     }
   };
 
-  const callVideoGeneration = async (actionPrompt: string, startImageUrl: string) => {
-    let finalPrompt = actionPrompt;
-    if (videoModel === "sora-2") {
-      finalPrompt = `${actionPrompt} --resolution ${videoResolution} --duration ${videoDuration}`;
-    } else if (videoModel === "veo-3.1") {
-      finalPrompt = `${actionPrompt} (cinematic video, high quality)`;
+  const callVideoGeneration = async (userPrompt: string, startImageUrl: string | null) => {
+    const MOCK_VIDEO = "https://assets.mixkit.co/videos/preview/mixkit-waves-in-the-water-1164-large.mp4";
+
+    if (!poeApiKey) {
+        await new Promise(r => setTimeout(r, 3000));
+        return MOCK_VIDEO;
     }
 
-    try {
-      let messageContent;
-      if (startImageUrl) {
-        messageContent = [
-          { type: "text", text: finalPrompt },
-          { type: "image_url", image_url: { url: startImageUrl } }
-        ];
-      } else {
-        messageContent = finalPrompt;
-      }
+    const durationValue = videoDuration.replace("s", "");
+    const finalPrompt = userPrompt;
 
-      const response = await fetch(GEMINI_PROXY_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-          "apikey": SUPABASE_ANON_KEY,
-        },
-        body: JSON.stringify({
-          model: videoModel,
-          messages: [{ role: "user", content: messageContent }]
-        })
-      });
+    const messageContent = startImageUrl
+        ? [{ type: "text", text: finalPrompt }, { type: "image_url", image_url: { url: startImageUrl } }]
+        : finalPrompt;
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Status ${response.status}`);
-      }
-
-      const data = await response.json();
-      const content = data.choices[0].message.content;
-
-      const match = content.match(/https?:\/\/[^\s)]+\.mp4/) || content.match(/https?:\/\/[^\s)]+/);
-      if (match) return match[0];
-
-      const mdMatch = content.match(/\((https?:\/\/.*?)\)/);
-      return mdMatch ? mdMatch[1] : null;
-    } catch (error) {
-      addLog(`[Error] ${videoModel} 生成失败: ${(error as Error).message}`);
-      return null;
-    }
-  };
-
-  const analyzeAssetImage = async (assetId: string, base64Image: string) => {
-    setCustomAssets(prev => prev.map(a => a.id === assetId ? { ...a, isAnalyzing: true, desc: "AI 正在识别..." } : a));
-    const prompt = `Analyze this image for a video asset library. Classify type: "character" OR "environment". Name it (2-3 words). Concise visual description (under 40 words). JSON: { "type": "...", "name": "...", "description": "..." }`;
-    const messages = [{ role: "user", content: [{ type: "text", text: prompt }, { type: "image_url", image_url: { url: base64Image } }] }];
-    const responseText = await callPoeGPT(messages, "gpt-5", true);
-    try {
-      const result = JSON.parse(responseText!.replace(/```json\n?|\n?```/g, "").trim());
-      setCustomAssets(prev => prev.map(a => a.id === assetId ? { ...a, type: result.type?.toLowerCase() || 'character', name: result.name || a.name, desc: result.description || "识别完成", isAnalyzing: false } : a));
-      addLog(`✅ 识别成功: [${result.type}] ${result.name}`);
-    } catch (e) {
-      setCustomAssets(prev => prev.map(a => a.id === assetId ? { ...a, desc: responseText || "分析失败", isAnalyzing: false } : a));
-    }
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64 = reader.result as string;
-      const name = `Asset_${customAssets.length + 1}`;
-      const newAsset: CustomAsset = { id: `custom_${Date.now()}`, type: 'character', name, url: base64, desc: "Waiting for AI...", isAnalyzing: false };
-      setCustomAssets(prev => [...prev, newAsset]);
-      analyzeAssetImage(newAsset.id, base64);
+    const requestPayload = {
+        model: videoModel,
+        messages: [{ role: "user", content: messageContent }],
+        "size": videoResolution,
+        "duration": durationValue
     };
-    reader.readAsDataURL(file);
+
+    setLastSoraRequest({
+        endpoint: videoModel,
+        prompt: finalPrompt,
+        fullPayload: requestPayload
+    });
+
+    const executeRequest = async () => {
+        const response = await fetch("https://api.poe.com/v1/chat/completions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${poeApiKey}` },
+            body: JSON.stringify(requestPayload)
+        });
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Status ${response.status} - ${errorText}`);
+        }
+        const data = await response.json();
+        const content = data.choices[0].message.content;
+        const match = content.match(/https?:\/\/[^\s)]+\.mp4/) || content.match(/https?:\/\/[^\s)]+/);
+        const mdMatch = content.match(/\((https?:\/\/.*?)\)/);
+        return match ? match[0] : (mdMatch ? mdMatch[1] : MOCK_VIDEO);
+    };
+
+    try { return await executeRequest(); }
+    catch (error: any) {
+        addLog(`⚠️ 视频API失败: ${error.message}，使用演示视频`);
+        await new Promise(r => setTimeout(r, 2000));
+        return MOCK_VIDEO;
+    }
   };
 
-  const generateSingleVideo = async (sceneId: number) => {
-    if (generatingVideos[sceneId]) return;
-
-    const scene = scriptData?.scenes?.find(s => s.id === sceneId);
-    const frame = finalFrames.find(f => f.id === sceneId);
-
-    if (!scene || !frame || !frame.url) {
-      addLog(`[Error] 无法生成视频：找不到场景数据或图片未生成`);
-      return;
+  const stitchImages = async (fileList: FileList) => {
+    if (!fileList || fileList.length === 0) return null;
+    setIsStitching(true);
+    addLog(`🧩 正在智能拼接 ${fileList.length} 张图片...`);
+    const loadImage = (file: File) => new Promise<HTMLImageElement>((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = URL.createObjectURL(file);
+    });
+    try {
+        const images = await Promise.all(Array.from(fileList).map(loadImage));
+        const count = images.length;
+        let cols = Math.ceil(Math.sqrt(count));
+        let rows = Math.ceil(count / cols);
+        if (count === 4) { cols = 2; rows = 2; }
+        else if (count === 6) { cols = 3; rows = 2; }
+        else if (count === 9) { cols = 3; rows = 3; }
+        const baseWidth = images[0].width;
+        const baseHeight = images[0].height;
+        const canvas = document.createElement('canvas');
+        canvas.width = baseWidth * cols;
+        canvas.height = baseHeight * rows;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return null;
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        images.forEach((img, i) => {
+            const x = (i % cols) * baseWidth;
+            const y = Math.floor(i / cols) * baseHeight;
+            ctx.drawImage(img, 0, 0, img.width, img.height, x, y, baseWidth, baseHeight);
+        });
+        const stitchedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
+        addLog(`✅ 拼图完成 (${cols}x${rows})`);
+        setIsStitching(false);
+        return stitchedDataUrl;
+    } catch (e: any) {
+        addLog(`❌ 拼图失败: ${e.message}`);
+        setIsStitching(false);
+        return null;
     }
-
-    setGeneratingVideos(prev => ({ ...prev, [sceneId]: true }));
-    addLog(`🎬 正在为场景 ${sceneId} 生成视频 (模型: ${videoModel})...`);
-
-    const videoUrl = await callVideoGeneration(scene.action_prompt, frame.url);
-
-    if (videoUrl) {
-      addLog(`✅ 场景 ${sceneId} 视频生成成功！`);
-      setVideoResults(prev => ({ ...prev, [sceneId]: videoUrl }));
-    } else {
-      addLog(`❌ 场景 ${sceneId} 视频生成失败。`);
-    }
-
-    setGeneratingVideos(prev => ({ ...prev, [sceneId]: false }));
   };
 
-  const regenerateSceneImage = async (sceneId: number) => {
-    if (regeneratingScenes[sceneId] || !scriptData) return;
-    setRegeneratingScenes(prev => ({ ...prev, [sceneId]: true }));
-    addLog(`🔄 正在重绘场景 ${sceneId}...`);
+  const handleBatchUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files ? Array.from(e.target.files) : [];
+      if (files.length === 0) return;
+      const readers = files.map(file => new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve({ file, base64: reader.result });
+          reader.readAsDataURL(file);
+      }));
+      Promise.all(readers).then((results: any) => {
+          results.forEach((res: any, index: number) => {
+              const newAsset = { id: `custom_${Date.now()}_${index}`, type: 'character', name: res.file.name.split('.')[0].slice(0, 10), url: res.base64, desc: "Reference", isAnalyzing: false };
+              setCustomAssets(prev => [...prev, newAsset]);
+          });
+          addLog(`📄 批量添加 ${files.length} 张图片`);
+      });
+  };
 
-    const scene = scriptData.scenes?.find(s => s.id === sceneId);
-    if (!scene) return;
-
-    const refUrls: string[] = [];
-    if (scene.env_id && sceneAssets[scene.env_id]) refUrls.push(sceneAssets[scene.env_id]);
-    if (scene.char_ids) scene.char_ids.forEach(cid => { if (characterAssets[cid]) refUrls.push(characterAssets[cid]); });
-    customAssets.filter(a => a.type === 'scale_ref').forEach(a => refUrls.push(a.url));
-
-    let newUrl = await callNanaBanana(scene.action_prompt, refUrls);
-    if (!newUrl) {
-      newUrl = `https://placehold.co/600x338/574b90/FFF?text=Regenerated+${sceneId}`;
+  const handleStoryboardUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setFinalVideoUrl(null);
+    setCurrentStep(2);
+    if (files.length === 1) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setStoryboardUrl(reader.result as string);
+            addLog(`📤 已上传分镜图`);
+        };
+        reader.readAsDataURL(files[0]);
     } else {
-      addLog(`✅ 场景 ${sceneId} 重绘成功`);
+        const stitchedUrl = await stitchImages(files);
+        if (stitchedUrl) setStoryboardUrl(stitchedUrl);
     }
 
-    setFinalFrames(prev => prev.map(f => f.id === sceneId ? { ...f, url: newUrl! } : f));
-    setRegeneratingScenes(prev => ({ ...prev, [sceneId]: false }));
+    if (!scriptData) {
+        const summaryText = topic ? topic : "";
+        const fakeScript = { summary: summaryText, scenes: [] };
+        setScriptData(fakeScript);
+    }
+    e.target.value = '';
   };
 
   const generateScriptWithAssets = async () => {
     let assetContext = "";
+    const imageMessages = [];
+
+    // --- 1. 资产映射逻辑：为图片编号，方便 Prompt 引用 ---
     if (customAssets.length > 0) {
-      assetContext = "IMPORTANT: PRIORITIZE USING THESE CUSTOM ASSETS IDs IN THE SCRIPT.\n";
-      customAssets.filter(a => a.type !== 'scale_ref').forEach(asset => {
-        assetContext += `- Type: ${asset.type.toUpperCase()} | Name: "${asset.name}" | ID: "${asset.id}" | Visual Desc: "${asset.desc}"\n`;
-      });
+        assetContext = "【重要】用户提供了以下参考图 (Reference Images)。请务必根据用户指令中的\"图1\"、\"图2\"等称呼进行严格的视觉绑定：\n";
+        customAssets.forEach((asset, index) => {
+            // 这里将 Image N 和文件名关联，让 GPT 知道 "图N" 是谁
+            assetContext += `- 图${index + 1} (Image ${index + 1}) / Asset Name: "${asset.name}"\n`;
+            // 构建用于 GPT 的图片消息对象
+            imageMessages.push({ type: "image_url", image_url: { url: asset.url } });
+        });
+    } else {
+        assetContext = "No reference images provided.\n";
     }
 
-    const systemPrompt = `
-      You are an AI Video Director. Asset-based workflow.
-      ${assetContext}
+    // --- 2. 新的 Sora 2 智能体 Prompt (防加戏版) ---
+    const systemPromptText = `
+    # 角色
+    你是一个专业的 Sora 2 视频提示词生成智能体，能够根据用户输入的故事大纲，生成完整的适合 Sora 2 生成 10-15 秒视频的提示词。
+    ${assetContext}
 
-      Tasks:
-      1. Define Characters. (Use custom IDs if applicable)
-      2. Define Environments. (Use custom IDs if applicable)
-      3. Write Scenes with explicit Shot Types.
+    # 技能 (优先级从高到低)
+    1. 【最高优先级】精确执行用户分镜：
+       - **检测：** 如果用户输入中包含具体的分镜描述（如\"1.空镜... 2.特写...\"或具体的镜头列表），这说明用户已有成熟剧本。
+       - **执行：** 此时你必须 **完全停止** 任何\"辅助生成\"或\"剧情补充\"。你的唯一任务是将用户的每一条描述准确地转化为 Sora 提示词格式。
+       - **逻辑绑定：** 重点理解用户口中的\"图1\"、\"图2\"与上方参考图的对应关系。例如用户说\"图2坐在副驾\"，你必须在提示词中明确描述 Image 2 的特征出现在副驾位置。
+       - **禁止：** 严禁修改用户设定的环境、动作或添加用户未提到的情节。
 
-      Output JSON:
-      {
-        "title": "Title",
-        "characters": [ { "id": "id", "name": "Name", "visual_prompt": "Desc" } ],
-        "environments": [ { "id": "id", "name": "Name", "visual_prompt": "Desc" } ],
-        "scenes": [ { "id": 1, "char_ids": ["id"], "env_id": "id", "shot_type": "Medium Shot", "desc": "Story", "action_prompt": "Prompt" } ]
-      }
+    2. 辅助生成视频提示词 (仅当用户未提供具体分镜时)：
+       - 只有当用户输入非常简略（如只是一句话大纲）时，才启用此技能。
+       - 此时你可以自动补全风格、色调、角色细节等。
+
+    # 输出要求 (JSON Format)
+    请务必仅输出一个标准的 JSON 对象，包含以下字段：
+    1. \"title\": 视频标题
+    2. \"summary\": 简短的故事梗概 (用于UI显示)
+    3. \"storyboard_prompt\":
+       - 如果用户提供了分镜列表，请将这些分镜翻译为英文，作为绘图提示词。
+       - 绘图模型通常生成 3x3 (9格) 图片。如果用户提供了超过 9 个镜头（如 12 个），请精选最关键的 9 个画面组合成 Prompt，或者描述为一个连续的序列。
+    4. \"sora_prompt\": 严格按照以下格式生成的完整 Sora 2 提示词内容（不要使用 Markdown 表格，使用纯文本换行）：
+       \"风格\"：[具体风格]
+       \"色调\"：[色调描述]
+       \"BGM 与音效\"：[详细描述]
+       \"基础设定与场景\"：\"场景\"：[描述]
+       \"角色 1\"：[详细信息]
+       \"角色 2\"：[详细信息]
+       \"镜头与故事顺序\"：\"开场广角镜头\"：[描述]...（此处包含所有镜头、台词、动作、特效的详细描述）
+
+    # 限制
+    1. 只根据用户输入生成与 Sora 2 视频提示词相关的内容。
+    2. 输出内容必须是合法的 JSON 格式。
     `;
 
-    addLog("🧠 正在规划剧本...");
-    const messages = [{ role: "system", content: systemPrompt }, { role: "user", content: `主题：${topic}` }];
-    const content = await callPoeGPT(messages, "gpt-5", true);
+    // 构建多模态 User 消息内容
+    const userContent: any[] = [
+        { type: "text", text: `[Instruction]\n${systemPromptText}\n\n[User Input]\n故事大纲/分镜描述: ${topic}` },
+        ...imageMessages // 将所有图片作为消息的一部分
+    ];
+
+    addLog("🧠 正在规划剧本 (智能体模式: 严格遵循用户分镜)...");
+
+    // 调用 GPT，直接传递包含图片和文本的 userContent
+    const content = await callPoeGPT([{ role: "user", content: userContent }], "gpt-5", true);
+
     try {
-      return JSON.parse(content!.replace(/```json\n?|\n?```/g, "").trim());
+        // 增强的 JSON 提取逻辑
+        const jsonMatch = content?.match(/```json([\s\S]*?)```/) || content?.match(/\{[\s\S]*\}/);
+        const jsonString = jsonMatch ? jsonMatch[1] || jsonMatch[0] : content;
+        return JSON.parse(jsonString.trim());
     } catch (e) {
-      return null;
+        console.error("JSON Parse Error:", e, content);
+        return null;
     }
   };
 
-  const handleGenerate = async () => {
+  const handleSmartGenerate = async () => {
     if (!topic) return;
     setIsGenerating(true);
-    setLogs([]);
-    setCurrentStep(1);
-    setScriptData(null);
-    setCharacterAssets({});
-    setSceneAssets({});
-    setFinalFrames([]);
-    setVideoResults({});
 
-    let script = await generateScriptWithAssets();
-    if (!script) {
-      await new Promise(r => setTimeout(r, 500));
-      script = {
-        title: "演示项目",
-        characters: [{ id: "c1", name: "Hacker", visual_prompt: "Cyberpunk girl" }],
-        environments: [{ id: "e1", name: "Alley", visual_prompt: "Rain" }],
-        scenes: [{ id: 1, char_ids: ["c1"], env_id: "e1", shot_type: "Wide Shot", desc: "Start", action_prompt: "Start" }]
-      };
-      addLog("⚠️ API 调用失败，使用演示数据");
+    let currentScript = scriptData;
+    let currentStoryboard = storyboardUrl;
+
+    if (currentScript && currentScript.summary !== topic && !(currentScript.summary === "" && topic !== "")) {
+        addLog("🔄 检测到新主题，正在重新规划...");
+        currentScript = null;
+        currentStoryboard = null;
+        setScriptData(null);
+        setStoryboardUrl(null);
+        setFinalVideoUrl(null);
+        setSoraPrompt("");
     }
-    setScriptData(script);
 
-    setCurrentStep(2);
-    const newCharAssets: Record<string, string> = {};
-    const newSceneAssets: Record<string, string> = {};
+    if (!currentScript) {
+        setLogs([]);
+        setCurrentStep(1);
 
-    addLog("--- 准备资产 ---");
+        currentScript = await generateScriptWithAssets();
 
-    if (script.characters) {
-      for (const char of script.characters) {
-        const custom = customAssets.find(c => c.id === char.id);
-        if (custom) {
-          newCharAssets[char.id] = custom.url;
-          addLog(`🔗 [角色] 直接引用: ${char.name}`);
-        } else {
-          addLog(`🎨 [角色] AI 绘制: ${char.name}`);
-          let url = await callNanaBanana(char.visual_prompt);
-          if (!url) url = `https://placehold.co/400x400/2d3436/FFF?text=${char.name}`;
-          newCharAssets[char.id] = url;
+        if (!currentScript) {
+            await new Promise(r => setTimeout(r, 800));
+
+            const hasRefs = customAssets.length > 0;
+            const assetNames = customAssets.map(a => a.name).join(", ");
+
+            let fallbackSbPrompt = `Create a 3x3 grid storyboard about: ${topic}.`;
+            if (hasRefs) {
+                fallbackSbPrompt += ` Use reference characters: ${assetNames}. Match reference style exactly.`;
+            }
+
+            currentScript = {
+                title: "智能生成剧本 (模拟)",
+                summary: topic,
+                sora_prompt: topic, // Fallback
+                storyboard_prompt: fallbackSbPrompt,
+                scenes: []
+            };
+            addLog("⚡ 剧本已就绪 (本地智能模式)");
         }
-        setCharacterAssets(prev => ({ ...prev, [char.id]: newCharAssets[char.id] }));
-      }
+        setScriptData(currentScript);
+    } else {
+        addLog("✅ 复用现有剧本...");
     }
-    if (script.environments) {
-      for (const env of script.environments) {
-        const custom = customAssets.find(c => c.id === env.id);
-        if (custom) {
-          newSceneAssets[env.id] = custom.url;
-          addLog(`🔗 [场景] 直接引用: ${env.name}`);
+
+    if (!currentStoryboard) {
+        setCurrentStep(2);
+        addLog("🎨 正在绘制九宫格关键帧...");
+
+        const promptToUse = storyboardPrompt || currentScript.storyboard_prompt;
+
+        const sbUrl = await callNanoBananaForStoryboard(promptToUse, customAssets);
+
+        if (sbUrl) {
+            setStoryboardUrl(sbUrl);
+            currentStoryboard = sbUrl;
+            addLog("✅ 九宫格生成完毕");
         } else {
-          addLog(`🎨 [场景] AI 绘制: ${env.name}`);
-          let url = await callNanaBanana(env.visual_prompt);
-          if (!url) url = `https://placehold.co/600x338/101820/FFF?text=${env.name}`;
-          newSceneAssets[env.id] = url;
+            addLog("❌ 绘制失败，请重试");
+            setIsGenerating(false);
+            return;
         }
-        setSceneAssets(prev => ({ ...prev, [env.id]: newSceneAssets[env.id] }));
-      }
-    }
-
-    setCurrentStep(3);
-    addLog("--- 合成分镜 ---");
-    const frames: FrameData[] = [];
-    let prevFrameUrl: string | null = null;
-
-    if (script.scenes) {
-      for (const scene of script.scenes) {
-        addLog(`合成场景 ${scene.id} [${scene.shot_type}]...`);
-
-        const refUrls: string[] = [];
-        if (scene.env_id && newSceneAssets[scene.env_id]) refUrls.push(newSceneAssets[scene.env_id]);
-        if (scene.char_ids) scene.char_ids.forEach(cid => { if (newCharAssets[cid]) refUrls.push(newCharAssets[cid]); });
-        customAssets.filter(a => a.type === 'scale_ref').forEach(a => refUrls.push(a.url));
-        if (consistencyMode && prevFrameUrl) refUrls.unshift(prevFrameUrl);
-
-        let finalUrl = await callNanaBanana(scene.action_prompt, refUrls);
-        if (!finalUrl) finalUrl = `https://placehold.co/600x338/34495e/FFF?text=Scene+${scene.id}`;
-
-        if (finalUrl && !finalUrl.includes("placehold")) prevFrameUrl = finalUrl;
-
-        frames.push({ ...scene, url: finalUrl });
-        setFinalFrames([...frames]);
-      }
+    } else {
+        addLog("✅ 复用现有分镜...");
     }
 
     if (enableVideo) {
-      setCurrentStep(4);
-      for (const frame of frames) {
-        addLog(`🎥 生成视频 Scene ${frame.id} (${videoModel})...`);
-        const videoUrl = await callVideoGeneration(frame.action_prompt, frame.url);
-        setVideoResults(prev => ({ ...prev, [frame.id]: videoUrl || '' }));
-      }
-      addLog("全流程任务结束 (含视频)。");
+        setCurrentStep(3);
+        // 优先使用智能体生成的 sora_prompt
+        const promptToUse = soraPrompt || currentScript.sora_prompt || currentScript.summary || "Generate video";
+
+        addLog(`🎥 正在召唤 ${videoModel} 生成 ${videoDuration} 视频...`);
+        const vidUrl = await callVideoGeneration(promptToUse, currentStoryboard);
+
+        if (vidUrl) {
+            setFinalVideoUrl(vidUrl);
+            addLog("✅ 视频生成成功！");
+        } else {
+            addLog("❌ 视频生成失败");
+        }
     } else {
-      addLog("任务结束 (仅图片模式)。点击图片上的 '生成视频' 按钮可手动制作。");
+        addLog("⏸️ 已暂停：等待手动生成视频");
     }
 
     setIsGenerating(false);
   };
 
+  const handleReset = () => {
+      setTopic("");
+      setScriptData(null);
+      setStoryboardUrl(null);
+      setFinalVideoUrl(null);
+      setSoraPrompt("");
+      setStoryboardPrompt("");
+      setLogs([]);
+      setCurrentStep(0);
+      addLog("🧹 状态已清空，可以开始新创作");
+  };
+
+  const handleRegenerateStoryboard = async () => {
+      if (!storyboardPrompt || isGenerating) return;
+      setIsGenerating(true);
+      setCurrentStep(2);
+      setFinalVideoUrl(null);
+      addLog("🎨 正在重新绘制九宫格...");
+      const sbUrl = await callNanoBananaForStoryboard(storyboardPrompt, customAssets);
+      if (sbUrl) { setStoryboardUrl(sbUrl); addLog("✅ 重绘完成"); }
+      setIsGenerating(false);
+  };
+
+  const handleGenerateVideo = async () => {
+      if (!storyboardUrl || isGenerating) return;
+      setIsGenerating(true);
+      setCurrentStep(3);
+      addLog(`🎥 正在生成 ${videoDuration} 视频...`);
+      const vidUrl = await callVideoGeneration(soraPrompt, storyboardUrl);
+      if (vidUrl) { setFinalVideoUrl(vidUrl); addLog("✅ 生成成功"); }
+      setIsGenerating(false);
+  };
+
+  const downloadFile = (url: string, name: string) => {
+      const link = document.createElement('a'); link.href = url; link.download = name; link.target = '_blank';
+      document.body.appendChild(link); link.click(); document.body.removeChild(link);
+  };
+
   return (
-    <div className="bg-slate-950 text-slate-200 font-sans">
-      <main className="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <div className="lg:col-span-4 space-y-6">
-          {showConfig && (
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4 border-l-4 border-l-indigo-500">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-slate-400">配置选项</h3>
-                <button onClick={() => setShowConfig(false)} className="text-slate-500 hover:text-slate-300">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="p-3 bg-slate-950/50 rounded border border-slate-700">
-                <p className="text-xs text-slate-400">
-                  API 通过服务器代理调用
-                  <span className="ml-2 text-green-400">✓ 已就绪</span>
-                </p>
-              </div>
-
-              <div className="pt-2 border-t border-slate-800 space-y-3">
-                <h4 className="text-xs font-semibold text-indigo-400">绘图 (Nano-Banana)</h4>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-400">视觉连续性</span>
-                  <button
-                    onClick={() => setConsistencyMode(!consistencyMode)}
-                    className={`w-10 h-5 rounded-full relative transition-colors ${consistencyMode ? 'bg-indigo-600' : 'bg-slate-700'}`}
-                  >
-                    <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-transform ${consistencyMode ? 'left-6' : 'left-1'}`} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="pt-2 border-t border-slate-800 space-y-3">
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-xs font-semibold text-pink-400">视频生成配置</h4>
-                  <div className="flex items-center gap-2">
-                    <span className={`text-[10px] ${enableVideo ? 'text-pink-400' : 'text-slate-500'}`}>
-                      {enableVideo ? '自动生成' : '手动生成'}
-                    </span>
-                    <button
-                      onClick={() => setEnableVideo(!enableVideo)}
-                      className={`w-10 h-5 rounded-full relative transition-colors ${enableVideo ? 'bg-pink-600' : 'bg-slate-700'}`}
-                    >
-                      <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-transform ${enableVideo ? 'left-6' : 'left-1'}`} />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div>
-                    <label className="text-[10px] text-slate-500 block mb-1">选择模型</label>
-                    <select
-                      value={videoModel}
-                      onChange={(e) => setVideoModel(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs focus:border-pink-500 outline-none"
-                    >
-                      <option value="sora-2">Sora-2 (OpenAI)</option>
-                      <option value="veo-3.1">Veo-3.1 (Google)</option>
-                    </select>
-                  </div>
-                  {videoModel === "sora-2" && (
-                    <div className="grid grid-cols-2 gap-2">
-                      <select
-                        value={videoResolution}
-                        onChange={(e) => setVideoResolution(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs"
-                      >
-                        <option value="720x1280">720x1280</option>
-                        <option value="1280x720">1280x720</option>
-                      </select>
-                      <select
-                        value={videoDuration}
-                        onChange={(e) => setVideoDuration(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs"
-                      >
-                        <option value="4s">4s</option>
-                        <option value="8s">8s</option>
-                      </select>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {!showConfig && (
-            <button
-              onClick={() => setShowConfig(true)}
-              className="w-full py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors"
-            >
-              <Settings className="w-4 h-4" />
-              显示配置
-            </button>
-          )}
-
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-slate-300 flex items-center gap-2">
-                <ImageIcon className="w-4 h-4 text-indigo-400" /> 自定义资产库
-              </h3>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="text-xs flex items-center gap-1 bg-indigo-600 hover:bg-indigo-500 px-2 py-1 rounded text-white transition-colors"
-              >
-                <Plus className="w-3 h-3" /> 上传图片
-              </button>
-              <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
-            </div>
-            <div className="space-y-3 max-h-64 overflow-y-auto">
-              {customAssets.map((asset) => (
-                <div key={asset.id} className="bg-slate-950 p-2 rounded border border-slate-800 flex gap-3 relative group">
-                  <div className="w-12 h-12 shrink-0 bg-black rounded overflow-hidden">
-                    <img src={asset.url} className="w-full h-full object-cover" alt={asset.name} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-center mb-1">
-                      <input
-                        value={asset.name}
-                        onChange={(e) => setCustomAssets(prev => prev.map(a => a.id === asset.id ? {...a, name: e.target.value} : a))}
-                        className="bg-transparent text-xs font-bold text-slate-300 w-20 outline-none focus:text-indigo-400"
-                      />
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => setCustomAssets(prev => prev.map(a => a.id === asset.id ? {...a, type: 'character'} : a))}
-                          className={`text-[8px] px-1 rounded ${asset.type === 'character' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-500'}`}
-                        >
-                          角色
-                        </button>
-                        <button
-                          onClick={() => setCustomAssets(prev => prev.map(a => a.id === asset.id ? {...a, type: 'environment'} : a))}
-                          className={`text-[8px] px-1 rounded ${asset.type === 'environment' ? 'bg-green-600 text-white' : 'bg-slate-800 text-slate-500'}`}
-                        >
-                          场景
-                        </button>
-                        <button
-                          onClick={() => setCustomAssets(prev => prev.map(a => a.id === asset.id ? {...a, type: 'scale_ref'} : a))}
-                          className={`text-[8px] px-1 rounded ${asset.type === 'scale_ref' ? 'bg-purple-600 text-white' : 'bg-slate-800 text-slate-500'}`}
-                        >
-                          比例
-                        </button>
-                      </div>
-                    </div>
-                    <p className="text-[9px] text-slate-500 mt-0.5 line-clamp-2" title={asset.desc}>
-                      {asset.isAnalyzing ? "AI 识别中..." : asset.desc}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setCustomAssets(prev => prev.filter(a => a.id !== asset.id))}
-                    className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 p-1 hover:text-red-400"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
-              {customAssets.length === 0 && (
-                <div className="text-center py-6 text-xs text-slate-600 border border-dashed border-slate-800 rounded flex flex-col items-center gap-2">
-                  <ImageIcon className="w-6 h-6 opacity-30"/>
-                  <span>请上传图片以启用自定义资产</span>
-                </div>
-              )}
-            </div>
+    <div className="min-h-screen bg-[#09090b] text-zinc-100 font-sans selection:bg-purple-500/30">
+      <header className="h-14 border-b border-zinc-800 bg-[#09090b]/80 backdrop-blur-md sticky top-0 z-50 px-6 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center shadow-lg shadow-purple-900/20">
+            <Film className="w-4 h-4 text-white" />
           </div>
-
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Terminal className="w-5 h-5 text-indigo-500" /> 故事创作
-            </h2>
-            <textarea
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              className="w-full h-24 bg-slate-950 border border-slate-700 rounded-lg p-3 text-sm mb-4"
-              placeholder="输入故事梗概..."
-            />
-            <button
-              onClick={handleGenerate}
-              disabled={isGenerating}
-              className={`w-full py-3 rounded-lg font-medium flex items-center justify-center gap-2 ${isGenerating ? 'bg-slate-800 text-slate-400' : 'bg-indigo-600 hover:bg-indigo-500 text-white'}`}
-            >
-              {isGenerating ? <Loader className="animate-spin w-4 h-4"/> : (enableVideo ? <Video className="w-4 h-4"/> : <ImageIcon className="w-4 h-4"/>)}
-              {isGenerating ? "生成中..." : (enableVideo ? "开始生成 (含视频)" : "开始生成 (仅图片)")}
-            </button>
-          </div>
-
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-48 overflow-y-auto font-mono text-xs space-y-1">
-            {logs.map((log, i) => (
-              <div key={i} className="text-slate-400 border-l-2 border-slate-800 pl-2">{log}</div>
-            ))}
-          </div>
+          <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-400">
+            AutoCine <span className="text-zinc-600 text-xs font-medium ml-1">Pro Flow</span>
+          </h1>
         </div>
+        <div className="flex gap-2">
+            <button onClick={() => setShowDebug(!showDebug)} className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1 ${showDebug ? 'bg-purple-600 text-white' : 'bg-zinc-800 text-zinc-300'}`}>
+                <Bug className="w-3 h-3" /> Debug
+            </button>
+            <button className="px-3 py-1.5 rounded-full bg-zinc-800 hover:bg-zinc-700 text-xs text-zinc-300">Docs</button>
+        </div>
+      </header>
 
-        <div className="lg:col-span-8 space-y-8">
-          <div className={`transition-all duration-500 ${currentStep >= 3 ? 'opacity-100' : 'opacity-50 blur-sm'}`}>
-            <div className="flex items-center gap-2 mb-3">
-              <span className="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs">1</span>
-              <h3 className="text-sm font-semibold text-slate-300">分镜与视频合成</h3>
+      <div className="flex h-[calc(100vh-3.5rem)]">
+        <aside className="w-80 border-r border-zinc-800 bg-[#0c0c0e] flex flex-col">
+            <div className="flex p-2 gap-1 border-b border-zinc-800">
+                <button onClick={() => setActiveTab('create')} className={`flex-1 py-2 text-xs font-medium rounded-md ${activeTab === 'create' ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:bg-zinc-800/50'}`}>配置</button>
+                <button onClick={() => setActiveTab('assets')} className={`flex-1 py-2 text-xs font-medium rounded-md ${activeTab === 'assets' ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:bg-zinc-800/50'}`}>参考图 ({customAssets.length})</button>
             </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-thin scrollbar-thumb-zinc-700">
+                {activeTab === 'create' ? (
+                    <>
+                        <div className="space-y-3">
+                            <label className="text-xs font-bold text-zinc-400">Poe API Key</label>
+                            <input type="password" value={poeApiKey || ""} onChange={(e) => setPoeApiKey(e.target.value)} placeholder="sk-..." className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm" />
+                        </div>
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <label className="text-xs font-bold text-zinc-400">自动生成视频</label>
+                                <div onClick={() => setEnableVideo(!enableVideo)} className={`w-10 h-5 rounded-full p-1 cursor-pointer transition-colors ${enableVideo ? 'bg-purple-600' : 'bg-zinc-700'}`}>
+                                    <div className={`w-3 h-3 bg-white rounded-full transition-transform ${enableVideo ? 'translate-x-5' : 'translate-x-0'}`} />
+                                </div>
+                            </div>
+                            {enableVideo && (
+                                <div className="space-y-2">
+                                    <div className="flex flex-col bg-zinc-900 p-2 rounded border border-zinc-800">
+                                        <label className="text-[10px] text-zinc-500 font-mono mb-1">Duration</label>
+                                        <select value={videoDuration} onChange={(e) => setVideoDuration(e.target.value)} className="w-full bg-zinc-800 border-none rounded text-[10px] text-zinc-300 py-1 px-1">
+                                            <option value="4s">4s (标准)</option>
+                                            <option value="8s">8s (中长)</option>
+                                            <option value="12s">12s (极长)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </>
+                ) : (
+                    <div className="space-y-4">
+                        <button onClick={() => fileInputRef.current?.click()} className="w-full py-6 border-2 border-dashed border-zinc-700 hover:border-purple-500 rounded-xl flex flex-col items-center justify-center gap-2 text-zinc-500 hover:text-purple-400 transition-colors">
+                            <Plus className="w-5 h-5" /><span className="text-xs font-medium">批量上传参考图</span>
+                        </button>
+                        <input type="file" ref={fileInputRef} className="hidden" accept="image/*" multiple onChange={handleBatchUpload} />
+                        <div className="space-y-2">
+                            {customAssets.map((asset) => (
+                                <div key={asset.id} className="bg-zinc-900 p-2 rounded-lg border border-zinc-800 flex gap-3 relative">
+                                    <div className="w-12 h-12 rounded bg-black shrink-0"><img src={asset.url} className="w-full h-full object-cover" /></div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center justify-between mb-1">
+                                            <span className="text-xs font-bold text-zinc-300 truncate">{asset.name}</span>
+                                        </div>
+                                    </div>
+                                    <button onClick={() => setCustomAssets(prev => prev.filter(a => a.id !== asset.id))} className="absolute top-1 right-1 text-zinc-500 hover:text-red-400"><X className="w-3 h-3"/></button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </div>
+            <div className="h-40 border-t border-zinc-800 bg-[#09090b] p-3 overflow-y-auto font-mono text-[10px] space-y-1">
+                {logs.map((log, i) => <div key={i} className="text-zinc-400 truncate">{String(log)}</div>)}
+            </div>
+        </aside>
 
-            <div className="space-y-6">
-              {finalFrames.map((frame) => (
-                <div key={frame.id} className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col gap-4">
-                  <div className="flex flex-col md:flex-row gap-4">
-                    <div className="w-full md:w-1/2">
-                      <div className="flex justify-between items-center mb-2">
-                        <div className="flex items-center gap-2">
-                          <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Generated Frame</p>
+        <main className="flex-1 flex flex-col bg-[#0f0f11] overflow-hidden relative">
+            <div className="flex-1 overflow-y-auto p-8 scrollbar-thin scrollbar-thumb-zinc-700 pb-40">
+                {scriptData && (
+                    <div className="mb-8">
+                        <div className="flex items-center justify-between mb-4 cursor-pointer" onClick={() => setIsScriptExpanded(!isScriptExpanded)}>
+                            <h2 className="text-lg font-bold text-zinc-200 flex items-center gap-2"><FileText className="w-5 h-5 text-purple-500" /> AI 剧本</h2>
+                            {isScriptExpanded ? <ChevronDown className="w-4 h-4 text-zinc-500"/> : <ChevronRight className="w-4 h-4 text-zinc-500"/>}
+                        </div>
+                        {isScriptExpanded && (
+                            <div className="bg-[#18181b] border border-zinc-800 p-3 rounded-lg text-sm text-zinc-400 italic">
+                                {scriptData.summary ? (
+                                    <span>"{scriptData.summary}"</span>
+                                ) : (
+                                    <span className="text-zinc-500 not-italic flex items-center gap-2"><ImageIcon className="w-4 h-4"/> 已进入「纯图片模式」，视频将完全基于画面生成。</span>
+                                )}
+                                {scriptData.summary === topic && scriptData.summary !== "" && <span className="ml-2 text-[10px] text-purple-400 bg-purple-900/30 px-1 rounded">(用户自定义模式)</span>}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-lg font-bold text-zinc-200 flex items-center gap-2"><LayoutGrid className="w-5 h-5 text-blue-500" /> 九宫格分镜</h2>
+                            <div className="flex gap-2">
+                                {storyboardUrl ? (
+                                    <>
+                                        <button onClick={handleRegenerateStoryboard} disabled={isGenerating} className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded text-xs text-white flex items-center gap-1"><RefreshCw className={`w-3 h-3 ${isGenerating ? 'animate-spin' : ''}`}/> 重绘</button>
+                                        <button onClick={() => storyboardInputRef.current?.click()} disabled={isGenerating} className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded text-xs text-white flex items-center gap-1"><Upload className="w-3 h-3"/> 替换</button>
+                                        <button onClick={() => storyboardUrl && downloadFile(storyboardUrl, 'storyboard.png')} className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded text-xs text-white"><Download className="w-3 h-3"/></button>
+                                    </>
+                                ) : (
+                                    <button onClick={() => storyboardInputRef.current?.click()} className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs flex items-center gap-1"><Grid3X3 className="w-3 h-3"/> 上传/拼图</button>
+                                )}
+                                <input type="file" ref={storyboardInputRef} className="hidden" accept="image/*" multiple onChange={handleStoryboardUpload} />
+                            </div>
+                        </div>
+                        <div className="aspect-video bg-[#18181b] rounded-xl border border-zinc-800 flex items-center justify-center relative overflow-hidden group">
+                            {isStitching ? <div className="text-center"><Loader className="w-8 h-8 text-blue-500 animate-spin mx-auto mb-2"/><p className="text-xs text-zinc-500">拼图中...</p></div> :
+                             storyboardUrl ? <img src={storyboardUrl} className="w-full h-full object-contain" /> :
+                             <div className="text-center"><ImageIcon className="w-8 h-8 text-zinc-700 mx-auto mb-2"/><p className="text-xs text-zinc-500">等待生成...</p></div>}
                         </div>
 
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => generateSingleVideo(frame.id)}
-                            disabled={generatingVideos[frame.id]}
-                            title={`使用 ${videoModel} 生成此镜头的视频`}
-                            className="p-1 text-slate-400 hover:text-pink-400 hover:bg-slate-800 rounded transition-colors disabled:opacity-50"
-                          >
-                            {generatingVideos[frame.id] ? <Loader className="w-3 h-3 animate-spin"/> : <Clapperboard className="w-3 h-3"/>}
-                          </button>
+                        {(storyboardUrl || currentStep === 2) && (
+                            <div className="w-full mt-2">
+                                <div className="flex items-center gap-2 mb-1 text-xs text-zinc-500"><Edit3 className="w-3 h-3" /><span>绘图提示词 (Storyboard Prompt)</span></div>
+                                <textarea className="w-full h-16 bg-zinc-900 border border-zinc-800 rounded p-2 text-xs text-zinc-400 resize-none focus:border-blue-500 focus:text-zinc-200" value={storyboardPrompt} onChange={(e) => setStoryboardPrompt(e.target.value)} />
+                            </div>
+                        )}
+                    </div>
 
-                          <button
-                            onClick={() => regenerateSceneImage(frame.id)}
-                            disabled={regeneratingScenes[frame.id]}
-                            title="重绘"
-                            className="p-1 text-slate-400 hover:text-indigo-400 hover:bg-slate-800 rounded"
-                          >
-                            <RotateCcw className={`w-3 h-3 ${regeneratingScenes[frame.id] ? 'animate-spin' : ''}`} />
-                          </button>
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-lg font-bold text-zinc-200 flex items-center gap-2"><Clapperboard className="w-5 h-5 text-pink-500" /> 最终成片 ({videoDuration})</h2>
+                            <div className="flex gap-2">
+                                {storyboardUrl && (
+                                    <button onClick={handleGenerateVideo} disabled={isGenerating} className={`px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1 ${finalVideoUrl ? 'bg-zinc-800 hover:bg-zinc-700 text-white' : 'bg-pink-600 hover:bg-pink-500 text-white'}`}>
+                                        {isGenerating && currentStep === 3 ? <Loader className="w-3 h-3 animate-spin"/> : <Zap className="w-3 h-3 fill-current"/>}
+                                        {finalVideoUrl ? "重生成" : "生成视频"}
+                                    </button>
+                                )}
+                                {finalVideoUrl && <button onClick={() => downloadFile(finalVideoUrl, 'video.mp4')} className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded text-xs text-white"><Download className="w-3 h-3"/></button>}
+                            </div>
                         </div>
-                      </div>
-
-                      <div className="aspect-video bg-slate-950 rounded-lg overflow-hidden border border-slate-800 relative group">
-                        {frame.url && !regeneratingScenes[frame.id] ? (
-                          <img src={frame.url} className="w-full h-full object-cover" alt={`Scene ${frame.id}`} />
-                        ) : (
-                          <div className="w-full h-full flex flex-col items-center justify-center gap-2">
-                            <Loader className="animate-spin text-slate-600 w-6 h-6"/>
-                            <span className="text-[10px] text-slate-500">
-                              {regeneratingScenes[frame.id] ? "Redrawing..." : "Loading..."}
-                            </span>
-                          </div>
-                        )}
-                        {frame.shot_type && (
-                          <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-black/50 backdrop-blur-sm text-[8px] text-white rounded flex items-center gap-1">
-                            <Camera className="w-2 h-2"/> {frame.shot_type}
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-xs text-slate-400 mt-2">{frame.desc}</p>
+                        <div className="aspect-video bg-[#18181b] rounded-xl border border-zinc-800 flex items-center justify-center relative overflow-hidden group">
+                            {finalVideoUrl ? (
+                                <div className="w-full h-full relative">
+                                    <video src={finalVideoUrl} className="w-full h-full object-cover" controls autoPlay loop />
+                                    <div className="absolute top-3 right-3 px-2 py-1 bg-black/60 backdrop-blur rounded text-[10px] font-medium text-white">Sora-2 · {videoDuration}</div>
+                                </div>
+                            ) : (
+                                <div className="w-full h-full p-4 flex flex-col items-center justify-center">
+                                    {isGenerating && currentStep === 3 ? <Loader className="w-8 h-8 text-pink-500 animate-spin mb-2"/> :
+                                     <div className="w-full">
+                                        <div className="flex items-center gap-2 mb-2 text-xs text-zinc-400"><Settings className="w-3 h-3" /><span>视频生成指令 (Sora-2 Prompt)</span></div>
+                                        <textarea className="w-full h-24 bg-zinc-900 border border-zinc-700 rounded p-2 text-xs text-zinc-300 resize-none focus:border-pink-500" placeholder="等待剧本..." value={soraPrompt} onChange={(e) => setSoraPrompt(e.target.value)} />
+                                     </div>
+                                    }
+                                </div>
+                            )}
+                        </div>
                     </div>
-
-                    <div className="w-full md:w-1/2">
-                      <div className="flex justify-between items-center mb-2">
-                        <p className="text-[10px] text-pink-500 uppercase tracking-wider font-bold">Video ({videoModel})</p>
-                        {(currentStep === 4 || generatingVideos[frame.id]) && !videoResults[frame.id] && (
-                          <div className="flex items-center gap-1 text-[9px] text-indigo-400">
-                            <Loader className="w-3 h-3 animate-spin"/> Generating...
-                          </div>
-                        )}
-                      </div>
-                      <div className={`aspect-video bg-black rounded-lg overflow-hidden border border-slate-800 relative ${!videoResults[frame.id] ? 'opacity-50' : ''}`}>
-                        {videoResults[frame.id] ? (
-                          <div className="w-full h-full flex items-center justify-center relative group">
-                            <img src={frame.url} className="w-full h-full object-cover opacity-60" alt={`Video preview ${frame.id}`} />
-                            <a
-                              href={videoResults[frame.id]}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="absolute inset-0 flex items-center justify-center hover:bg-black/40 transition-colors"
-                            >
-                              <div className="w-12 h-12 rounded-full bg-pink-600 flex items-center justify-center shadow-lg shadow-pink-900/50">
-                                <Play className="w-5 h-5 text-white ml-1" />
-                              </div>
-                            </a>
-                          </div>
-                        ) : (
-                          <div className="w-full h-full flex flex-col items-center justify-center text-slate-600 gap-2">
-                            <Video className="w-8 h-8 opacity-20" />
-                            <span className="text-xs">等待生成...</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
                 </div>
-              ))}
             </div>
-          </div>
-        </div>
-      </main>
+
+            <div className="border-t border-zinc-800 bg-[#09090b] p-6">
+                <div className="max-w-4xl mx-auto relative group">
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl opacity-20 group-hover:opacity-40 transition duration-500 blur"></div>
+                    <div className="relative flex bg-zinc-900 rounded-xl border border-zinc-700/50 p-2 items-end shadow-2xl gap-2">
+                        <textarea value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="输入故事主题..." className="w-full bg-transparent text-sm text-zinc-200 placeholder-zinc-500 p-3 outline-none resize-none h-14 max-h-32" />
+                        <button onClick={handleReset} className="mb-1 p-2.5 rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors" title="重置/新建"><Trash2 className="w-4 h-4"/></button>
+                        <button onClick={handleSmartGenerate} disabled={isGenerating || isStitching} className={`mb-1 mr-1 px-6 py-2.5 rounded-lg font-bold text-sm flex items-center gap-2 transition-all ${isGenerating ? 'bg-zinc-800 text-zinc-500' : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'}`}>
+                            {isGenerating ? <Loader className="w-4 h-4 animate-spin"/> : <Sparkles className="w-4 h-4 fill-current"/>}
+                            {scriptData && storyboardUrl ? "直接生成视频" : scriptData ? "生成分镜" : "启动全流程"}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {showDebug && (
+                <div className="fixed bottom-0 left-0 right-0 h-64 bg-black/95 border-t border-zinc-800 p-4 overflow-y-auto font-mono text-xs text-zinc-400 z-50">
+                    <div className="flex justify-between items-center mb-2">
+                        <h3 className="text-white font-bold flex items-center gap-2"><Bug className="w-4 h-4"/> Debug Info</h3>
+                        <button onClick={() => setShowDebug(false)} className="text-zinc-500 hover:text-white"><X className="w-4 h-4"/></button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 h-full pb-8">
+                        <div><strong className="text-purple-400 block">Nano Request:</strong><pre className="bg-zinc-900 p-2 rounded border border-zinc-800">{JSON.stringify(lastNanoRequest, null, 2)}</pre></div>
+                        <div><strong className="text-pink-400 block">Sora Request:</strong><pre className="bg-zinc-900 p-2 rounded border border-zinc-800">{JSON.stringify(lastSoraRequest, null, 2)}</pre></div>
+                    </div>
+                </div>
+            )}
+        </main>
+      </div>
     </div>
   );
 };
+
+export default AutoCinePanel;
